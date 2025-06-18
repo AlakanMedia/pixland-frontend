@@ -1,8 +1,9 @@
 <script>
     import { onMount, tick } from "svelte";
     import { fade, scale } from "svelte/transition";
-    import { store, alert } from "../shared.svelte.js";
+    import { modals, user } from "../shared.svelte.js";
     import { registerNewUser, loginUser } from "../pixlandApi.js";
+    import { decodeJWT, showAlert, isValidEmail } from "../utils.js";
 
     let username = $state("");
     let email = $state("");
@@ -17,20 +18,6 @@
         loginContainer.focus();
         await tick();
     });
-
-    // Esta función puede estar en utils.js
-    function isValidEmail(emailToValid) {
-        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-        return emailRegex.test(emailToValid);
-    }
-
-    // Esta función puede estar en utils.js
-    function showAlert(type, title, message) {
-        alert.type = type;
-        alert.title = title;
-        alert.message = message;
-        alert.show = true;
-    }
 
     function isValidFields() {
         if (!(username && email && password)) {
@@ -53,23 +40,33 @@
             return false;
         }
 
+        if (username.trim().length < 1) {
+            const inputUsername = document.body.querySelector("#input-username");
+            inputUsername.classList.add("error");
+
+            showAlert("info", "Username Too Short", "Your username must be at least 1 character long.");
+            return false;
+        }
+
         if (!isValidEmail(email)) {
             const inputEmail = document.body.querySelector("#input-email");
-
-            if (!inputEmail.classList.contains("error")) {
-                inputEmail.classList.add("error");
-            }
+            inputEmail.classList.add("error");
 
             showAlert("info", "Invalid Email", "The email address you entered is not valid. Please check for any typos or use a valid email format.");
             return false;
         }
 
+        if (password.trim().length < 4) {
+            const inputPassword = document.body.querySelector("#input-password");
+            inputPassword.classList.add("error");
+
+            showAlert("info", "Password Too Short", "Your password must be at least 4 characters long.");
+            return false;
+        }
+
         if (password !== confirmPassword) {
             const inputConfirmPassword = document.body.querySelector("#input-confirm-password");
-
-            if (!inputConfirmPassword.classList.contains("error")){
-                inputConfirmPassword.classList.add("error");
-            }
+            inputConfirmPassword.classList.add("error");
 
             showAlert("info", "Password Mismatch", "The passwords you entered do not match. Please ensure both passwords are identical and try again.");
             return false;
@@ -83,28 +80,22 @@
             return false;
         }
 
-        const statusCode = await registerNewUser({
+        const response = await registerNewUser({
             username: username,
             email: email,
             password: password,
         });
 
-        if (statusCode === 409) {
-            showAlert("info", "Username or Email Already Taken", "The username or email you entered is already in use. Please choose a different username or email address to proceed with your registration.");
-            return false;
-        }
+        if (response.state !== "success") {
+            const data = response.data;
 
-        if (statusCode === 422) {
-            showAlert("info", "Password Too Short", "Your password must be at least 4 characters long.");
+            if (data && data.code === 409) {
+                showAlert("info", "Username or Email Already Taken", "The username or email you entered is already in use. Please choose a different username or email address to proceed with your registration.");
+            }
+            else {
+                showAlert("error", "Unexpected Error Occurred", "An unexpected error has occurred while processing your request. Please try again later. If the problem persists, contact support for assistance.");
+            }
 
-            const inputPassword = document.body.querySelector("#input-password");
-            inputPassword.classList.add("error");
-
-            return false;
-        }
-
-        if (statusCode === 500) {
-            showAlert("error", "Unexpected Error Occurred", "An unexpected error has occurred while processing your request. Please try again later. If the problem persists, contact support for assistance.");
             return false;
         }
 
@@ -128,21 +119,22 @@
             return false;
         }
 
-        const statusCode = await loginUser(username, password);
+        const response = await loginUser(username, password);
 
-        if (statusCode === 401) {
-            showAlert("info", "Login Failed", "The username or password you entered is incorrect. Please try again.");
+        if (response.state !== "success") {
+            const data = response.data;
+
+            if (data && data.code === 401) {
+                showAlert("info", "Login Failed", "The username or password you entered is incorrect. Please try again.");
+            }
+            else {
+                showAlert("error", "Unexpected Error Occurred", "An unexpected error has occurred while processing your request. Please try again later. If the problem persists, contact support for assistance.");
+            }
+
             return false;
-
         }
 
-        if (statusCode === 500) {
-            showAlert("error", "Unexpected Error Occurred", "An unexpected error has occurred while processing your request. Please try again later. If the problem persists, contact support for assistance.");
-            return false;
-        }
-
-        showAlert("success", "Login Successful", "You have successfully logged in. Welcome back!");
-        return true;
+        return response.data;
     }
 
     async function handleSignButton() {
@@ -160,8 +152,21 @@
             const userLoged = await handleLogin();
 
             if (userLoged) {
-                store.userLogged = true;
-                store.loginIsOpen = false;
+                const decodeToken = decodeJWT(userLoged.token);
+
+                user.id = decodeToken.payload.sub;
+                user.logged = true;
+
+                if (user.websocket) {
+                    user.websocket.send(JSON.stringify({
+                        type: "anonymous_to_registered",
+                        data: {user_id: user.id},
+                    }));
+                }
+
+                modals.loginIsOpen = false;
+
+                localStorage.setItem("access_token", userLoged.token);
             }
         }
     }
@@ -169,30 +174,35 @@
     function closeLogin(event) {
         if (event.type === "click"){
             if (event.target !== login && !login.contains(event.target)) {
-                store.loginIsOpen = false;
+                modals.loginIsOpen = false;
             }
         }
         else if (event.type === "keydown") {
             if (event.key === "Escape") {
-                store.loginIsOpen = false;
+                modals.loginIsOpen = false;
             }
         }
     }
 
-    function removeErrorClass(element) {
-        if (element.classList.contains("error")) {
-            element.classList.remove("error");
+    function handleKeyDown(event) {
+        if (event.key === "Enter") {
+            handleSignButton();
         }
+        else {
+            closeLogin(event);
+        }
+    }
+
+    function removeErrorClass(element) {
+        element.classList.remove("error");
     }
 </script>
 
 <div
     id="login-container"
     onclick={(e) => {closeLogin(e);}}
-    onkeydown={(e) => {closeLogin(e);}}
+    onkeydown={(e) => {handleKeyDown(e);}}
     role="dialog"
-    aria-modal="true"
-    aria-labelledby="login"
     tabindex="0"
     bind:this={loginContainer}
     transition:fade={{duration: 600}}
@@ -282,7 +292,7 @@
         position: fixed;
         width: 100%;
         height: 100%;
-        background-color: rgba(0, 0, 0, 0.7);
+        background-color: rgba(0, 0, 0, 0.8);
         display: flex;
         justify-content: center;
         align-items: center;

@@ -1,5 +1,35 @@
 const API_URL = import.meta.env.VITE_API_URL
 
+export async function getUserInformation(token) {
+    try {
+        const response = await fetch(`${API_URL}/users/me`, {
+            method: "GET",
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json",
+            }
+        });
+
+        const responseJson = await response.json();
+
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}: ${responseJson.detail}`);
+        }
+
+        return {
+            state: "success",
+            data: {
+                code: response.status,
+                info: responseJson,
+            }
+        }
+    }
+    catch (error) {
+        console.log(error);
+        return {state: "error", data: null}
+    }
+}
+
 export async function loginUser(username, password) {
     try {
         const response = await fetch(`${API_URL}/token`, {
@@ -12,22 +42,34 @@ export async function loginUser(username, password) {
         });
 
         if (!response.ok) {
+            const errorJson = await response.json();
+
             if (response.status === 401) {
-                return response.status;
+                return {
+                    state: "error",
+                    data: {
+                        code: response.status,
+                        message: errorJson.detail,
+                    }
+                }
             }
-            else {
-                const errorJson = await response.json();
-                throw new Error(`Error ${response.status}: ${errorJson.detail}`);
-            }
+
+            throw new Error(`Error ${response.status}: ${errorJson.detail}`);
         }
 
-        const data = await response.json();
-        localStorage.setItem("access_token", data.access_token);
-        return response.status;
+        const responseData = await response.json();
+
+        return {
+            state: "success",
+            data: {
+                code: response.status,
+                token: responseData.access_token,
+            }
+        }
     }
     catch (error) {
         console.log(error);
-        return 500;
+        return {state: "error", data: null}
     }
 }
 
@@ -35,8 +77,6 @@ export async function registerNewUser(userInfo) {
     try {
         const response = await fetch(`${API_URL}/users/register`, {
             method: "POST",
-            // headers: {"Content-Type": "application/json"},
-            // body: JSON.stringify(userInfo),
             headers: {"Content-Type": "application/x-www-form-urlencoded"},
             body: new URLSearchParams({
                 username: userInfo.username,
@@ -46,30 +86,33 @@ export async function registerNewUser(userInfo) {
         });
 
         if (!response.ok) {
+            const errorJson = await response.json();
+
             if (response.status === 409) {
-                return response.status;
-            }
-            else if (response.status === 422) {
-                const errorJson = await response.json();
-                const detail = errorJson.detail[0];
-
-                if (detail.loc.includes("password")) {
-                    return response.status;
+                return {
+                    state: "error",
+                    data: {
+                        code: response.status,
+                        message: errorJson.detail,
+                    }
                 }
+            }
 
-                throw new Error(`Error ${response.status}: ${errorJson.detail}`);
-            }
-            else {
-                const errorJson = await response.json();
-                throw new Error(`Error ${response.status}: ${errorJson.detail}`);
-            }
+            throw new Error(`Error ${response.status}: ${errorJson.detail}`);
         }
 
-        await response.json();
-        return response.status;
+        const responseData = await response.json();
+
+        return {
+            state: "success",
+            data: {
+                code: response.status,
+                user_id: responseData.user_id,
+            }
+        }
     }
     catch (error) {
         console.log(error);
-        return 500;
+        return {state: "error", data: null}
     }
 }

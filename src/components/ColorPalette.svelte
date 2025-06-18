@@ -1,5 +1,5 @@
 <script>
-    import { store } from "../shared.svelte.js";
+    import { colorSelected } from "../shared.svelte.js";
 
     const COLORS = [
         "red", "green", "blue", "yellow",
@@ -12,11 +12,11 @@
 <div id="palette">
     {#each COLORS as color}
        <button
-            class={["palette-button", color === store.colorName ? "selected" : ""]}
+            class={["palette-button", colorSelected.name === color ? "selected" : ""]}
             style="background-color: {color};"
             onclick={(e) => {
                 e.stopPropagation();
-                store.colorName = color;
+                colorSelected.name = color;
             }}
             aria-label={color}
             title={color.charAt(0).toUpperCase() + color.slice(1).toLowerCase()}
@@ -32,11 +32,11 @@
         justify-content: center;
         gap: 6px;
         padding: 6px;
-        background-color: rgba(0, 0, 0, 0.7);
+        background-color: rgba(0, 0, 0, 0.8);
         border-radius: 6px;
 
         position: fixed;
-        bottom: 10px;
+        bottom: 0.5rem;
         left: 50%;
         transform: translateX(-50%);
 
@@ -73,7 +73,7 @@
         transform: scale(1.08);
     }
 
-    @media (max-width: 500px) {
+    @media (max-width: 580px) {
         #palette {
             width: calc((4 * 42px) + (6px * 5));
         }

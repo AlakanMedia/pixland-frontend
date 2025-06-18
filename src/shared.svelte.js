@@ -1,12 +1,25 @@
-export const store = $state({
-    colorName: "",
-    loginIsOpen: false,
-    userLogged: false,
+export const colorSelected = $state({
+    name: "",
 });
 
-export const alert = $state({
+export const modals = $state({
+    loginIsOpen: false,
+    profileIsOpen: false,
+});
+
+export const user = $state({
+    id: "",
+    logged: false,
+    websocket: null,
+});
+
+export const appInfo = $state({
+    activeUsers: 0,
+});
+
+export const alertCard = $state({
     show: false,
-    type: undefined,
-    title: undefined,
-    message: undefined,
+    type: "",
+    title: "",
+    message: "",
 });
