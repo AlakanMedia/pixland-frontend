@@ -10,6 +10,13 @@
     const pixelSize = 20;
     let coords = new Spring({x:50, y: 50}, {stiffness: 0.1, damping: 0.25});
 
+    // Variables para el clic y arrastre
+    const dragThreshold = 5;
+    let isDragging = false;
+    let isMouseDown = false;
+    let clickMouseX;
+    let clickMouseY;
+
     onMount(() => {
         drawMatrix();
 
@@ -103,6 +110,42 @@
             // TODO: Debo verificar si la api devuelve 401 para marcar el store.userLogged como falso
         }
     }
+
+    function handleMouseDown(event) {
+        // Para que no haga nada si presionó algún botón que no sea el izquierdo
+        if (event.button !== 0) {
+            return;
+        }
+
+        clickMouseX = event.clientX;
+        clickMouseY = event.clientY;
+        isMouseDown = true;
+    }
+
+    function handleMouseMove(event) {
+        // Verificamos que el usuario tenga el clic izquierdo presionado
+        if (isMouseDown) {
+            const deltaDraggingX = event.clientX - clickMouseX;
+            const deltaDraggingY = event.clientY - clickMouseY;
+            const dragDistance = Math.hypot(deltaDraggingX, deltaDraggingY);
+
+            if (dragDistance > dragThreshold) {
+                isDragging = true;
+            }
+        }
+    }
+
+    function handleMouseUp(event) {
+        if (isDragging) {
+            console.log("Lógica para el arrastre");
+        }
+        else {
+            console.log("Lógica para el clic");
+        }
+
+        isDragging = false;
+        isMouseDown = false;
+    }
 </script>
 
 <svelte:window onresize={() => {drawMatrix();}}/>
@@ -116,7 +159,9 @@
 <svg
     id="mouse-chaser"
     role="presentation"
-    onclick={(e) => {handleSetColor(e);}}
+    onmousedown={(e) => {handleMouseDown(e);}}
+    onmousemove={(e) => {handleMouseMove(e);}}
+    onmouseup={(e) => {handleMouseUp(e)}}
 >
     <rect 
         width={pixelSize}
