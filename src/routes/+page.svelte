@@ -7,8 +7,8 @@
 
     const API_URL = import.meta.env.VITE_API_URL
 
-    // Referencia al canvas
-    let canvasElement;
+    let canvasElement; // Referencia al canvas
+    let contextCanvas; // Contexto del canvas
 
     // Tamaño en pixeles de una celda
     const cellSize = 20;
@@ -34,6 +34,7 @@
     onMount(() => {
         canvasElement.width = window.innerWidth;
         canvasElement.height = window.innerHeight;
+        contextCanvas = canvasElement.getContext("2d");
 
         drawMatrix();
 
@@ -83,9 +84,7 @@
     });
 
     function drawMatrix() {
-        const context = canvasElement.getContext("2d");
-
-        context.clearRect(0, 0, canvasElement.width, canvasElement.height);
+        contextCanvas.clearRect(0, 0, canvasElement.width, canvasElement.height);
 
         // 1. Calcula qué celdas del MUNDO son visibles en la pantalla ahora mismo
         const startCellX = Math.floor(camaraOffsetX / cellSize);
@@ -102,27 +101,25 @@
                 const screenX = worldX - camaraOffsetX;
                 const screenY = worldY - camaraOffsetY;
                 
-                context.strokeStyle = "grey";
-                context.strokeRect(screenX, screenY, cellSize, cellSize);
+                contextCanvas.strokeStyle = "grey";
+                contextCanvas.strokeRect(screenX, screenY, cellSize, cellSize);
 
                 // Aquí también iría la lógica para dibujar el color de la celda
                 // desde tu modelo de datos (el array 2D `mundo`)
                 // const color = mundo[i][j].color;
-                // context.fillStyle = color;
-                // context.fillRect(pantallaX, pantallaY, cellSize, cellSize);
+                // contextCanvas.fillStyle = color;
+                // contextCanvas.fillRect(pantallaX, pantallaY, cellSize, cellSize);
             }
         }
     }
 
     function setColor(x, y, color) {
-        const context = canvasElement.getContext("2d");
-
         // Ajustamos la celda según la ventana del usuario
         const screenX = x - camaraOffsetX;
         const screenY = y - camaraOffsetY;
 
-        context.fillStyle = color;
-        context.fillRect(screenX, screenY, cellSize, cellSize);
+        contextCanvas.fillStyle = color;
+        contextCanvas.fillRect(screenX, screenY, cellSize, cellSize);
     }
 
     function handleSetColor(event) {
