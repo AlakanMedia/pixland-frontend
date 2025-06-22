@@ -11,7 +11,7 @@
     let canvasElement;
 
     // Tamaño en pixeles de una celda
-    const pixelSize = 20;
+    const cellSize = 20;
 
     // Variables de configuración del mouse chaser
     let coords = new Spring({x:50, y: 50}, {stiffness: 0.1, damping: 0.25});
@@ -88,28 +88,28 @@
         context.clearRect(0, 0, canvasElement.width, canvasElement.height);
 
         // 1. Calcula qué celdas del MUNDO son visibles en la pantalla ahora mismo
-        const startCellX = Math.floor(camaraOffsetX / pixelSize);
-        const startCellY = Math.floor(camaraOffsetY / pixelSize);
-        const endCellX = Math.floor((camaraOffsetX + canvasElement.width) / pixelSize);
-        const endCellY = Math.floor((camaraOffsetY + canvasElement.height) / pixelSize);
+        const startCellX = Math.floor(camaraOffsetX / cellSize);
+        const startCellY = Math.floor(camaraOffsetY / cellSize);
+        const endCellX = Math.floor((camaraOffsetX + canvasElement.width) / cellSize);
+        const endCellY = Math.floor((camaraOffsetY + canvasElement.height) / cellSize);
 
         // 2. Itera sobre las celdas del MUNDO que son visibles
         for (let i = startCellX; i <= endCellX; i++) {
             for (let j = startCellY; j <= endCellY; j++) {
                 // 3. Calcula dónde dibujar cada celda del mundo en la PANTALLA
-                const worldX = i * pixelSize;
-                const worldY = j * pixelSize;
+                const worldX = i * cellSize;
+                const worldY = j * cellSize;
                 const screenX = worldX - camaraOffsetX;
                 const screenY = worldY - camaraOffsetY;
                 
                 context.strokeStyle = "grey";
-                context.strokeRect(screenX, screenY, pixelSize, pixelSize);
+                context.strokeRect(screenX, screenY, cellSize, cellSize);
 
                 // Aquí también iría la lógica para dibujar el color de la celda
                 // desde tu modelo de datos (el array 2D `mundo`)
                 // const color = mundo[i][j].color;
                 // context.fillStyle = color;
-                // context.fillRect(pantallaX, pantallaY, pixelSize, pixelSize);
+                // context.fillRect(pantallaX, pantallaY, cellSize, cellSize);
             }
         }
     }
@@ -122,7 +122,7 @@
         const screenY = y - camaraOffsetY;
 
         context.fillStyle = color;
-        context.fillRect(screenX, screenY, pixelSize, pixelSize);
+        context.fillRect(screenX, screenY, cellSize, cellSize);
     }
 
     function handleSetColor(event) {
@@ -133,8 +133,8 @@
 
         if (colorSelected.name) {
             // Calculamos las coordenadas de la celda en el mundo
-            const worldX = Math.floor((camaraOffsetX + event.clientX) / pixelSize) * pixelSize;
-            const worldY = Math.floor((camaraOffsetY + event.clientY) / pixelSize) * pixelSize;
+            const worldX = Math.floor((camaraOffsetX + event.clientX) / cellSize) * cellSize;
+            const worldY = Math.floor((camaraOffsetY + event.clientY) / cellSize) * cellSize;
 
             setColor(worldX, worldY, colorSelected.name);
             user.websocket.send(JSON.stringify({
