@@ -6,9 +6,23 @@
 	import { decodeJWT } from "../utils.js";
 
     const API_URL = import.meta.env.VITE_API_URL
+
+    // Referencia al canvas
     let canvasElement;
+
+    // Tamaño en pixeles de una celda
     const pixelSize = 20;
+
+    // Variables de configuración del mouse chaser
     let coords = new Spring({x:50, y: 50}, {stiffness: 0.1, damping: 0.25});
+    let size = new Spring(7);
+
+    // Variables que almacenan en qué posición de nuestro
+    // mundo en pixeles está la esquina superior izquierda
+    let camaraOffsetX = 0;
+    let camaraOffsetY = 0;
+    let startCameraX = 0;
+    let startCameraY = 0;
 
     // Variables para el clic y arrastre
     const dragThreshold = 5;
@@ -18,6 +32,9 @@
     let clickMouseY;
 
     onMount(() => {
+        canvasElement.width = window.innerWidth;
+        canvasElement.height = window.innerHeight;
+
         drawMatrix();
 
         const accessToken = localStorage.getItem("access_token");
@@ -43,7 +60,6 @@
         };
 
         user.websocket.onclose = () => {
-            user.websocket = null;
             console.log("WebSocket connection closed.");
         };
 
@@ -67,28 +83,46 @@
     });
 
     function drawMatrix() {
-        canvasElement.width = window.innerWidth;
-        canvasElement.height = window.innerHeight;
-
         const context = canvasElement.getContext("2d");
-        const rows = canvasElement.height / pixelSize;
-        const columns = canvasElement.width / pixelSize;
 
-        for (let i = 0; i < rows; i++) {
-            for (let j = 0; j < columns; j++) {
+        context.clearRect(0, 0, canvasElement.width, canvasElement.height);
+
+        // 1. Calcula qué celdas del MUNDO son visibles en la pantalla ahora mismo
+        const startCellX = Math.floor(camaraOffsetX / pixelSize);
+        const startCellY = Math.floor(camaraOffsetY / pixelSize);
+        const endCellX = Math.floor((camaraOffsetX + canvasElement.width) / pixelSize);
+        const endCellY = Math.floor((camaraOffsetY + canvasElement.height) / pixelSize);
+
+        // 2. Itera sobre las celdas del MUNDO que son visibles
+        for (let i = startCellX; i <= endCellX; i++) {
+            for (let j = startCellY; j <= endCellY; j++) {
+                // 3. Calcula dónde dibujar cada celda del mundo en la PANTALLA
+                const worldX = i * pixelSize;
+                const worldY = j * pixelSize;
+                const screenX = worldX - camaraOffsetX;
+                const screenY = worldY - camaraOffsetY;
+                
                 context.strokeStyle = "grey";
-                context.strokeRect(j * pixelSize, i * pixelSize, pixelSize, pixelSize);
+                context.strokeRect(screenX, screenY, pixelSize, pixelSize);
+
+                // Aquí también iría la lógica para dibujar el color de la celda
+                // desde tu modelo de datos (el array 2D `mundo`)
+                // const color = mundo[i][j].color;
+                // context.fillStyle = color;
+                // context.fillRect(pantallaX, pantallaY, pixelSize, pixelSize);
             }
         }
     }
 
     function setColor(x, y, color) {
-		const xCanvas = Math.floor(x / pixelSize) * pixelSize;
-		const yCanvas = Math.floor(y / pixelSize) * pixelSize;
-
         const context = canvasElement.getContext("2d");
+
+        // Ajustamos la celda según la ventana del usuario
+        const screenX = x - camaraOffsetX;
+        const screenY = y - camaraOffsetY;
+
         context.fillStyle = color;
-        context.fillRect(xCanvas, yCanvas, pixelSize, pixelSize);
+        context.fillRect(screenX, screenY, pixelSize, pixelSize);
     }
 
     function handleSetColor(event) {
@@ -98,12 +132,16 @@
         }
 
         if (colorSelected.name) {
-            setColor(event.clientX, event.clientY, colorSelected.name);
+            // Calculamos las coordenadas de la celda en el mundo
+            const worldX = Math.floor((camaraOffsetX + event.clientX) / pixelSize) * pixelSize;
+            const worldY = Math.floor((camaraOffsetY + event.clientY) / pixelSize) * pixelSize;
+
+            setColor(worldX, worldY, colorSelected.name);
             user.websocket.send(JSON.stringify({
                 type: "update_pixel",
                 data: {
-                    x: event.clientX,
-                    y: event.clientY,
+                    x: worldX,
+                    y: worldY,
                     color: colorSelected.name,
                 },
             }));
@@ -111,7 +149,7 @@
         }
     }
 
-    function handleMouseDown(event) {
+    function handleOnMouseDown(event) {
         // Para que no haga nada si presionó algún botón que no sea el izquierdo
         if (event.button !== 0) {
             return;
@@ -119,36 +157,51 @@
 
         clickMouseX = event.clientX;
         clickMouseY = event.clientY;
+        startCameraX = camaraOffsetX;
+        startCameraY = camaraOffsetY;
         isMouseDown = true;
+        size.target = 10;
     }
 
-    function handleMouseMove(event) {
+    function handleOnMouseMove(event) {
         // Verificamos que el usuario tenga el clic izquierdo presionado
         if (isMouseDown) {
-            const deltaDraggingX = event.clientX - clickMouseX;
-            const deltaDraggingY = event.clientY - clickMouseY;
-            const dragDistance = Math.hypot(deltaDraggingX, deltaDraggingY);
+            const deltaX = event.clientX - clickMouseX;
+            const deltaY = event.clientY - clickMouseY;
+            const dragDistance = Math.hypot(deltaX, deltaY);
 
             if (dragDistance > dragThreshold) {
                 isDragging = true;
+
+                camaraOffsetX = startCameraX - deltaX;
+                camaraOffsetY = startCameraY - deltaY;
+
+                drawMatrix();
             }
         }
     }
 
-    function handleMouseUp(event) {
+    function handleOnMouseUp(event) {
         if (isDragging) {
-            console.log("Lógica para el arrastre");
+            // Lógica para el arrastre
         }
         else {
-            console.log("Lógica para el clic");
+            handleSetColor(event);
         }
 
         isDragging = false;
         isMouseDown = false;
+        size.target = 7;
     }
 </script>
 
-<svelte:window onresize={() => {drawMatrix();}}/>
+<svelte:window onresize={() => {
+        canvasElement.width = window.innerWidth;
+        canvasElement.height = window.innerHeight;
+
+        drawMatrix();
+    }}
+/>
 <svelte:body
     onmousemove={(e) => {
         coords.target = {x: e.clientX, y: e.clientY};
@@ -159,16 +212,15 @@
 <svg
     id="mouse-chaser"
     role="presentation"
-    onmousedown={(e) => {handleMouseDown(e);}}
-    onmousemove={(e) => {handleMouseMove(e);}}
-    onmouseup={(e) => {handleMouseUp(e)}}
+    onmousedown={(e) => {handleOnMouseDown(e);}}
+    onmousemove={(e) => {handleOnMouseMove(e);}}
+    onmouseup={(e) => {handleOnMouseUp(e);}}
 >
-    <rect 
-        width={pixelSize}
-        height={pixelSize}
-        x={Math.floor(coords.current.x / pixelSize) * pixelSize}
-        y={Math.floor(coords.current.y / pixelSize) * pixelSize}
-    />
+	<circle
+		cx={coords.current.x}
+		cy={coords.current.y}
+		r={size.current}
+	/>
 </svg>
 <Widgets/>
 
