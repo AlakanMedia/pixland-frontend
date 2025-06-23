@@ -3,10 +3,11 @@
     import { modals, user } from "../shared.svelte.js";
 	import { fade, scale } from "svelte/transition";
 	import { getUserInformation } from "../pixlandApi.js";
-    import { showAlert } from "../utils.js";
+    import { showAlert, formatToLocalDate } from "../utils.js";
 
     let profileUsername = $state("...");
     let profileEmail = $state("...");
+    let profileCreatedAt = $state("...");
     let profilePixelxPlaced = $state(0);
 
     let profile;
@@ -29,6 +30,7 @@
 
                 profileUsername = userInfo.username;
                 profileEmail = userInfo.email;
+                profileCreatedAt = userInfo.created_at;
                 profilePixelxPlaced = userInfo.pixels_placed;
             }
         }
@@ -86,6 +88,13 @@
                 </div>
                 <div class="stat-value">{profilePixelxPlaced}</div>
                 <div class="stat-label">pixels placed</div>
+            </div>
+            <div class="stat-container">
+                <div class="stat-icon">
+                    <i class="ph ph-calendar-dots"></i>
+                </div>
+                <div class="stat-value">{formatToLocalDate(profileCreatedAt)}</div>
+                <div class="stat-label">created at</div>
             </div>
         </div>
         <div id="profile-actions">

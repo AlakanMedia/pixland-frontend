@@ -25,3 +25,17 @@ export function decodeJWT(token) {
 
     return { header, payload };
 }
+
+export function formatToLocalDate(utcDateString) {
+    if (utcDateString === "...") {
+        return utcDateString;
+    }
+
+    const fixedUtcString = utcDateString.endsWith('Z') ? utcDateString : utcDateString + 'Z';
+    const date = new Date(fixedUtcString);
+
+    return date.toLocaleString("en-US", {
+        dateStyle: "short",
+        timeStyle: "short",
+    });
+}

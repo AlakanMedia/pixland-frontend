@@ -10,19 +10,19 @@
     let canvasElement; // Referencia al canvas
     let contextCanvas; // Contexto del canvas
 
-    // Tamaño en pixeles de una celda
+    // Configuración del mundo
     const cellSize = 20;
+    const worldPxWidth = cellSize * 1024;
+    const worldPxHeight = cellSize * 1024;
 
     // Variables de configuración del mouse chaser
     let coords = new Spring({x:50, y: 50}, {stiffness: 0.1, damping: 0.25});
     let size = new Spring(7);
 
-    // Variables que almacenan en qué posición de nuestro
-    // mundo en pixeles está la esquina superior izquierda
-    let camaraOffsetX = 0;
-    let camaraOffsetY = 0;
-    let startCameraX = 0;
-    let startCameraY = 0;
+    let cameraOffsetX = 0; // Coordenada en píxeles de la esquina izquierda de la cámara
+    let cameraOffsetY = 0; // Coordenada en píxeles de la esquina superior de la cámara
+    let startCameraX = 0; // Para saber la posición previa de la cámara antes del arrastre
+    let startCameraY = 0; // Para saber la posición previa de la cámara antes del arrastre
 
     // Variables para el clic y arrastre
     const dragThreshold = 5;
@@ -87,10 +87,10 @@
         contextCanvas.clearRect(0, 0, canvasElement.width, canvasElement.height);
 
         // 1. Calcula qué celdas del MUNDO son visibles en la pantalla ahora mismo
-        const startCellX = Math.floor(camaraOffsetX / cellSize);
-        const startCellY = Math.floor(camaraOffsetY / cellSize);
-        const endCellX = Math.floor((camaraOffsetX + canvasElement.width) / cellSize);
-        const endCellY = Math.floor((camaraOffsetY + canvasElement.height) / cellSize);
+        const startCellX = Math.floor(cameraOffsetX / cellSize);
+        const startCellY = Math.floor(cameraOffsetY / cellSize);
+        const endCellX = Math.floor((cameraOffsetX + canvasElement.width) / cellSize);
+        const endCellY = Math.floor((cameraOffsetY + canvasElement.height) / cellSize);
 
         // 2. Itera sobre las celdas del MUNDO que son visibles
         for (let i = startCellX; i <= endCellX; i++) {
@@ -98,8 +98,8 @@
                 // 3. Calcula dónde dibujar cada celda del mundo en la PANTALLA
                 const worldX = i * cellSize;
                 const worldY = j * cellSize;
-                const screenX = worldX - camaraOffsetX;
-                const screenY = worldY - camaraOffsetY;
+                const screenX = worldX - cameraOffsetX;
+                const screenY = worldY - cameraOffsetY;
                 
                 contextCanvas.strokeStyle = "grey";
                 contextCanvas.strokeRect(screenX, screenY, cellSize, cellSize);
@@ -115,8 +115,8 @@
 
     function setColor(x, y, color) {
         // Ajustamos la celda según la ventana del usuario
-        const screenX = x - camaraOffsetX;
-        const screenY = y - camaraOffsetY;
+        const screenX = x - cameraOffsetX;
+        const screenY = y - cameraOffsetY;
 
         contextCanvas.fillStyle = color;
         contextCanvas.fillRect(screenX, screenY, cellSize, cellSize);
@@ -129,9 +129,9 @@
         }
 
         if (colorSelected.name) {
-            // Calculamos las coordenadas de la celda en el mundo
-            const worldX = Math.floor((camaraOffsetX + event.clientX) / cellSize) * cellSize;
-            const worldY = Math.floor((camaraOffsetY + event.clientY) / cellSize) * cellSize;
+            // Calculamos la coordenada superior izquierda en píxeles de la celda en el mundo
+            const worldX = Math.floor((cameraOffsetX + event.clientX) / cellSize) * cellSize;
+            const worldY = Math.floor((cameraOffsetY + event.clientY) / cellSize) * cellSize;
 
             setColor(worldX, worldY, colorSelected.name);
             user.websocket.send(JSON.stringify({
@@ -154,8 +154,8 @@
 
         clickMouseX = event.clientX;
         clickMouseY = event.clientY;
-        startCameraX = camaraOffsetX;
-        startCameraY = camaraOffsetY;
+        startCameraX = cameraOffsetX;
+        startCameraY = cameraOffsetY;
         isMouseDown = true;
         size.target = 10;
     }
@@ -170,8 +170,10 @@
             if (dragDistance > dragThreshold) {
                 isDragging = true;
 
-                camaraOffsetX = startCameraX - deltaX;
-                camaraOffsetY = startCameraY - deltaY;
+                // Solución de los límites del mapa más corta, para la versión más larga
+                // que hice tengo que ir a ver el pantallazo que tomé
+                cameraOffsetX = Math.max(0, Math.min(startCameraX - deltaX, worldPxWidth - canvasElement.width));
+                cameraOffsetY = Math.max(0, Math.min(startCameraY - deltaY, worldPxHeight - canvasElement.height));
 
                 drawMatrix();
             }

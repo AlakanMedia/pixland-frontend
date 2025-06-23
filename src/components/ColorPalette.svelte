@@ -33,7 +33,7 @@
         gap: 6px;
         padding: 6px;
         background-color: rgba(0, 0, 0, 0.8);
-        border-radius: 6px;
+        border-radius: 12px;
 
         position: fixed;
         bottom: 0.5rem;
