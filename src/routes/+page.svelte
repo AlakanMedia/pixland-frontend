@@ -1,7 +1,7 @@
 <script>
-    import { onMount } from "svelte";
+    import { onMount, onDestroy } from "svelte";
     import { Spring } from "svelte/motion";
-	import { decodeJWT } from "../utils.js";
+    import { getUserInformation } from "../pixlandApi.js";
     import { colorSelected, modals, user, appInfo } from "../shared.svelte.js";
     import Widgets from "../components/Widgets.svelte";
 
@@ -35,26 +35,22 @@
     let clickMouseX;
     let clickMouseY;
 
-    onMount(() => {
+    onMount(async () => {
         canvasElement.width = window.innerWidth;
         canvasElement.height = window.innerHeight;
         contextCanvas = canvasElement.getContext("2d");
 
         drawMatrix();
 
-        const accessToken = localStorage.getItem("access_token");
+        const response = await getUserInformation()
 
-        if (accessToken) {
-            const currentUnixDate = Math.floor(Date.now() / 1000);
-            const tokenData = decodeJWT(accessToken);
-
-            if (currentUnixDate < tokenData.payload.exp) {
-                user.id = tokenData.payload.sub;
-                user.logged = true;
-            }
-            else {
-                localStorage.removeItem("access_token");
-            }
+        if (response.state !== "success") {
+            user.id = ""
+            user.logged = false;
+        }
+        else {
+            user.id = response.data.info.id;
+            user.logged = true;
         }
 
         const wsUrl = user.id ? `${API_URL}/ws?user_id=${user.id}` : `${API_URL}/ws`;
@@ -78,13 +74,13 @@
                 appInfo.activeUsers = wsData.data.active_users;
             }
         };
+    });
 
-        return () => {
-            if (user.websocket) {
-                user.websocket.close();
-                user.websocket = null;
-            }
-        };
+    onDestroy(() => {
+        if (user.websocket) {
+            user.websocket.close();
+            user.websocket = null;
+        }
     });
 
     function drawMatrix() {

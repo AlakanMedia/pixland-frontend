@@ -1,13 +1,10 @@
 const API_URL = import.meta.env.VITE_API_URL
 
-export async function getUserInformation(token) {
+export async function getUserInformation() {
     try {
         const response = await fetch(`${API_URL}/users/me`, {
             method: "GET",
-            headers: {
-                "Authorization": `Bearer ${token}`,
-                "Content-Type": "application/json",
-            }
+            credentials: "include"
         });
 
         const responseJson = await response.json();
@@ -25,8 +22,7 @@ export async function getUserInformation(token) {
         }
     }
     catch (error) {
-        console.log(error);
-        return {state: "error", data: null}
+        return {state: "error", data: null};
     }
 }
 
@@ -35,6 +31,7 @@ export async function loginUser(username, password) {
         const response = await fetch(`${API_URL}/token`, {
             method: "POST",
             headers: {"Content-Type": "application/x-www-form-urlencoded"},
+            credentials: "include",
             body: new URLSearchParams({
                 username: username,
                 password: password,
@@ -59,13 +56,7 @@ export async function loginUser(username, password) {
 
         const responseData = await response.json();
 
-        return {
-            state: "success",
-            data: {
-                code: response.status,
-                token: responseData.access_token,
-            }
-        }
+        return {state: "success", data: {message: responseData.message}};
     }
     catch (error) {
         console.log(error);
@@ -108,6 +99,34 @@ export async function registerNewUser(userInfo) {
             data: {
                 code: response.status,
                 user_id: responseData.user_id,
+            }
+        }
+    }
+    catch (error) {
+        console.log(error);
+        return {state: "error", data: null}
+    }
+}
+
+export async function deleteCookies() {
+    try {
+        const response = await fetch(`${API_URL}/users/logout`, {
+            method: "POST",
+            credentials: "include",
+        });
+
+        if (!response.ok) {
+            const errorJson = await response.json();
+            throw new Error(`Error ${response.status}: ${errorJson.detail}`);
+        }
+
+        const responseData = await response.json();
+
+        return {
+            state: "success",
+            data: {
+                code: response.status,
+                user_id: responseData.message,
             }
         }
     }

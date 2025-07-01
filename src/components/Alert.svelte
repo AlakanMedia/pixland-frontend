@@ -35,7 +35,7 @@
 <style>
     #alert {
         position: fixed;
-        top: calc(42px + 1rem);
+        top: 0.5rem;
         right: 0.5rem;
         background-color: aquamarine;
         padding: 12px;

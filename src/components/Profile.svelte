@@ -2,8 +2,8 @@
 	import { onMount, tick } from "svelte";
     import { modals, user } from "../shared.svelte.js";
 	import { fade, scale } from "svelte/transition";
-	import { getUserInformation } from "../pixlandApi.js";
     import { showAlert, formatToLocalDate } from "../utils.js";
+	import { getUserInformation, deleteCookies } from "../pixlandApi.js";
 
     let profileUsername = $state("...");
     let profileEmail = $state("...");
@@ -17,22 +17,18 @@
         profileContainer.focus();
         await tick();
 
-        const accessToken = localStorage.getItem("access_token");
+        const response = await getUserInformation();
 
-        if (accessToken) {
-            const response = await getUserInformation(accessToken);
+        if (response.state !== "success") {
+            showAlert("error", "User Info Error", "There was an issue retrieving your user information. Please try again later.");
+        }
+        else {
+            const userInfo = response.data.info;
 
-            if (response.state !== "success") {
-                showAlert("error", "User Info Error", "There was an issue retrieving your user information. Please try again later.");
-            }
-            else {
-                const userInfo = response.data.info;
-
-                profileUsername = userInfo.username;
-                profileEmail = userInfo.email;
-                profileCreatedAt = userInfo.created_at;
-                profilePixelxPlaced = userInfo.pixels_placed;
-            }
+            profileUsername = userInfo.username;
+            profileEmail = userInfo.email;
+            profileCreatedAt = userInfo.created_at;
+            profilePixelxPlaced = userInfo.pixels_placed;
         }
     });
 
@@ -49,7 +45,7 @@
         }
     }
 
-    function logOut() {
+    async function logOut() {
         user.id = "";
         user.logged = false;
 
@@ -62,7 +58,7 @@
 
         modals.profileIsOpen = false;
 
-        localStorage.removeItem("access_token");
+        await deleteCookies();
     }
 </script>
 
@@ -98,7 +94,7 @@
             </div>
         </div>
         <div id="profile-actions">
-            <button class="btn btn-primary" onclick={() => {logOut();}}>
+            <button class="btn btn-primary" onclick={async () => {logOut();}}>
               <i class="ph-bold ph-sign-out"></i>
               sign out
             </button>

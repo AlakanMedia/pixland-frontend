@@ -2,8 +2,8 @@
     import { onMount, tick } from "svelte";
     import { fade, scale } from "svelte/transition";
     import { modals, user } from "../shared.svelte.js";
-    import { registerNewUser, loginUser } from "../pixlandApi.js";
-    import { decodeJWT, showAlert, isValidEmail } from "../utils.js";
+    import { registerNewUser, loginUser, getUserInformation } from "../pixlandApi.js";
+    import { showAlert, isValidEmail } from "../utils.js";
 
     let username = $state("");
     let email = $state("");
@@ -152,9 +152,14 @@
             const userLoged = await handleLogin();
 
             if (userLoged) {
-                const decodeToken = decodeJWT(userLoged.token);
+                const response = await getUserInformation();
 
-                user.id = decodeToken.payload.sub;
+                if (response.state !== "success") {
+                    showAlert("error", "Unexpected Error Occurred", "An error occurred while retrieving user information. Please try again.");
+                    return;
+                }
+
+                user.id = response.data.info.id;
                 user.logged = true;
 
                 if (user.websocket) {
@@ -165,8 +170,6 @@
                 }
 
                 modals.loginIsOpen = false;
-
-                localStorage.setItem("access_token", userLoged.token);
             }
         }
     }
@@ -184,9 +187,9 @@
         }
     }
 
-    function handleKeyDown(event) {
+    async function handleKeyDown(event) {
         if (event.key === "Enter") {
-            handleSignButton();
+            await handleSignButton();
         }
         else {
             closeLogin(event);
@@ -201,7 +204,7 @@
 <div
     id="login-container"
     onclick={(e) => {closeLogin(e);}}
-    onkeydown={(e) => {handleKeyDown(e);}}
+    onkeydown={async (e) => {handleKeyDown(e);}}
     role="dialog"
     tabindex="0"
     bind:this={loginContainer}
