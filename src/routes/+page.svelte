@@ -3,6 +3,7 @@
     import { Spring } from "svelte/motion";
     import { getUserInformation } from "../pixlandApi.js";
     import { colorSelected, modals, user, appInfo } from "../shared.svelte.js";
+    import { generateDynamicKey } from "../utils.js";
     import Widgets from "../components/Widgets.svelte";
 
     const API_URL = import.meta.env.VITE_API_URL
@@ -10,18 +11,21 @@
     let canvasElement; // Referencia al canvas
     let contextCanvas; // Contexto del canvas
 
+    const cellCache = new Map(); // Para guardar el valor de las celdas cacheadas
+
     // Variables para el manejo del zoom y la configuración del mundo
-    const baseCellSize = 20;
-    const zoomIntensity = 0.1;
+    const maxNumberCells = 1024;
+    const baseCellSize = 16;
+    const zoomIntensity = 0.02;
     let scale = $state(1); // La variable debe de ser $state para que $derived pueda funcionar
     let oldScale; // Scala antes del haber hecho zoom in o zoom out
     let effectiveCellSize = $derived(baseCellSize * scale);
-    let worldPxWidth = $derived(effectiveCellSize * 1024);
-    let worldPxHeight = $derived(effectiveCellSize * 1024);
+    let worldPxWidth = $derived(effectiveCellSize * maxNumberCells);
+    let worldPxHeight = $derived(effectiveCellSize * maxNumberCells);
 
     // Variables de configuración del mouse chaser
     let coords = new Spring({x:50, y: 50}, {stiffness: 0.1, damping: 0.25});
-    let size = new Spring(7);
+    let size = new Spring(4);
 
     let cameraOffsetX = 0; // Coordenada en píxeles de la esquina izquierda de la cámara
     let cameraOffsetY = 0; // Coordenada en píxeles de la esquina superior de la cámara
@@ -29,7 +33,7 @@
     let startCameraY = 0; // Para saber la posición previa de la cámara antes del arrastre
 
     // Variables para el clic y arrastre
-    const dragThreshold = 5;
+    const dragThreshold = 4;
     let isDragging = false;
     let isMouseDown = false;
     let clickMouseX;
@@ -39,6 +43,7 @@
         canvasElement.width = window.innerWidth;
         canvasElement.height = window.innerHeight;
         contextCanvas = canvasElement.getContext("2d");
+        contextCanvas.imageSmoothingEnabled = false;
 
         drawMatrix();
 
@@ -68,7 +73,12 @@
             const wsData = JSON.parse(event.data);
 
             if (wsData.type === "update_pixel") {
-                setColor(wsData.data.x, wsData.data.y, wsData.data.color);
+                cellCache.set(
+                    generateDynamicKey(wsData.data.x, wsData.data.y, maxNumberCells - 1),
+                    wsData.data.color
+                );
+
+                drawMatrix();
             }
             else if (wsData.type === "update_active_users") {
                 appInfo.activeUsers = wsData.data.active_users;
@@ -89,8 +99,10 @@
         // 1. Calcula qué celdas del MUNDO son visibles en la pantalla ahora mismo
         const startCellX = Math.floor(cameraOffsetX / effectiveCellSize);
         const startCellY = Math.floor(cameraOffsetY / effectiveCellSize);
-        const endCellX = Math.floor((cameraOffsetX + canvasElement.width) / effectiveCellSize);
-        const endCellY = Math.floor((cameraOffsetY + canvasElement.height) / effectiveCellSize);
+        const endCellX = Math.min(Math.floor((cameraOffsetX + canvasElement.width) / effectiveCellSize), maxNumberCells - 1);
+        const endCellY = Math.min(Math.floor((cameraOffsetY + canvasElement.height) / effectiveCellSize), maxNumberCells - 1);
+
+        const intCellSize = Math.ceil(effectiveCellSize);
 
         // 2. Itera sobre las celdas del MUNDO que son visibles
         for (let i = startCellX; i <= endCellX; i++) {
@@ -98,12 +110,19 @@
                 // 3. Calcula dónde dibujar cada celda del mundo en la PANTALLA
                 const worldX = i * effectiveCellSize;
                 const worldY = j * effectiveCellSize;
-                const screenX = worldX - cameraOffsetX;
-                const screenY = worldY - cameraOffsetY;
+                const screenX = Math.round(worldX - cameraOffsetX);
+                const screenY = Math.round(worldY - cameraOffsetY);
                 
-                if (baseCellSize <= effectiveCellSize) {
-                    contextCanvas.strokeStyle = "grey";
-                    contextCanvas.strokeRect(screenX, screenY, effectiveCellSize, effectiveCellSize);
+                const cellColor = cellCache.get(generateDynamicKey(i, j, maxNumberCells - 1));
+
+                if (cellColor) {
+                    contextCanvas.fillStyle = cellColor;
+                    contextCanvas.fillRect(screenX, screenY, intCellSize, intCellSize);
+                }
+
+                if (scale >= 2) {
+                    contextCanvas.strokeStyle = "white";
+                    contextCanvas.strokeRect(screenX, screenY , intCellSize, intCellSize);
                 }
 
                 // Aquí también iría la lógica para dibujar el color de la celda
@@ -113,19 +132,6 @@
                 // contextCanvas.fillRect(pantallaX, pantallaY, effectiveCellSize, effectiveCellSize);
             }
         }
-    }
-
-    function setColor(x, y, color) {
-        // Calculamos la coordenada superior izquierda en píxeles de la celda en el mundo
-        const worldPxX = x * effectiveCellSize;
-        const worldPxY = y * effectiveCellSize;
-
-        // Ajustamos la celda según la ventana del usuario
-        const screenX = worldPxX - cameraOffsetX;
-        const screenY = worldPxY - cameraOffsetY;
-
-        contextCanvas.fillStyle = color;
-        contextCanvas.fillRect(screenX, screenY, effectiveCellSize, effectiveCellSize);
     }
 
     function handleSetColor(event) {
@@ -139,7 +145,13 @@
             const coordinateX = Math.floor((cameraOffsetX + event.clientX) / effectiveCellSize);
             const coordinateY = Math.floor((cameraOffsetY + event.clientY) / effectiveCellSize);
 
-            setColor(coordinateX, coordinateY, colorSelected.name);
+            cellCache.set(
+                generateDynamicKey(coordinateX, coordinateY, maxNumberCells - 1),
+                colorSelected.name
+            );
+
+            drawMatrix();
+
             user.websocket.send(JSON.stringify({
                 type: "update_pixel",
                 data: {
@@ -163,7 +175,7 @@
         startCameraX = cameraOffsetX;
         startCameraY = cameraOffsetY;
         isMouseDown = true;
-        size.target = 10;
+        size.target = 8;
     }
 
     function handleOnMouseMove(event) {
@@ -196,7 +208,7 @@
 
         isDragging = false;
         isMouseDown = false;
-        size.target = 7;
+        size.target = 4;
     }
 
     function handleOnWheel(event) {
@@ -223,8 +235,8 @@
         const newWorldY = worldYBeforeZoom * (scale / oldScale);
 
         // Calculamos el nuevo offset de la cámara para que ese punto quede bajo el ratón
-        cameraOffsetX = newWorldX - event.clientX;
-        cameraOffsetY = newWorldY - event.clientY;
+        cameraOffsetX = Math.max(0, Math.min(newWorldX - event.clientX, worldPxWidth - canvasElement.width));
+        cameraOffsetY = Math.max(0, Math.min(newWorldY - event.clientY, worldPxHeight - canvasElement.height));
             
         drawMatrix();
     }
@@ -275,7 +287,7 @@
         position: fixed;
         width: 100%;
         height: 100%;
-        background-color: cornsilk;
+        background-color: gray;
     }
 
     #mouse-chaser {

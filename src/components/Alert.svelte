@@ -4,9 +4,9 @@
     import { alertCard } from "../shared.svelte.js";
 
     const alertIcons = {
-        "error": "<i class='ph ph-bold ph-bug' style='font-size: 2rem;'></i>",
-        "success": "<i class='ph ph-bold ph-check-circle' style='font-size: 2rem;'></i>",
-        "info": "<i class='ph ph-bold ph-info' style='font-size: 2rem;'></i>",
+        "error": "<i class='ph-bold ph-bug' style='font-size: 2rem;'></i>",
+        "success": "<i class='ph-bold ph-check-circle' style='font-size: 2rem;'></i>",
+        "info": "<i class='ph-bold ph-info' style='font-size: 2rem;'></i>",
     };
 
     onMount(() => {

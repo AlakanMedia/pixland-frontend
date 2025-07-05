@@ -10,7 +10,7 @@
 
 <ColorPalette/>
 <div id="current-users">
-    <i class="ph ph-bold ph-users-three"></i>
+    <i class="ph-bold ph-users-three"></i>
     {appInfo.activeUsers}
 </div>
 <Options/>

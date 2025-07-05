@@ -12,7 +12,7 @@
         optionIsOpen = !optionIsOpen;
     }}
 >
-    <i class="ph ph-fill ph-dots-three-outline" style="color: white"></i>
+    <i class="ph-fill ph-dots-three-outline" style="color: white"></i>
 </button>
 {#if optionIsOpen}
     <div id="options-menu">
@@ -22,20 +22,20 @@
                 modals.loginIsOpen = true;
                 optionIsOpen = false;
             }}>
-                <i class="ph ph-bold ph-user"></i>
+                <i class="ph-bold ph-user"></i>
                 <p>Login</p>
             </button> 
         {/if}
         <button class="option-button">
-            <i class="ph ph-bold ph-gear"></i>
+            <i class="ph-bold ph-gear"></i>
             <p>Settings</p>
         </button> 
         <button class="option-button">
-            <i class="ph ph-bold ph-gavel"></i>
+            <i class="ph-bold ph-gavel"></i>
             <p>Legals</p>
         </button> 
         <button class="option-button">
-            <i class="ph ph-bold ph-info"></i>
+            <i class="ph-bold ph-info"></i>
             <p>About</p>
         </button> 
     </div>

@@ -213,10 +213,10 @@
     <div id="login" bind:this={login} in:scale={{duration: 900}}>
         <div id="login-buttons-container">
             <button class="login-button" aria-label="Google">
-                <i class="ph ph-bold ph-google-logo"></i>
+                <i class="ph-bold ph-google-logo"></i>
             </button>
             <button class="login-button" aria-label="Discord">
-                <i class="ph ph-bold ph-discord-logo"></i>
+                <i class="ph-bold ph-discord-logo"></i>
             </button>
         </div>
         <div id="login-separator">
@@ -274,10 +274,10 @@
                 onclick={async () => {handleSignButton();}}
             >
                 {#if register}
-                    <i class="ph ph-bold ph-user-plus"></i>
+                    <i class="ph-bold ph-user-plus"></i>
                     <p>sign up</p>
                 {:else} 
-                    <i class="ph ph-bold ph-sign-in"></i>
+                    <i class="ph-bold ph-sign-in"></i>
                     <p>sign in</p>
                 {/if}
             </button>
