@@ -1,7 +1,7 @@
 <script>
     import { onMount, onDestroy } from "svelte";
     import { Spring } from "svelte/motion";
-    import { getUserInformation } from "../pixlandApi.js";
+    import { getUserInformation, getCellsBox } from "../pixlandApi.js";
     import { colorSelected, modals, user, appInfo } from "../shared.svelte.js";
     import { generateDynamicKey } from "../utils.js";
     import Widgets from "../components/Widgets.svelte";
@@ -12,14 +12,17 @@
     let contextCanvas; // Contexto del canvas
 
     const cellCache = new Map(); // Para guardar el valor de las celdas cacheadas
+    const loadedChunks = new Set(); // Para saber si un chunk ya fue cargado
+    const loadingChunks = new Set(); // Nuevo
 
     // Variables para el manejo del zoom y la configuración del mundo
     const maxNumberCells = 1024;
     const baseCellSize = 16;
+    const chunkSize = 64;
     const zoomIntensity = 0.02;
-    let scale = $state(1); // La variable debe de ser $state para que $derived pueda funcionar
-    let oldScale; // Scala antes del haber hecho zoom in o zoom out
-    let effectiveCellSize = $derived(baseCellSize * scale);
+    let cellScale = $state(1); // La variable debe de ser $state para que $derived pueda funcionar
+    let oldCellScale; // Scala antes del haber hecho zoom in o zoom out
+    let effectiveCellSize = $derived(baseCellSize * cellScale);
     let worldPxWidth = $derived(effectiveCellSize * maxNumberCells);
     let worldPxHeight = $derived(effectiveCellSize * maxNumberCells);
 
@@ -34,7 +37,7 @@
 
     // Variables para el clic y arrastre
     const dragThreshold = 4;
-    let isDragging = false;
+    let isDragging = $state(false);
     let isMouseDown = false;
     let clickMouseX;
     let clickMouseY;
@@ -45,7 +48,7 @@
         contextCanvas = canvasElement.getContext("2d");
         contextCanvas.imageSmoothingEnabled = false;
 
-        drawMatrix();
+        await fetchChunk();
 
         const response = await getUserInformation()
 
@@ -93,10 +96,78 @@
         }
     });
 
+    async function fetchChunk() {
+        const intCellSize = Math.ceil(effectiveCellSize);
+
+        const xCellUpperLeft = Math.floor(cameraOffsetX / intCellSize);
+        const yCellUpperLeft = Math.floor(cameraOffsetY / intCellSize);
+        const xCellBottomRight = Math.floor((cameraOffsetX + canvasElement.width) / intCellSize);
+        const yCellBottomRight = Math.floor((cameraOffsetY + canvasElement.height) / intCellSize);
+
+        const xChunkUpperLeft = Math.floor(xCellUpperLeft / chunkSize);
+        const yChunkUpperLeft = Math.floor(yCellUpperLeft / chunkSize);
+        const xChunkBottomRight = Math.floor(xCellBottomRight / chunkSize);
+        const yChunkBottomRight = Math.floor(yCellBottomRight / chunkSize);
+
+        const promises = [];
+
+        // 1. Identifica todos los chunks que necesitan ser cargados
+        for (let i = xChunkUpperLeft; i <= xChunkBottomRight; i++) {
+            for (let j = yChunkUpperLeft; j <= yChunkBottomRight; j++) {
+                const chunkString = `${i},${j}`;
+
+                // Si ya está cargado o se está cargando, sáltalo.
+                if (loadedChunks.has(chunkString) || loadingChunks.has(chunkString)) {
+                    continue;
+                }
+
+                // 2. Marca el chunk como "cargando"
+                loadingChunks.add(chunkString);
+
+                // 3. Prepara la promesa para obtener los datos del chunk
+                const promise = (async () => {
+                    const topLeft = { x: i * chunkSize, y: j * chunkSize };
+                    const bottomRight = { x: topLeft.x + chunkSize - 1, y: topLeft.y + chunkSize - 1 };
+
+                    const cellBox = await getCellsBox([topLeft.x, topLeft.y], [bottomRight.x, bottomRight.y]);
+
+                    if (cellBox.state === "success") {
+                        const cells = cellBox.data.info;
+                        for (let k = 0; k < cells.length; k++) {
+                            const cellInfo = cells[k];
+                            const mapKey = generateDynamicKey(
+                                cellInfo.location[0],
+                                cellInfo.location[1],
+                                maxNumberCells - 1
+                            );
+                            cellCache.set(mapKey, cellInfo.color);
+                        }
+                    }
+
+                    // 4. Una vez terminada la petición, actualiza los sets
+                    loadingChunks.delete(chunkString);
+                    loadedChunks.add(chunkString); // Ahora sí se marca como cargado
+                })();
+
+                promises.push(promise);
+            }
+        }
+
+        // 5. Si se añadieron nuevos chunks a la cola de carga, dibuja el canvas para mostrarlos en negro
+        if (promises.length > 0) {
+            drawMatrix();
+        }
+
+        // 6. Espera a que todas las peticiones terminen
+        await Promise.all(promises);
+
+        // 7. Vuelve a dibujar el canvas con los datos de los chunks ya cargados
+        drawMatrix();
+    }
+
     function drawMatrix() {
         contextCanvas.clearRect(0, 0, canvasElement.width, canvasElement.height);
 
-        // 1. Calcula qué celdas del MUNDO son visibles en la pantalla ahora mismo
         const startCellX = Math.floor(cameraOffsetX / effectiveCellSize);
         const startCellY = Math.floor(cameraOffsetY / effectiveCellSize);
         const endCellX = Math.min(Math.floor((cameraOffsetX + canvasElement.width) / effectiveCellSize), maxNumberCells - 1);
@@ -104,32 +175,38 @@
 
         const intCellSize = Math.ceil(effectiveCellSize);
 
-        // 2. Itera sobre las celdas del MUNDO que son visibles
         for (let i = startCellX; i <= endCellX; i++) {
             for (let j = startCellY; j <= endCellY; j++) {
-                // 3. Calcula dónde dibujar cada celda del mundo en la PANTALLA
                 const worldX = i * effectiveCellSize;
                 const worldY = j * effectiveCellSize;
                 const screenX = Math.round(worldX - cameraOffsetX);
                 const screenY = Math.round(worldY - cameraOffsetY);
-                
-                const cellColor = cellCache.get(generateDynamicKey(i, j, maxNumberCells - 1));
 
-                if (cellColor) {
-                    contextCanvas.fillStyle = cellColor;
+                // Determinar a qué chunk pertenece la celda actual
+                const chunkX = Math.floor(i / chunkSize);
+                const chunkY = Math.floor(j / chunkSize);
+                const chunkString = `${chunkX},${chunkY}`;
+
+                // NUEVA LÓGICA: Si el chunk se está cargando, píntalo de negro
+                if (loadingChunks.has(chunkString)) {
+                    contextCanvas.fillStyle = "black";
                     contextCanvas.fillRect(screenX, screenY, intCellSize, intCellSize);
+                } else {
+                    // LÓGICA EXISTENTE: Si no, busca su color en el caché
+                    const cellColor = cellCache.get(generateDynamicKey(i, j, maxNumberCells - 1));
+
+                    if (cellColor) {
+                        contextCanvas.fillStyle = cellColor;
+                        contextCanvas.fillRect(screenX, screenY, intCellSize, intCellSize);
+                    }
+
+                    // Dibuja la cuadrícula (sin cambios)
+                    if (cellScale >= 2) {
+                        contextCanvas.strokeStyle = "white";
+                        contextCanvas.strokeRect(screenX, screenY, intCellSize, intCellSize);
+                    }
                 }
 
-                if (scale >= 2) {
-                    contextCanvas.strokeStyle = "white";
-                    contextCanvas.strokeRect(screenX, screenY , intCellSize, intCellSize);
-                }
-
-                // Aquí también iría la lógica para dibujar el color de la celda
-                // desde tu modelo de datos (el array 2D `mundo`)
-                // const color = mundo[i][j].color;
-                // contextCanvas.fillStyle = color;
-                // contextCanvas.fillRect(pantallaX, pantallaY, effectiveCellSize, effectiveCellSize);
             }
         }
     }
@@ -178,7 +255,7 @@
         size.target = 8;
     }
 
-    function handleOnMouseMove(event) {
+    async function handleOnMouseMove(event) {
         // Verificamos que el usuario tenga el clic izquierdo presionado
         if (isMouseDown) {
             const deltaX = event.clientX - clickMouseX;
@@ -186,6 +263,7 @@
             const dragDistance = Math.hypot(deltaX, deltaY);
 
             if (dragDistance > dragThreshold) {
+                document.body.style.cursor = "move";
                 isDragging = true;
 
                 // Solución de los límites del mapa más corta, para la versión más larga
@@ -193,14 +271,14 @@
                 cameraOffsetX = Math.max(0, Math.min(startCameraX - deltaX, worldPxWidth - canvasElement.width));
                 cameraOffsetY = Math.max(0, Math.min(startCameraY - deltaY, worldPxHeight - canvasElement.height));
 
-                drawMatrix();
+                await fetchChunk();
             }
         }
     }
 
     function handleOnMouseUp(event) {
         if (isDragging) {
-            // Lógica para el arrastre
+            document.body.style.cursor = "default";
         }
         else {
             handleSetColor(event);
@@ -211,34 +289,34 @@
         size.target = 4;
     }
 
-    function handleOnWheel(event) {
+    async function handleOnWheel(event) {
         event.preventDefault();
 
-        oldScale = scale;
+        oldCellScale = cellScale;
 
-        let newScale;
+        let newCellScale;
         const worldXBeforeZoom = cameraOffsetX + event.clientX;
         const worldYBeforeZoom = cameraOffsetY + event.clientY;
 
         if (event.deltaY < 0) { // Zoom In
-            newScale = scale * (1 + zoomIntensity);
+            newCellScale = cellScale * (1 + zoomIntensity);
         }
         else { // Zoom Out
-            newScale = scale * (1 - zoomIntensity);
+            newCellScale = cellScale * (1 - zoomIntensity);
         }
 
         // Opcional pero recomendado: poner límites al zoom
-        scale = Math.max(0.5, Math.min(newScale, 5)); 
+        cellScale = Math.max(0.2, Math.min(newCellScale, 4)); 
 
         // La nueva coordenada del punto de anclaje en el mundo re-escalado
-        const newWorldX = worldXBeforeZoom * (scale / oldScale);
-        const newWorldY = worldYBeforeZoom * (scale / oldScale);
+        const newWorldX = worldXBeforeZoom * (cellScale / oldCellScale);
+        const newWorldY = worldYBeforeZoom * (cellScale / oldCellScale);
 
         // Calculamos el nuevo offset de la cámara para que ese punto quede bajo el ratón
         cameraOffsetX = Math.max(0, Math.min(newWorldX - event.clientX, worldPxWidth - canvasElement.width));
         cameraOffsetY = Math.max(0, Math.min(newWorldY - event.clientY, worldPxHeight - canvasElement.height));
             
-        drawMatrix();
+        await fetchChunk();
     }
 </script>
 
@@ -260,9 +338,9 @@
     id="mouse-chaser"
     role="presentation"
     onmousedown={(e) => {handleOnMouseDown(e);}}
-    onmousemove={(e) => {handleOnMouseMove(e);}}
+    onmousemove={async (e) => {handleOnMouseMove(e);}}
     onmouseup={(e) => {handleOnMouseUp(e);}}
-    onwheel={(e) => {handleOnWheel(e);}}
+    onwheel={async (e) => {handleOnWheel(e);}}
 >
 	<circle
 		cx={coords.current.x}

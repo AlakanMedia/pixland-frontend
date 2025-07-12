@@ -135,3 +135,41 @@ export async function deleteCookies() {
         return {state: "error", data: null}
     }
 }
+
+export async function getCellsBox(upperLeftLimit, lowerRightLimit) {
+    try {
+        if (
+            (!Array.isArray(upperLeftLimit) || !Array.isArray(lowerRightLimit)) || 
+            (upperLeftLimit.length !== 2 || lowerRightLimit.length !== 2)
+        ) {
+            throw new Error("One of the parameters is not an array or its length is not equal to two");
+        }
+
+        const response = await fetch(`${API_URL}/cells/box`, {
+            method:"POST",
+            headers:{'Content-Type': 'application/json',},
+            body:JSON.stringify({
+                upper_left_limit: upperLeftLimit,
+                lower_right_limit: lowerRightLimit,
+            })
+        });
+
+        const responseJson = await response.json();
+
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}: ${responseJson.detail}`);
+        }
+
+        return {
+            state: "success",
+            data: {
+                code: response.status,
+                info: responseJson,
+            }
+        }
+    }
+    catch (error) {
+        console.log(error);
+        return {state: "error", data: null}
+    }
+}
