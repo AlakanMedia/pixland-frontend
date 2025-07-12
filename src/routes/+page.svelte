@@ -28,7 +28,7 @@
 
     // Variables de configuración del mouse chaser
     let coords = new Spring({x:50, y: 50}, {stiffness: 0.1, damping: 0.25});
-    let size = new Spring(4);
+    let size = new Spring(6);
 
     let cameraOffsetX = 0; // Coordenada en píxeles de la esquina izquierda de la cámara
     let cameraOffsetY = 0; // Coordenada en píxeles de la esquina superior de la cámara
@@ -42,12 +42,15 @@
     let clickMouseX;
     let clickMouseY;
 
+    let needsRedraw = true; // Empieza en true para el dibujado inicial
+
     onMount(async () => {
         canvasElement.width = window.innerWidth;
         canvasElement.height = window.innerHeight;
-        contextCanvas = canvasElement.getContext("2d");
+        contextCanvas = canvasElement.getContext("2d", { alpha: false });
         contextCanvas.imageSmoothingEnabled = false;
 
+        requestAnimationFrame(renderLoop);
         await fetchChunk();
 
         const response = await getUserInformation()
@@ -81,7 +84,7 @@
                     wsData.data.color
                 );
 
-                drawMatrix();
+                needsRedraw = true;
             }
             else if (wsData.type === "update_active_users") {
                 appInfo.activeUsers = wsData.data.active_users;
@@ -95,6 +98,17 @@
             user.websocket = null;
         }
     });
+
+    function renderLoop() {
+        // Si no hay nada que cambiar, no hagas nada y espera al siguiente frame.
+        if (needsRedraw) {
+            drawMatrix();
+            needsRedraw = false; // Reseteamos la bandera hasta que algo vuelva a cambiar
+        }
+
+        // Le pedimos al navegador que vuelva a llamar a esta función en el próximo frame de animación
+        requestAnimationFrame(renderLoop);
+    }
 
     async function fetchChunk() {
         const intCellSize = Math.ceil(effectiveCellSize);
@@ -155,14 +169,14 @@
 
         // 5. Si se añadieron nuevos chunks a la cola de carga, dibuja el canvas para mostrarlos en negro
         if (promises.length > 0) {
-            drawMatrix();
+            needsRedraw = true;
         }
 
         // 6. Espera a que todas las peticiones terminen
         await Promise.all(promises);
 
         // 7. Vuelve a dibujar el canvas con los datos de los chunks ya cargados
-        drawMatrix();
+        needsRedraw = true;
     }
 
     function drawMatrix() {
@@ -189,7 +203,7 @@
 
                 // NUEVA LÓGICA: Si el chunk se está cargando, píntalo de negro
                 if (loadingChunks.has(chunkString)) {
-                    contextCanvas.fillStyle = "black";
+                    contextCanvas.fillStyle = "gray";
                     contextCanvas.fillRect(screenX, screenY, intCellSize, intCellSize);
                 } else {
                     // LÓGICA EXISTENTE: Si no, busca su color en el caché
@@ -227,7 +241,7 @@
                 colorSelected.name
             );
 
-            drawMatrix();
+            needsRedraw = true;
 
             user.websocket.send(JSON.stringify({
                 type: "update_pixel",
@@ -252,7 +266,7 @@
         startCameraX = cameraOffsetX;
         startCameraY = cameraOffsetY;
         isMouseDown = true;
-        size.target = 8;
+        size.target = 10;
     }
 
     async function handleOnMouseMove(event) {
@@ -286,7 +300,7 @@
 
         isDragging = false;
         isMouseDown = false;
-        size.target = 4;
+        size.target = 6;
     }
 
     async function handleOnWheel(event) {
@@ -324,7 +338,7 @@
         canvasElement.width = window.innerWidth;
         canvasElement.height = window.innerHeight;
 
-        drawMatrix();
+        needsRedraw = true;
     }}
 />
 <svelte:body
@@ -346,6 +360,7 @@
 		cx={coords.current.x}
 		cy={coords.current.y}
 		r={size.current}
+        style="fill: rgba(255, 255, 255, 0.2); stroke: white; stroke-width: 2;"
 	/>
 </svg>
 <Widgets/>
