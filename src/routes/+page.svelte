@@ -2,7 +2,7 @@
     import { onMount, onDestroy } from "svelte";
     import { Spring } from "svelte/motion";
     import { getUserInformation, getCellsBox } from "../pixlandApi.js";
-    import { colorSelected, modals, user, appInfo } from "../shared.svelte.js";
+    import { colorSelected, modals, user, appInfo, updateMatrix } from "../shared.svelte.js";
     import { generateDynamicKey } from "../utils.js";
     import Widgets from "../components/Widgets.svelte";
 
@@ -47,7 +47,8 @@
     onMount(async () => {
         canvasElement.width = window.innerWidth;
         canvasElement.height = window.innerHeight;
-        contextCanvas = canvasElement.getContext("2d", { alpha: false });
+        // contextCanvas = canvasElement.getContext("2d", { alpha: false });
+        contextCanvas = canvasElement.getContext("2d");
         contextCanvas.imageSmoothingEnabled = false;
 
         requestAnimationFrame(renderLoop);
@@ -150,8 +151,8 @@
                         for (let k = 0; k < cells.length; k++) {
                             const cellInfo = cells[k];
                             const mapKey = generateDynamicKey(
-                                cellInfo.location[0],
-                                cellInfo.location[1],
+                                cellInfo.location.x,
+                                cellInfo.location.y,
                                 maxNumberCells - 1
                             );
                             cellCache.set(mapKey, cellInfo.color);
@@ -189,6 +190,8 @@
 
         const intCellSize = Math.ceil(effectiveCellSize);
 
+        const rootStyles = getComputedStyle(document.documentElement);
+
         for (let i = startCellX; i <= endCellX; i++) {
             for (let j = startCellY; j <= endCellY; j++) {
                 const worldX = i * effectiveCellSize;
@@ -203,20 +206,20 @@
 
                 // NUEVA LÓGICA: Si el chunk se está cargando, píntalo de negro
                 if (loadingChunks.has(chunkString)) {
-                    contextCanvas.fillStyle = "gray";
+                    contextCanvas.fillStyle = rootStyles.getPropertyValue("--color02").trim();
                     contextCanvas.fillRect(screenX, screenY, intCellSize, intCellSize);
                 } else {
                     // LÓGICA EXISTENTE: Si no, busca su color en el caché
                     const cellColor = cellCache.get(generateDynamicKey(i, j, maxNumberCells - 1));
 
                     if (cellColor) {
-                        contextCanvas.fillStyle = cellColor;
+                        contextCanvas.fillStyle = rootStyles.getPropertyValue(cellColor).trim();
                         contextCanvas.fillRect(screenX, screenY, intCellSize, intCellSize);
                     }
 
                     // Dibuja la cuadrícula (sin cambios)
                     if (cellScale >= 2) {
-                        contextCanvas.strokeStyle = "white";
+                        contextCanvas.strokeStyle = rootStyles.getPropertyValue("--color04").trim();
                         contextCanvas.strokeRect(screenX, screenY, intCellSize, intCellSize);
                     }
                 }
@@ -332,8 +335,19 @@
             
         await fetchChunk();
     }
+
+    $effect(() => {
+        if (updateMatrix.update) {
+            needsRedraw = true;
+            updateMatrix.update = false;
+        }
+    });
 </script>
 
+<svelte:head>
+	<title>PixLand</title>
+    <meta name="description" content="Free online pixel art game where you can paint and create digital artwork on a shared canvas. Download your pixel creations, customize color palettes, and join a collaborative pixel art community. Create, share, and explore pixel art in real-time." />
+</svelte:head>
 <svelte:window onresize={() => {
         canvasElement.width = window.innerWidth;
         canvasElement.height = window.innerHeight;
@@ -360,7 +374,7 @@
 		cx={coords.current.x}
 		cy={coords.current.y}
 		r={size.current}
-        style="fill: rgba(255, 255, 255, 0.2); stroke: white; stroke-width: 2;"
+        style={`fill: rgb(from var(${colorSelected.name}) r g b / 0.4); stroke: white; stroke-width: 2;`}
 	/>
 </svg>
 <Widgets/>
@@ -380,7 +394,7 @@
         position: fixed;
         width: 100%;
         height: 100%;
-        background-color: gray;
+        background-color: var(--color01);
     }
 
     #mouse-chaser {

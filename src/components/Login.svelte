@@ -264,7 +264,7 @@
             {/if}
         </form>
         <div id="summit-container">
-            <label>
+            <label id="register-checkbox">
                 <input id="register-button" type="checkbox" bind:checked={register}/>
                 <span>register</span>
             </label>
@@ -288,14 +288,14 @@
 <style>
     #login p, 
     #login label {
-        color: #f5f5f5;
+        color: var(--text-primary);
     }
 
     #login-container {
         position: fixed;
         width: 100%;
         height: 100%;
-        background-color: rgba(0, 0, 0, 0.8);
+        background-color: var(--overlay-bg);
         display: flex;
         justify-content: center;
         align-items: center;
@@ -306,8 +306,8 @@
         justify-content: center;
         align-items: center;
         flex-direction: column;
-        background-color: #0f0f0f;
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+        background-color: var(--bg-elevated-2);
+        box-shadow: var(--shadow-colored);
         border-radius: 6px;
         width: 260px;
         padding: 12px;
@@ -325,9 +325,9 @@
         height: 42px;
         width: 100%;
         border-radius: 6px;
-        color: #f5f5f5;
-        background-color: #1e1e1e;
-        border: 1px solid #2a2a2a;
+        color: var(--action-primary-text);
+        background-color: var(--action-primary);
+        border: 2px solid var(--border-default);
         transition: transform 0.3s ease;
     }
 
@@ -349,7 +349,7 @@
 
     #login-separator > hr{
         width: 100%;
-        border: 2px solid #2a2a2a;
+        border: 2px solid var(--border-default);
     }
 
     #login-separator > hr:first-of-type {
@@ -381,17 +381,21 @@
     .input-form {
         width: 100%;
         border-radius: 6px;
-        border: 1px solid #2a2a2a;
+        border: 1px solid var(--input-border);
         transition: border-color 0.3s ease;
-        background-color: #1a1a1a;
-        color: #e0e0e0;
+        background-color: var(--input-bg);
+        color: var(--text-primary);
         padding: 0.5rem 0.75rem;
         font-size: 1rem;
     }
 
     .input-form:focus {
         outline: none;
-        border-color: #616161;
+        border-color: var(--input-border-focus);
+    }
+
+    .input-form::placeholder {
+        color: var(--input-placeholder);
     }
 
     #sign-button {
@@ -402,9 +406,9 @@
         height: 42px;
         padding: 0 0.5rem;
         border-radius: 6px;
-        color: #f5f5f5;
-        background-color: #1e1e1e;
-        border: 1px solid #2a2a2a;
+        color: var(--action-primary-text);
+        background-color: var(--action-primary);
+        border: 2px solid var(--border-default);
         transition: transform 0.3s ease;
         font-size: 1rem;
     }
@@ -418,11 +422,16 @@
     }
 
     .error {
-        border-color: #7D1E20 !important;
+        border-color: var(--state-error-border) !important;
+    }
+
+    #register-checkbox {
+        display: flex;
+        gap: 0.5rem
     }
 
     #register-button {
-        accent-color: #616161;
+        accent-color: var(--action-secondary);
         cursor: pointer;
     }
 </style>

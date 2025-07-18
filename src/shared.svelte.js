@@ -1,5 +1,5 @@
 export const colorSelected = $state({
-    name: "",
+    name: "--color02",
 });
 
 export const modals = $state({
@@ -22,4 +22,8 @@ export const alertCard = $state({
     type: "",
     title: "",
     message: "",
+});
+
+export const updateMatrix = $state({
+    update: false,
 });

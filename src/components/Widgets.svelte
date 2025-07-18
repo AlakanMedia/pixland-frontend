@@ -41,7 +41,7 @@
         right: 0.5rem;
         width: 42px;
         height: 42px;
-        border: 2px solid black;
+        border: 2px solid var(--border-accent);
         border-radius: 50%;
         transition: transform 0.1s ease;
     }
@@ -56,13 +56,13 @@
         left: 0.5rem;
         height: 42px;
         border-radius: 6px;
-        background-color: rgba(0, 0, 0, 0.8);
+        background-color: var(--overlay-bg);
         display: flex;
         justify-content: space-between;
         align-items: center;
         gap: 1rem;
         padding: 6px 12px;
-        color: white;
+        color: var(--text-primary);
         font-size: 1.5rem;
     }
 </style>

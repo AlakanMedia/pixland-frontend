@@ -5,7 +5,7 @@
 </script>
 
 <button
-    id="option-button"
+    id="dots-button"
     aria-label="Options"
     onclick={(e) => {
         e.stopPropagation();
@@ -42,7 +42,7 @@
 {/if}
 
 <style>
-    #option-button {
+    #dots-button {
         position: fixed;
         top: 0.5rem;
         left: 0.5rem;
@@ -53,12 +53,12 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        background-color: rgba(0, 0, 0, 0.8);
+        background-color: var(--overlay-bg);
         font-size: 1.5rem;
         transition: transform 0.1s ease;
     }
 
-    #option-button:active {
+    #dots-button:active {
         transform: scale(0.96);
     }
 
@@ -66,7 +66,7 @@
         position: fixed;
         top: calc(42px + 1rem);
         left: 0.5rem;
-        background-color: rgba(0, 0, 0, 0.8);
+        background-color: var(--overlay-bg);
         border-radius: 6px;
         padding: 6px;
         display: flex;
@@ -78,8 +78,11 @@
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        font-size: 1rem;
+        font-size: 1.25rem;
         padding: 3px 8px;
+        background-color: var(--action-primary);
+        color: var(--action-primary-text);
+        border: 2px solid var(--border-default);
     }
 
     .option-button > p {

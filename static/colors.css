@@ -1,0 +1,354 @@
+/**
+ * SISTEMA DE COLORES - TEMA OSCURO MEJORADO
+ * Una paleta moderna con menos transparencias y colores más sólidos
+ * que mejora la legibilidad y el contraste visual
+ */
+:root {
+    /* === COLORES DE LA PALETA === */
+    --color01: #262626;
+    --color02: #000000;
+    --color03: #808080;
+    --color04: #ffffff;
+    --color05: #99623d;
+    --color06: #ffa3c8;
+    --color07: #cf73e6;
+    --color08: #800080;
+    --color09: #e50000;
+    --color10: #e58900;
+    --color11: #e5e500;
+    --color12: #96e646;
+    --color13: #00be00;
+    --color14: #00e6e6;
+    --color15: #0088cc;
+    --color16: #0000e6;
+
+    /* === COLORES BASE === */
+
+    /* Escala de grises - base para superficies */
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
+    --gray-400: #9ca3af;
+    --gray-500: #6b7280;
+    --gray-600: #4b5563;
+    --gray-700: #374151;
+    --gray-800: #1f2937;
+    --gray-900: #111827;
+    --gray-950: #0a0a0a;
+
+    /* Colores principales - Azul moderno (reemplaza púrpura) */
+    --blue-50: #eff6ff;
+    --blue-100: #dbeafe;
+    --blue-200: #bfdbfe;
+    --blue-300: #93c5fd;
+    --blue-400: #60a5fa;
+    --blue-500: #3b82f6;
+    --blue-600: #2563eb;
+    --blue-700: #1d4ed8;
+    --blue-800: #1e40af;
+    --blue-900: #1e3a8a;
+    --blue-950: #172554;
+
+    /* Color de acento - Verde esmeralda */
+    --emerald-400: #34d399;
+    --emerald-500: #10b981;
+    --emerald-600: #059669;
+
+    /* Color de acento secundario - Naranja vibrante */
+    --orange-400: #fb923c;
+    --orange-500: #f97316;
+    --orange-600: #ea580c;
+
+    /* Estados informativos */
+    --success-100: #dcfce7;
+    --success-500: #22c55e;
+    --success-600: #16a34a;
+    --success-700: #15803d;
+
+    --warning-100: #fef3c7;
+    --warning-500: #f59e0b;
+    --warning-600: #d97706;
+    --warning-700: #b45309;
+
+    --error-100: #fee2e2;
+    --error-500: #ef4444;
+    --error-600: #dc2626;
+    --error-700: #b91c1c;
+
+    --info-100: #dbeafe;
+    --info-500: #3b82f6;
+    --info-600: #2563eb;
+    --info-700: #1d4ed8;
+
+    /* === VARIABLES SEMÁNTICAS === */
+
+    /* Fondo y superficies - Menos transparencias */
+    --bg-base: #0f0f0f;            /* Fondo base más profundo */
+    --bg-elevated-1: #1a1a1a;      /* Cartas, contenedores primarios */
+    --bg-elevated-2: #242424;      /* Modales, popups */
+    --bg-elevated-3: #2e2e2e;      /* Tooltips, menús contextuales */
+    --bg-elevated-4: #383838;      /* Elementos más elevados */
+
+    /* Bordes y separadores - Más sólidos */
+    --border-subtle: #2a2a2a;
+    --border-default: #3a3a3a;
+    --border-prominent: #4a4a4a;
+    --border-accent: var(--blue-600);
+
+    /* Sombreado mejorado */
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
+    --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.7);
+    --shadow-inner: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+    --shadow-colored: 0 4px 12px rgba(37, 99, 235, 0.2);
+
+    /* Texto y tipografía - Mejor contraste */
+    --text-primary: #ffffff;                      /* Texto principal más claro */
+    --text-secondary: #d1d5db;                    /* Texto secundario sólido */
+    --text-tertiary: #9ca3af;                     /* Texto deshabilitado */
+    --text-muted: #6b7280;                        /* Texto muy sutil */
+    --text-inverse: #0f0f0f;                      /* Texto sobre fondos claros */
+
+    /* Botones y acciones - Colores más sólidos */
+    --action-primary: var(--blue-600);           /* Botón principal */
+    --action-primary-hover: var(--blue-500);
+    --action-primary-active: var(--blue-700);
+    --action-primary-disabled: #4b5563;
+    --action-primary-text: #ffffff;
+
+    --action-secondary: var(--emerald-500);      /* Botón secundario */
+    --action-secondary-hover: var(--emerald-400);
+    --action-secondary-active: var(--emerald-600);
+    --action-secondary-text: #ffffff;
+
+    --action-tertiary: #374151;                  /* Botón terciario sólido */
+    --action-tertiary-hover: #4b5563;
+    --action-tertiary-active: #6b7280;
+    --action-tertiary-text: var(--text-primary);
+
+    --action-ghost: transparent;                 /* Botón fantasma */
+    --action-ghost-hover: #1a1a1a;
+    --action-ghost-active: #242424;
+
+    /* Estados de mensajes - Más sólidos */
+    --state-success: var(--success-500);
+    --state-success-bg: #0f2f1f;
+    --state-success-border: var(--success-600);
+
+    --state-warning: var(--warning-500);
+    --state-warning-bg: #2f1f0f;
+    --state-warning-border: var(--warning-600);
+
+    --state-error: var(--error-500);
+    --state-error-bg: #2f0f0f;
+    --state-error-border: var(--error-600);
+
+    --state-info: var(--info-500);
+    --state-info-bg: #0f1f2f;
+    --state-info-border: var(--info-600);
+
+    /* Elementos de acento */
+    --accent-primary: var(--blue-500);
+    --accent-secondary: var(--emerald-500);
+    --accent-tertiary: var(--orange-500);
+
+    /* Elementos de formulario - Menos transparencias */
+    --input-bg: #1a1a1a;
+    --input-border: #3a3a3a;
+    --input-border-focus: var(--blue-500);
+    --input-border-error: var(--error-500);
+    --input-placeholder: #6b7280;
+    --input-text: var(--text-primary);
+
+    /* Overlay y fondo modal */
+    --overlay-bg: rgba(0, 0, 0, 0.8);
+    --modal-bg: var(--bg-elevated-2);
+
+    /* Scrollbar personalizada */
+    --scrollbar-track: var(--bg-base);
+    --scrollbar-thumb: #4b5563;
+    --scrollbar-thumb-hover: #6b7280;
+
+    /* Elementos interactivos */
+    --hover-overlay: rgba(255, 255, 255, 0.05);
+    --active-overlay: rgba(255, 255, 255, 0.1);
+    --focus-ring: var(--blue-500);
+    --selection-bg: rgba(37, 99, 235, 0.3);
+}
+
+/* === UTILIDADES DE SCROLLBAR === */
+.scrollbar-dark {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+.scrollbar-dark::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.scrollbar-dark::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+}
+
+.scrollbar-dark::-webkit-scrollbar-thumb {
+    background-color: var(--scrollbar-thumb);
+    border-radius: 4px;
+    border: 2px solid var(--scrollbar-track);
+}
+
+.scrollbar-dark::-webkit-scrollbar-thumb:hover {
+    background-color: var(--scrollbar-thumb-hover);
+}
+
+.scrollbar-dark::-webkit-scrollbar-corner {
+    background: var(--scrollbar-track);
+}
+
+/* === CLASES DE UTILIDAD === */
+
+/* Texto */
+.text-primary { color: var(--text-primary); }
+.text-secondary { color: var(--text-secondary); }
+.text-tertiary { color: var(--text-tertiary); }
+.text-muted { color: var(--text-muted); }
+.text-inverse { color: var(--text-inverse); }
+
+/* Fondos */
+.bg-base { background-color: var(--bg-base); }
+.bg-elevated-1 { background-color: var(--bg-elevated-1); }
+.bg-elevated-2 { background-color: var(--bg-elevated-2); }
+.bg-elevated-3 { background-color: var(--bg-elevated-3); }
+.bg-elevated-4 { background-color: var(--bg-elevated-4); }
+
+/* Bordes */
+.border-subtle { border-color: var(--border-subtle); }
+.border-default { border-color: var(--border-default); }
+.border-prominent { border-color: var(--border-prominent); }
+.border-accent { border-color: var(--border-accent); }
+
+/* Sombras */
+.shadow-sm { box-shadow: var(--shadow-sm); }
+.shadow-md { box-shadow: var(--shadow-md); }
+.shadow-lg { box-shadow: var(--shadow-lg); }
+.shadow-xl { box-shadow: var(--shadow-xl); }
+.shadow-inner { box-shadow: var(--shadow-inner); }
+.shadow-colored { box-shadow: var(--shadow-colored); }
+
+/* Estados */
+.text-success { color: var(--state-success); }
+.text-warning { color: var(--state-warning); }
+.text-error { color: var(--state-error); }
+.text-info { color: var(--state-info); }
+
+.bg-success { 
+    background-color: var(--state-success-bg); 
+    border-color: var(--state-success-border);
+}
+.bg-warning { 
+    background-color: var(--state-warning-bg); 
+    border-color: var(--state-warning-border);
+}
+.bg-error { 
+    background-color: var(--state-error-bg); 
+    border-color: var(--state-error-border);
+}
+.bg-info { 
+    background-color: var(--state-info-bg); 
+    border-color: var(--state-info-border);
+}
+
+/* Botones */
+.btn-primary {
+    background-color: var(--action-primary);
+    color: var(--action-primary-text);
+    border-color: var(--action-primary);
+}
+
+.btn-primary:hover {
+    background-color: var(--action-primary-hover);
+    border-color: var(--action-primary-hover);
+}
+
+.btn-primary:active {
+    background-color: var(--action-primary-active);
+    border-color: var(--action-primary-active);
+}
+
+.btn-secondary {
+    background-color: var(--action-secondary);
+    color: var(--action-secondary-text);
+    border-color: var(--action-secondary);
+}
+
+.btn-secondary:hover {
+    background-color: var(--action-secondary-hover);
+    border-color: var(--action-secondary-hover);
+}
+
+.btn-tertiary {
+    background-color: var(--action-tertiary);
+    color: var(--action-tertiary-text);
+    border-color: var(--border-default);
+}
+
+.btn-tertiary:hover {
+    background-color: var(--action-tertiary-hover);
+}
+
+.btn-ghost {
+    background-color: var(--action-ghost);
+    color: var(--text-primary);
+    border-color: transparent;
+}
+
+.btn-ghost:hover {
+    background-color: var(--action-ghost-hover);
+}
+
+/* Elementos interactivos */
+.hover-overlay:hover {
+    background-color: var(--hover-overlay);
+}
+
+.focus-ring:focus {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+}
+
+/* Selección de texto */
+::selection {
+    background-color: var(--selection-bg);
+    color: var(--text-primary);
+}
+
+/* Formularios */
+.input-field {
+    background-color: var(--input-bg);
+    border-color: var(--input-border);
+    color: var(--input-text);
+}
+
+.input-field:focus {
+    border-color: var(--input-border-focus);
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
+.input-field::placeholder {
+    color: var(--input-placeholder);
+}
+
+.input-field.error {
+    border-color: var(--input-border-error);
+}
+
+/* Utilidades de acento */
+.accent-primary { color: var(--accent-primary); }
+.accent-secondary { color: var(--accent-secondary); }
+.accent-tertiary { color: var(--accent-tertiary); }
+
+.bg-accent-primary { background-color: var(--accent-primary); }
+.bg-accent-secondary { background-color: var(--accent-secondary); }
+.bg-accent-tertiary { background-color: var(--accent-tertiary); }

@@ -12,7 +12,7 @@
     onMount(() => {
         const interval = setInterval(() => {
             alertCard.show = false;
-		}, 4000);
+		}, 6000);
 
 		return () => clearInterval(interval);
     });
@@ -20,16 +20,16 @@
 
 <div
     id="alert"
+    class={alertCard.type === "error" ? "alert-error" : alertCard.type === "success" ? "alert-success" : "alert-warning"}
     transition:fly={{x: 400, duration: 1600}}
-    style="background-color: {alertCard.type === "error" ? "red" : alertCard.type === "success" ? "green" : "yellow"};"
 >
-    <div id="alert-title">
-        {#if alertCard.type in alertIcons}
-            {@html alertIcons[alertCard.type]}
-        {/if}
-        <h2>{alertCard.title}</h2>
+    <div class="alert-icon">
+        {@html alertIcons[alertCard.type]}
     </div>
-    <p>{alertCard.message}</p>
+    <div class="alert-content">
+        <div class="alert-title">{alertCard.title}</div>
+        <div class="alert-description">{alertCard.message}</div>
+    </div>
 </div>
 
 <style>
@@ -37,17 +37,60 @@
         position: fixed;
         top: 0.5rem;
         right: 0.5rem;
-        background-color: aquamarine;
-        padding: 12px;
-        border-radius: 6px;
-        border: 2px solid blue;
-        max-width: 320px;
+        width: 320px;
+        display: flex;
+        align-items: flex-start;
+        gap: 16px;
+        padding: 20px;
+        border-radius: 12px;
+        border: 1px solid;
+        box-shadow: var(--shadow-lg);
+        overflow: hidden;
     }
 
-    #alert-title {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        margin-bottom: 0.5rem;
+    #alert::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 4px;
+        background: currentColor;
+    }
+
+    .alert-success {
+        background: var(--state-success-bg);
+        color: var(--state-success);
+        border-color: var(--state-success-border);
+    }
+
+    .alert-warning {
+        background: var(--state-warning-bg);
+        color: var(--state-warning);
+        border-color: var(--state-warning-border);
+    }
+
+    .alert-error {
+        background: var(--state-error-bg);
+        color: var(--state-error);
+        border-color: var(--state-error-border);
+    }
+
+    .alert-icon {
+        font-size: 24px;
+        margin-top: 2px;
+        flex-shrink: 0;
+    }
+
+    .alert-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .alert-title {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 6px;
+        color: inherit;
     }
 </style>

@@ -2,24 +2,36 @@
     import { colorSelected } from "../shared.svelte.js";
 
     const COLORS = [
-        "red", "green", "blue", "yellow",
-        "orange", "purple", "pink", "cyan",
-        "magenta", "gray", "black", "white",
-        "turquoise", "beige", "brown", "lavender",
+        {varName: "--color01", varText: "Very Dark Gray"},
+        {varName: "--color02", varText: "Black"},
+        {varName: "--color03", varText: "Gray"},
+        {varName: "--color04", varText: "White"},
+        {varName: "--color05", varText: "Dark Tan"},
+        {varName: "--color06", varText: "Pastel Pink"},
+        {varName: "--color07", varText: "Light Purple"},
+        {varName: "--color08", varText: "Purple"},
+        {varName: "--color09", varText: "Red"},
+        {varName: "--color10", varText: "Orange"},
+        {varName: "--color11", varText: "Yellow"},
+        {varName: "--color12", varText: "Lime Green"},
+        {varName: "--color13", varText: "Green"},
+        {varName: "--color14", varText: "Aqua"},
+        {varName: "--color15", varText: "Dodger Blue"},
+        {varName: "--color16", varText: "Blue"},
     ];
 </script>
 
 <div id="palette">
     {#each COLORS as color}
        <button
-            class={["palette-button", colorSelected.name === color ? "selected" : ""]}
-            style="background-color: {color};"
+            class={["palette-button", colorSelected.name === color.varName ? "selected" : ""]}
+            style={`background-color: var(${color.varName});`}
             onclick={(e) => {
                 e.stopPropagation();
-                colorSelected.name = color;
+                colorSelected.name = color.varName;
             }}
-            aria-label={color}
-            title={color.charAt(0).toUpperCase() + color.slice(1).toLowerCase()}
+            aria-label={color.varText}
+            title={color.varText}
         >
         </button> 
     {/each}
@@ -32,7 +44,7 @@
         justify-content: center;
         gap: 6px;
         padding: 6px;
-        background-color: rgba(0, 0, 0, 0.8);
+        background-color: var(--overlay-bg);
         border-radius: 12px;
 
         position: fixed;
@@ -61,12 +73,11 @@
         width: 10px;
         height: 10px;
         border-radius: 50%;
-        background-color: white;
-        box-shadow: 0 0 3px rgba(0,0,0,0.5);
+        background-color: var(--border-accent);
     }
 
     .palette-button.selected {
-        border: 3px solid white;
+        border: 3px solid var(--border-accent);
     }
 
     .palette-button:not(.selected):hover {
