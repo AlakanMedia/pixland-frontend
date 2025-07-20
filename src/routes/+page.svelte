@@ -13,7 +13,7 @@
 
     const cellCache = new Map(); // Para guardar el valor de las celdas cacheadas
     const loadedChunks = new Set(); // Para saber si un chunk ya fue cargado
-    const loadingChunks = new Set(); // Nuevo
+    const loadingChunks = new Set(); // Para los chunks que ya han sido guardados
 
     // Variables para el manejo del zoom y la configuración del mundo
     const maxNumberCells = 1024;
@@ -42,13 +42,12 @@
     let clickMouseX;
     let clickMouseY;
 
-    let needsRedraw = true; // Empieza en true para el dibujado inicial
+    let needsRedraw = true;
 
     onMount(async () => {
         canvasElement.width = window.innerWidth;
         canvasElement.height = window.innerHeight;
-        // contextCanvas = canvasElement.getContext("2d", { alpha: false });
-        contextCanvas = canvasElement.getContext("2d");
+        contextCanvas = canvasElement.getContext("2d", { alpha: false });
         contextCanvas.imageSmoothingEnabled = false;
 
         requestAnimationFrame(renderLoop);
@@ -101,7 +100,6 @@
     });
 
     function renderLoop() {
-        // Si no hay nada que cambiar, no hagas nada y espera al siguiente frame.
         if (needsRedraw) {
             drawMatrix();
             needsRedraw = false; // Reseteamos la bandera hasta que algo vuelva a cambiar
@@ -112,12 +110,10 @@
     }
 
     async function fetchChunk() {
-        const intCellSize = Math.ceil(effectiveCellSize);
-
-        const xCellUpperLeft = Math.floor(cameraOffsetX / intCellSize);
-        const yCellUpperLeft = Math.floor(cameraOffsetY / intCellSize);
-        const xCellBottomRight = Math.floor((cameraOffsetX + canvasElement.width) / intCellSize);
-        const yCellBottomRight = Math.floor((cameraOffsetY + canvasElement.height) / intCellSize);
+        const xCellUpperLeft = Math.floor(cameraOffsetX / effectiveCellSize);
+        const yCellUpperLeft = Math.floor(cameraOffsetY / effectiveCellSize);
+        const xCellBottomRight = Math.floor((cameraOffsetX + canvasElement.width) / effectiveCellSize);
+        const yCellBottomRight = Math.floor((cameraOffsetY + canvasElement.height) / effectiveCellSize);
 
         const xChunkUpperLeft = Math.floor(xCellUpperLeft / chunkSize);
         const yChunkUpperLeft = Math.floor(yCellUpperLeft / chunkSize);
@@ -204,12 +200,10 @@
                 const chunkY = Math.floor(j / chunkSize);
                 const chunkString = `${chunkX},${chunkY}`;
 
-                // NUEVA LÓGICA: Si el chunk se está cargando, píntalo de negro
                 if (loadingChunks.has(chunkString)) {
-                    contextCanvas.fillStyle = rootStyles.getPropertyValue("--color02").trim();
+                    contextCanvas.fillStyle = rootStyles.getPropertyValue("--color01").trim();
                     contextCanvas.fillRect(screenX, screenY, intCellSize, intCellSize);
                 } else {
-                    // LÓGICA EXISTENTE: Si no, busca su color en el caché
                     const cellColor = cellCache.get(generateDynamicKey(i, j, maxNumberCells - 1));
 
                     if (cellColor) {
@@ -217,7 +211,6 @@
                         contextCanvas.fillRect(screenX, screenY, intCellSize, intCellSize);
                     }
 
-                    // Dibuja la cuadrícula (sin cambios)
                     if (cellScale >= 2) {
                         contextCanvas.strokeStyle = rootStyles.getPropertyValue("--color04").trim();
                         contextCanvas.strokeRect(screenX, screenY, intCellSize, intCellSize);
@@ -238,11 +231,13 @@
             // Coordenadas (x, y)
             const coordinateX = Math.floor((cameraOffsetX + event.clientX) / effectiveCellSize);
             const coordinateY = Math.floor((cameraOffsetY + event.clientY) / effectiveCellSize);
+            const dynamicKey = generateDynamicKey(coordinateX, coordinateY, maxNumberCells - 1);
 
-            cellCache.set(
-                generateDynamicKey(coordinateX, coordinateY, maxNumberCells - 1),
-                colorSelected.name
-            );
+            if (cellCache.get(dynamicKey) === colorSelected.name) {
+                return;
+            }
+
+            cellCache.set(dynamicKey, colorSelected.name);
 
             needsRedraw = true;
 
@@ -394,7 +389,6 @@
         position: fixed;
         width: 100%;
         height: 100%;
-        background-color: var(--color01);
     }
 
     #mouse-chaser {

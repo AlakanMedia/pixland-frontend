@@ -1,5 +1,5 @@
 export const colorSelected = $state({
-    name: "--color02",
+    name: "--color01",
 });
 
 export const modals = $state({
