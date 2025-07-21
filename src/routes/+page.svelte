@@ -1,5 +1,6 @@
 <script>
     import { onMount, onDestroy } from "svelte";
+    import { fade } from "svelte/transition";
     import { Spring } from "svelte/motion";
     import { getUserInformation, getCellsBox } from "../pixlandApi.js";
     import { colorSelected, modals, user, appInfo, updateMatrix } from "../shared.svelte.js";
@@ -16,10 +17,11 @@
     const loadingChunks = new Set(); // Para los chunks que ya han sido guardados
 
     // Variables para el manejo del zoom y la configuración del mundo
-    const maxNumberCells = 1024;
+    const maxNumberCells = 2048;
     const baseCellSize = 16;
     const chunkSize = 64;
-    const zoomIntensity = 0.02;
+    // const zoomIntensity = 0.02;
+    const zoomIntensity = 1 / baseCellSize;
     let cellScale = $state(1); // La variable debe de ser $state para que $derived pueda funcionar
     let oldCellScale; // Scala antes del haber hecho zoom in o zoom out
     let effectiveCellSize = $derived(baseCellSize * cellScale);
@@ -227,6 +229,10 @@
             return;
         }
 
+        if (cellScale < 1) {
+            return;
+        }
+
         if (colorSelected.name) {
             // Coordenadas (x, y)
             const coordinateX = Math.floor((cameraOffsetX + event.clientX) / effectiveCellSize);
@@ -311,14 +317,16 @@
         const worldYBeforeZoom = cameraOffsetY + event.clientY;
 
         if (event.deltaY < 0) { // Zoom In
-            newCellScale = cellScale * (1 + zoomIntensity);
+            // newCellScale = cellScale * (1 + zoomIntensity);
+            newCellScale = cellScale + zoomIntensity;
         }
         else { // Zoom Out
-            newCellScale = cellScale * (1 - zoomIntensity);
+            // newCellScale = cellScale * (1 - zoomIntensity);
+            newCellScale = cellScale - zoomIntensity;
         }
 
         // Opcional pero recomendado: poner límites al zoom
-        cellScale = Math.max(0.2, Math.min(newCellScale, 4)); 
+        cellScale = Math.max(0.4, Math.min(newCellScale, 4)); 
 
         // La nueva coordenada del punto de anclaje en el mundo re-escalado
         const newWorldX = worldXBeforeZoom * (cellScale / oldCellScale);
@@ -365,12 +373,15 @@
     onmouseup={(e) => {handleOnMouseUp(e);}}
     onwheel={async (e) => {handleOnWheel(e);}}
 >
-	<circle
-		cx={coords.current.x}
-		cy={coords.current.y}
-		r={size.current}
-        style={`fill: rgb(from var(${colorSelected.name}) r g b / 0.4); stroke: white; stroke-width: 2;`}
-	/>
+    {#if cellScale >= 1}
+	    <circle
+	        cx={coords.current.x}
+	    	cy={coords.current.y}
+	    	r={size.current}
+            style={`fill: rgb(from var(${colorSelected.name}) r g b / 0.4); stroke: white; stroke-width: 2;`}
+            transition:fade
+	    />
+    {/if}
 </svg>
 <Widgets/>
 
