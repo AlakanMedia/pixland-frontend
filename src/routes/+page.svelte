@@ -20,8 +20,7 @@
     const maxNumberCells = 2048;
     const baseCellSize = 16;
     const chunkSize = 64;
-    // const zoomIntensity = 0.02;
-    const zoomIntensity = 1 / baseCellSize;
+    const zoomIntensity = 0.02;
     let cellScale = $state(1); // La variable debe de ser $state para que $derived pueda funcionar
     let oldCellScale; // Scala antes del haber hecho zoom in o zoom out
     let effectiveCellSize = $derived(baseCellSize * cellScale);
@@ -317,12 +316,10 @@
         const worldYBeforeZoom = cameraOffsetY + event.clientY;
 
         if (event.deltaY < 0) { // Zoom In
-            // newCellScale = cellScale * (1 + zoomIntensity);
-            newCellScale = cellScale + zoomIntensity;
+            newCellScale = cellScale * (1 + zoomIntensity);
         }
         else { // Zoom Out
-            // newCellScale = cellScale * (1 - zoomIntensity);
-            newCellScale = cellScale - zoomIntensity;
+            newCellScale = cellScale * (1 - zoomIntensity);
         }
 
         // Opcional pero recomendado: poner límites al zoom
