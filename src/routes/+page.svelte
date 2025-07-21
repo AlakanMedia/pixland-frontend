@@ -20,7 +20,7 @@
     const maxNumberCells = 2048;
     const baseCellSize = 16;
     const chunkSize = 64;
-    const zoomIntensity = 0.02;
+    const zoomStep = 0.25;
     let cellScale = $state(1); // La variable debe de ser $state para que $derived pueda funcionar
     let oldCellScale; // Scala antes del haber hecho zoom in o zoom out
     let effectiveCellSize = $derived(baseCellSize * cellScale);
@@ -185,8 +185,6 @@
         const endCellX = Math.min(Math.floor((cameraOffsetX + canvasElement.width) / effectiveCellSize), maxNumberCells - 1);
         const endCellY = Math.min(Math.floor((cameraOffsetY + canvasElement.height) / effectiveCellSize), maxNumberCells - 1);
 
-        const intCellSize = Math.ceil(effectiveCellSize);
-
         const rootStyles = getComputedStyle(document.documentElement);
 
         for (let i = startCellX; i <= endCellX; i++) {
@@ -203,21 +201,20 @@
 
                 if (loadingChunks.has(chunkString)) {
                     contextCanvas.fillStyle = rootStyles.getPropertyValue("--color01").trim();
-                    contextCanvas.fillRect(screenX, screenY, intCellSize, intCellSize);
+                    contextCanvas.fillRect(screenX, screenY, effectiveCellSize, effectiveCellSize);
                 } else {
                     const cellColor = cellCache.get(generateDynamicKey(i, j, maxNumberCells - 1));
 
                     if (cellColor) {
                         contextCanvas.fillStyle = rootStyles.getPropertyValue(cellColor).trim();
-                        contextCanvas.fillRect(screenX, screenY, intCellSize, intCellSize);
+                        contextCanvas.fillRect(screenX, screenY, effectiveCellSize, effectiveCellSize);
                     }
 
                     if (cellScale >= 2) {
                         contextCanvas.strokeStyle = rootStyles.getPropertyValue("--color04").trim();
-                        contextCanvas.strokeRect(screenX, screenY, intCellSize, intCellSize);
+                        contextCanvas.strokeRect(screenX, screenY, effectiveCellSize, effectiveCellSize);
                     }
                 }
-
             }
         }
     }
@@ -316,14 +313,14 @@
         const worldYBeforeZoom = cameraOffsetY + event.clientY;
 
         if (event.deltaY < 0) { // Zoom In
-            newCellScale = cellScale * (1 + zoomIntensity);
+            newCellScale = cellScale + zoomStep;
         }
         else { // Zoom Out
-            newCellScale = cellScale * (1 - zoomIntensity);
+            newCellScale = cellScale - zoomStep;
         }
 
         // Opcional pero recomendado: poner límites al zoom
-        cellScale = Math.max(0.4, Math.min(newCellScale, 4)); 
+        cellScale = Math.max(0.25, Math.min(newCellScale, 4)); 
 
         // La nueva coordenada del punto de anclaje en el mundo re-escalado
         const newWorldX = worldXBeforeZoom * (cellScale / oldCellScale);
