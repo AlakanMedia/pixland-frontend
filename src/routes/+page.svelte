@@ -3,8 +3,8 @@
     import { fade } from "svelte/transition";
     import { Spring } from "svelte/motion";
     import { getUserInformation, getCellsBox } from "../pixlandApi.js";
-    import { colorSelected, modals, user, appInfo, updateMatrix } from "../shared.svelte.js";
-    import { generateDynamicKey } from "../utils.js";
+    import { colorSelected, modals, user, appInfo, updateMatrix, availablePixels } from "../shared.svelte.js";
+    import { generateDynamicKey, getUserLevel } from "../utils.js";
     import Widgets from "../components/Widgets.svelte";
 
     const API_URL = import.meta.env.VITE_API_URL
@@ -46,14 +46,6 @@
     let needsRedraw = true;
 
     onMount(async () => {
-        canvasElement.width = window.innerWidth;
-        canvasElement.height = window.innerHeight;
-        contextCanvas = canvasElement.getContext("2d", { alpha: false });
-        contextCanvas.imageSmoothingEnabled = false;
-
-        requestAnimationFrame(renderLoop);
-        await fetchChunk();
-
         const response = await getUserInformation()
 
         if (response.state !== "success") {
@@ -61,9 +53,23 @@
             user.logged = false;
         }
         else {
-            user.id = response.data.info.id;
+            const userInfo = response.data.info;
+            const userLevel = getUserLevel(userInfo.pixels_placed);
+
+            availablePixels.num = 0;
+            availablePixels.limit = userLevel.pixelsLimit;
+
+            user.id = userInfo.id;
             user.logged = true;
         }
+
+        canvasElement.width = window.innerWidth;
+        canvasElement.height = window.innerHeight;
+        contextCanvas = canvasElement.getContext("2d", { alpha: false });
+        contextCanvas.imageSmoothingEnabled = false;
+
+        requestAnimationFrame(renderLoop);
+        await fetchChunk();
 
         const wsUrl = user.id ? `${API_URL}/ws?user_id=${user.id}` : `${API_URL}/ws`;
         user.websocket = new WebSocket(wsUrl);
@@ -220,39 +226,30 @@
     }
 
     function handleSetColor(event) {
-        if (!user.logged) {
-            modals.loginIsOpen = true;
-            return;
+        // Coordenadas (x, y)
+        const coordinateX = Math.floor((cameraOffsetX + event.clientX) / effectiveCellSize);
+        const coordinateY = Math.floor((cameraOffsetY + event.clientY) / effectiveCellSize);
+        const dynamicKey = generateDynamicKey(coordinateX, coordinateY, maxNumberCells - 1);
+
+        if (cellCache.get(dynamicKey) === colorSelected.name) {
+            return false;
         }
 
-        if (cellScale < 1) {
-            return;
-        }
+        cellCache.set(dynamicKey, colorSelected.name);
 
-        if (colorSelected.name) {
-            // Coordenadas (x, y)
-            const coordinateX = Math.floor((cameraOffsetX + event.clientX) / effectiveCellSize);
-            const coordinateY = Math.floor((cameraOffsetY + event.clientY) / effectiveCellSize);
-            const dynamicKey = generateDynamicKey(coordinateX, coordinateY, maxNumberCells - 1);
+        needsRedraw = true;
 
-            if (cellCache.get(dynamicKey) === colorSelected.name) {
-                return;
-            }
+        user.websocket.send(JSON.stringify({
+            type: "update_pixel",
+            data: {
+                x: coordinateX,
+                y: coordinateY,
+                color: colorSelected.name,
+            },
+        }));
+        // TODO: Debo verificar si la api devuelve 401 para marcar el store.userLogged como falso
 
-            cellCache.set(dynamicKey, colorSelected.name);
-
-            needsRedraw = true;
-
-            user.websocket.send(JSON.stringify({
-                type: "update_pixel",
-                data: {
-                    x: coordinateX,
-                    y: coordinateY,
-                    color: colorSelected.name,
-                },
-            }));
-            // TODO: Debo verificar si la api devuelve 401 para marcar el store.userLogged como falso
-        }
+        return true;
     }
 
     function handleOnMouseDown(event) {
@@ -295,7 +292,18 @@
             document.body.style.cursor = "default";
         }
         else {
-            handleSetColor(event);
+            if (!user.logged) {
+                modals.loginIsOpen = true;
+            }
+            else {
+                if (cellScale >= 1 && availablePixels.num > 0) {
+                    const pixelPlaced = handleSetColor(event);
+
+                    if (pixelPlaced) {
+                        availablePixels.num--;
+                    }
+                }
+            }
         }
 
         isDragging = false;

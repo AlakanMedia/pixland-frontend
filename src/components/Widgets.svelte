@@ -1,17 +1,19 @@
 <script>
     import ColorPalette from "../components/ColorPalette.svelte";
+    import PixelQueue from "./PixelQueue.svelte";
     import Options from "../components/Options.svelte";
     import Login from "./Login.svelte";
     import Alert from "./Alert.svelte";
     import { modals, alertCard, user, appInfo } from "../shared.svelte.js";
 	import { scale } from "svelte/transition";
 	import Profile from "./Profile.svelte";
+    import { padWithZeros } from "../utils.js";
 </script>
 
 <ColorPalette/>
 <div id="current-users">
     <i class="ph-bold ph-users-three"></i>
-    {appInfo.activeUsers}
+    {padWithZeros(appInfo.activeUsers, 2)}
 </div>
 <Options/>
 {#if modals.loginIsOpen}
@@ -26,6 +28,7 @@
         onclick={() => {modals.profileIsOpen = true;}}
         transition:scale
     />
+    <PixelQueue/>
 {/if}
 {#if modals.profileIsOpen}
     <Profile/> 
@@ -58,10 +61,9 @@
         border-radius: 6px;
         background-color: var(--overlay-bg);
         display: flex;
-        justify-content: space-between;
         align-items: center;
-        gap: 1rem;
-        padding: 6px 12px;
+        gap: 0.5rem;
+        padding: 0.5rem;
         color: var(--text-primary);
         font-size: 1.5rem;
     }

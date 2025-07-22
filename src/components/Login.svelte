@@ -1,9 +1,9 @@
 <script>
     import { onMount, tick } from "svelte";
     import { fade, scale } from "svelte/transition";
-    import { modals, user } from "../shared.svelte.js";
+    import { modals, user, availablePixels } from "../shared.svelte.js";
     import { registerNewUser, loginUser, getUserInformation } from "../pixlandApi.js";
-    import { showAlert, isValidEmail } from "../utils.js";
+    import { showAlert, isValidEmail, getUserLevel } from "../utils.js";
 
     let username = $state("");
     let email = $state("");
@@ -158,6 +158,11 @@
                     showAlert("error", "Unexpected Error Occurred", "An error occurred while retrieving user information. Please try again.");
                     return;
                 }
+
+                const userLevel = getUserLevel(response.data.info.pixels_placed);
+
+                availablePixels.num = 0;
+                availablePixels.limit = userLevel.pixelsLimit;
 
                 user.id = response.data.info.id;
                 user.logged = true;

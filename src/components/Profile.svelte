@@ -2,7 +2,7 @@
 	import { onMount, tick } from "svelte";
     import { modals, user } from "../shared.svelte.js";
 	import { fade, scale } from "svelte/transition";
-    import { showAlert, formatToLocalDate } from "../utils.js";
+    import { showAlert, formatToLocalDate, getUserLevel } from "../utils.js";
 	import { getUserInformation, deleteCookies } from "../pixlandApi.js";
 
     let profileUsername = $state("...");
@@ -62,57 +62,6 @@
         modals.profileIsOpen = false;
 
         await deleteCookies();
-    }
-
-    function getUserLevel(pixelsPlaced) {
-        if (pixelsPlaced >= 0 && pixelsPlaced <= 1000) {
-            return {level: "Pixel Peasant", message: "You've placed your first humble dot."};
-        }
-        else if (pixelsPlaced > 1000 && pixelsPlaced <= 4000) {
-            return {level: "Color Dabbler", message: "Starting to make a mess — in style."};
-        }
-        else if (pixelsPlaced > 4000 && pixelsPlaced <= 10000) {
-            return {level: "Dot Dropper", message: "You're making tiny waves in the canvas ocean."};
-        }
-        else if (pixelsPlaced > 10000 && pixelsPlaced <= 15000) {
-            return {level: "Hue Hustler", message: "You've got an eye for color and no shame in clicking."};
-        }
-        else if (pixelsPlaced > 15000 && pixelsPlaced <= 25000) {
-            return {level: "Shade Slinger", message: "Flipping palettes like a cowboy flips coins."};
-        }
-        else if (pixelsPlaced > 25000 && pixelsPlaced <= 50000) {
-            return {level: "Grid Graffiti", message: "Who needs permission to paint?"};
-        }
-        else if (pixelsPlaced > 50000 && pixelsPlaced <= 75000) {
-            return {level: "Palette Pioneer", message: "Blazing trails through pixels unknown."};
-        }
-        else if (pixelsPlaced > 75000 && pixelsPlaced <= 100000) {
-            return {level: "Canvas Commander", message: "You don't paint pixels — you order them around."};
-        }
-        else if (pixelsPlaced > 100000 && pixelsPlaced <= 150000) {
-            return {level: "Bitmaster", message: "The binary bows to your will."};
-        }
-        else if (pixelsPlaced > 150000 && pixelsPlaced <= 200000) {
-            return {level: "Pixel Picasso", message: "Your mess is starting to look like art."};
-        }
-        else if (pixelsPlaced > 200000 && pixelsPlaced <= 300000) {
-            return {level: "Color Overlord", message: "You control more shades than the sunset."};
-        }
-        else if (pixelsPlaced > 300000 && pixelsPlaced <= 500000) {
-            return {level: "The Dithering Duke", message: "Smoothing edges like a royal."};
-        }
-        else if (pixelsPlaced > 500000 && pixelsPlaced <= 750000) {
-            return {level: "Hue Sorcerer", message: "Summoning colors with a click and a curse."};
-        }
-        else if (pixelsPlaced > 750000 && pixelsPlaced <= 1000000) {
-            return {level: "Render Ruler", message: "The canvas is your kingdom. The cursor is your crown."};
-        }
-        else if (pixelsPlaced > 1000000 && pixelsPlaced <= 2000000) {
-            return {level: "Pixel Prophet", message: "You see the final image before it even exists."};
-        }
-        else if (pixelsPlaced > 2000000) {
-            return {level: "The Glitch God", message: "Reality bends at the power of your pixels."};
-        }
     }
 </script>
 
