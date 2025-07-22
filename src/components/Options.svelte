@@ -1,5 +1,5 @@
 <script>
-    import { modals, user } from "../shared.svelte.js";
+    import { ui, user } from "../shared.svelte.js";
 
     let optionIsOpen = $state(false);
 </script>
@@ -16,10 +16,10 @@
 </button>
 {#if optionIsOpen}
     <div id="options-menu">
-        {#if !user.logged}
+        {#if !user.isLoggedIn}
             <button class="option-button" onclick={(e) => {
                 e.stopPropagation();
-                modals.loginIsOpen = true;
+                ui.loginModalIsOpen = true;
                 optionIsOpen = false;
             }}>
                 <i class="ph-bold ph-user"></i>

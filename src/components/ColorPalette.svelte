@@ -1,5 +1,5 @@
 <script>
-    import { colorSelected } from "../shared.svelte.js";
+    import { drawingState } from "../shared.svelte.js";
 
     const COLORS = [
         {varName: "--color01", varText: "Very Dark Gray"},
@@ -24,11 +24,11 @@
 <div id="palette">
     {#each COLORS as color}
        <button
-            class={["palette-button", colorSelected.name === color.varName ? "selected" : ""]}
+            class={["palette-button", drawingState.selectedColor === color.varName ? "selected" : ""]}
             style={`background-color: var(${color.varName});`}
             onclick={(e) => {
                 e.stopPropagation();
-                colorSelected.name = color.varName;
+                drawingState.selectedColor = color.varName;
             }}
             aria-label={color.varText}
             title={color.varText}

@@ -1,7 +1,7 @@
 <script>
     import { onMount, tick } from "svelte";
     import { fade, scale } from "svelte/transition";
-    import { modals, user, availablePixels } from "../shared.svelte.js";
+    import { user, drawingState, ui } from "../shared.svelte.js";
     import { registerNewUser, loginUser, getUserInformation } from "../pixlandApi.js";
     import { showAlert, isValidEmail, getUserLevel } from "../utils.js";
 
@@ -161,11 +161,11 @@
 
                 const userLevel = getUserLevel(response.data.info.pixels_placed);
 
-                availablePixels.num = 0;
-                availablePixels.limit = userLevel.pixelsLimit;
+                drawingState.availablePixels = 0;
+                drawingState.pixelLimit = userLevel.pixelsLimit;
 
                 user.id = response.data.info.id;
-                user.logged = true;
+                user.isLoggedIn = true;
 
                 if (user.websocket) {
                     user.websocket.send(JSON.stringify({
@@ -174,7 +174,7 @@
                     }));
                 }
 
-                modals.loginIsOpen = false;
+                ui.loginModalIsOpen = false;
             }
         }
     }
@@ -182,12 +182,12 @@
     function closeLogin(event) {
         if (event.type === "click"){
             if (event.target !== login && !login.contains(event.target)) {
-                modals.loginIsOpen = false;
+                ui.loginModalIsOpen = false;
             }
         }
         else if (event.type === "keydown") {
             if (event.key === "Escape") {
-                modals.loginIsOpen = false;
+                ui.loginModalIsOpen = false;
             }
         }
     }

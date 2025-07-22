@@ -4,7 +4,7 @@
     import Options from "../components/Options.svelte";
     import Login from "./Login.svelte";
     import Alert from "./Alert.svelte";
-    import { modals, alertCard, user, appInfo } from "../shared.svelte.js";
+    import { ui, user } from "../shared.svelte.js";
 	import { scale } from "svelte/transition";
 	import Profile from "./Profile.svelte";
     import { padWithZeros } from "../utils.js";
@@ -13,27 +13,27 @@
 <ColorPalette/>
 <div id="current-users">
     <i class="ph-bold ph-users-three"></i>
-    {padWithZeros(appInfo.activeUsers, 2)}
+    {padWithZeros(ui.activeUsers, 2)}
 </div>
 <Options/>
-{#if modals.loginIsOpen}
+{#if ui.loginModalIsOpen}
     <Login/>
 {/if}
-{#if user.logged}
+{#if user.isLoggedIn}
     <input
         id="button-profile"
         type="image"
         src="/profile_placeholder.png"
         alt="profile_photo"
-        onclick={() => {modals.profileIsOpen = true;}}
+        onclick={() => {ui.profileModalIsOpen = true;}}
         transition:scale
     />
     <PixelQueue/>
 {/if}
-{#if modals.profileIsOpen}
+{#if ui.profileModalIsOpen}
     <Profile/> 
 {/if}
-{#if alertCard.show}
+{#if ui.alert.show}
     <Alert/>
 {/if}
 

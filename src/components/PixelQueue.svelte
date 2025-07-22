@@ -1,12 +1,12 @@
 <script>
 	import { onMount } from "svelte";
-    import { availablePixels } from "../shared.svelte.js";
+    import { drawingState } from "../shared.svelte.js";
     import { padWithZeros } from "../utils.js";
 
     onMount(() => {
         const intervalId = setInterval(() => {
-            if (availablePixels.num < availablePixels.limit) {
-                availablePixels.num++;
+            if (drawingState.availablePixels < drawingState.pixelLimit) {
+                drawingState.availablePixels++;
             }
         }, 4000);
 
@@ -16,7 +16,7 @@
 
 <div id="pixel-queue">
     <i class="ph-fill ph-square-logo"></i>
-    {padWithZeros(availablePixels.num, 2)} / {padWithZeros(availablePixels.limit, 2)}
+    {padWithZeros(drawingState.availablePixels, 2)} / {padWithZeros(drawingState.pixelLimit, 2)}
 </div>
 
 <style>

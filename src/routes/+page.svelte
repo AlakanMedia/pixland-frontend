@@ -3,7 +3,7 @@
     import { fade } from "svelte/transition";
     import { Spring } from "svelte/motion";
     import { getUserInformation, getCellsBox } from "../pixlandApi.js";
-    import { colorSelected, modals, user, appInfo, updateMatrix, availablePixels } from "../shared.svelte.js";
+    import { ui, user, drawingState } from "../shared.svelte.js";
     import { generateDynamicKey, getUserLevel } from "../utils.js";
     import Widgets from "../components/Widgets.svelte";
 
@@ -49,18 +49,18 @@
         const response = await getUserInformation()
 
         if (response.state !== "success") {
-            user.id = ""
-            user.logged = false;
+            user.id = null;
+            user.isLoggedIn = false;
         }
         else {
             const userInfo = response.data.info;
             const userLevel = getUserLevel(userInfo.pixels_placed);
 
-            availablePixels.num = 0;
-            availablePixels.limit = userLevel.pixelsLimit;
+            drawingState.availablePixels = 0;
+            drawingState.pixelLimit = userLevel.pixelsLimit;
 
             user.id = userInfo.id;
-            user.logged = true;
+            user.isLoggedIn = true;
         }
 
         canvasElement.width = window.innerWidth;
@@ -94,7 +94,7 @@
                 needsRedraw = true;
             }
             else if (wsData.type === "update_active_users") {
-                appInfo.activeUsers = wsData.data.active_users;
+                ui.activeUsers = wsData.data.active_users;
             }
         };
     });
@@ -231,11 +231,11 @@
         const coordinateY = Math.floor((cameraOffsetY + event.clientY) / effectiveCellSize);
         const dynamicKey = generateDynamicKey(coordinateX, coordinateY, maxNumberCells - 1);
 
-        if (cellCache.get(dynamicKey) === colorSelected.name) {
+        if (cellCache.get(dynamicKey) === drawingState.selectedColor) {
             return false;
         }
 
-        cellCache.set(dynamicKey, colorSelected.name);
+        cellCache.set(dynamicKey, drawingState.selectedColor);
 
         needsRedraw = true;
 
@@ -244,7 +244,7 @@
             data: {
                 x: coordinateX,
                 y: coordinateY,
-                color: colorSelected.name,
+                color: drawingState.selectedColor,
             },
         }));
         // TODO: Debo verificar si la api devuelve 401 para marcar el store.userLogged como falso
@@ -292,15 +292,15 @@
             document.body.style.cursor = "default";
         }
         else {
-            if (!user.logged) {
-                modals.loginIsOpen = true;
+            if (!user.isLoggedIn) {
+                ui.loginModalIsOpen = true;
             }
             else {
-                if (cellScale >= 1 && availablePixels.num > 0) {
+                if (cellScale >= 1 && drawingState.availablePixels > 0) {
                     const pixelPlaced = handleSetColor(event);
 
                     if (pixelPlaced) {
-                        availablePixels.num--;
+                        drawingState.availablePixels--;
                     }
                 }
             }
@@ -342,9 +342,9 @@
     }
 
     $effect(() => {
-        if (updateMatrix.update) {
+        if (drawingState.needsUpdate) {
             needsRedraw = true;
-            updateMatrix.update = false;
+            drawingState.needsUpdate = false;
         }
     });
 </script>
@@ -380,7 +380,7 @@
 	        cx={coords.current.x}
 	    	cy={coords.current.y}
 	    	r={size.current}
-            style={`fill: rgb(from var(${colorSelected.name}) r g b / 0.4); stroke: white; stroke-width: 2;`}
+            style={`fill: rgb(from var(${drawingState.selectedColor}) r g b / 0.4); stroke: white; stroke-width: 2;`}
             transition:fade
 	    />
     {/if}

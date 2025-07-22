@@ -1,7 +1,7 @@
 <script>
     import { onMount } from "svelte";
     import { fly } from "svelte/transition";
-    import { alertCard } from "../shared.svelte.js";
+    import { ui } from "../shared.svelte.js";
 
     const alertIcons = {
         "error": "<i class='ph-bold ph-bug' style='font-size: 2rem;'></i>",
@@ -11,7 +11,7 @@
 
     onMount(() => {
         const interval = setInterval(() => {
-            alertCard.show = false;
+            ui.alert.show = false;
 		}, 6000);
 
 		return () => clearInterval(interval);
@@ -20,15 +20,15 @@
 
 <div
     id="alert"
-    class={alertCard.type === "error" ? "alert-error" : alertCard.type === "success" ? "alert-success" : "alert-warning"}
+    class={ui.alert.type === "error" ? "alert-error" : ui.alert.type === "success" ? "alert-success" : "alert-warning"}
     transition:fly={{x: 400, duration: 1600}}
 >
     <div class="alert-icon">
-        {@html alertIcons[alertCard.type]}
+        {@html alertIcons[ui.alert.type]}
     </div>
     <div class="alert-content">
-        <div class="alert-title">{alertCard.title}</div>
-        <div class="alert-description">{alertCard.message}</div>
+        <div class="alert-title">{ui.alert.title}</div>
+        <div class="alert-description">{ui.alert.message}</div>
     </div>
 </div>
 

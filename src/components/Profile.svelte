@@ -1,6 +1,6 @@
 <script>
 	import { onMount, tick } from "svelte";
-    import { modals, user } from "../shared.svelte.js";
+    import { ui, user } from "../shared.svelte.js";
 	import { fade, scale } from "svelte/transition";
     import { showAlert, formatToLocalDate, getUserLevel } from "../utils.js";
 	import { getUserInformation, deleteCookies } from "../pixlandApi.js";
@@ -38,19 +38,19 @@
     function closeProfile(event) {
         if (event.type === "click"){
             if (event.target !== profile && !profile.contains(event.target)) {
-                modals.profileIsOpen = false;
+                ui.profileModalIsOpen = false;
             }
         }
         else if (event.type === "keydown") {
             if (event.key === "Escape") {
-                modals.profileIsOpen = false;
+                ui.profileModalIsOpen = false;
             }
         }
     }
 
     async function logOut() {
-        user.id = "";
-        user.logged = false;
+        user.id = null;
+        user.isLoggedIn = false;
 
         if (user.websocket) {
             user.websocket.send(JSON.stringify({
@@ -59,7 +59,7 @@
             }));
         }
 
-        modals.profileIsOpen = false;
+        ui.profileModalIsOpen = false;
 
         await deleteCookies();
     }
