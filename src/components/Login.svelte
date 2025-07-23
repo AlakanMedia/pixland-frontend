@@ -2,8 +2,8 @@
     import { onMount, tick } from "svelte";
     import { fade, scale } from "svelte/transition";
     import { user, drawingState, ui } from "../shared.svelte.js";
-    import { registerNewUser, loginUser, getUserInformation } from "../pixlandApi.js";
-    import { showAlert, isValidEmail, getUserLevel } from "../utils.js";
+    import { registerNewUser, loginUser, getUserInformation, getPalette } from "../pixlandApi.js";
+    import { showAlert, isValidEmail, getUserLevel, changeColorSchema } from "../utils.js";
 
     let username = $state("");
     let email = $state("");
@@ -152,19 +152,34 @@
             const userLoged = await handleLogin();
 
             if (userLoged) {
-                const response = await getUserInformation();
+                let response = await getUserInformation();
 
                 if (response.state !== "success") {
                     showAlert("error", "Unexpected Error Occurred", "An error occurred while retrieving user information. Please try again.");
                     return;
                 }
 
-                const userLevel = getUserLevel(response.data.info.pixels_placed);
+                const userInfo = response.data.info;
+
+                if (userInfo.palette_theme !== "default") {
+                    response = await getPalette(userInfo.palette_theme);
+
+                    if (response.state === "success") {
+                        const newPalette = response.data.info.colors;
+                        changeColorSchema(newPalette);
+                        drawingState.needsUpdate = true;
+                    }
+                    else {
+                        console.log("Error loading palette, default palette is being used");
+                    }
+                }
+
+                const userLevel = getUserLevel(userInfo.pixels_placed);
 
                 drawingState.availablePixels = 0;
                 drawingState.pixelLimit = userLevel.pixelsLimit;
 
-                user.id = response.data.info.id;
+                user.id = userInfo.id;
                 user.isLoggedIn = true;
 
                 if (user.websocket) {

@@ -173,3 +173,28 @@ export async function getCellsBox(upperLeftLimit, lowerRightLimit) {
         return {state: "error", data: null}
     }
 }
+
+export async function getPalette(name) {
+    try {
+        const response = await fetch(`${API_URL}/palettes/${name}`, {
+            method: "GET"
+        });
+
+        const responseJson = await response.json();
+
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}: ${responseJson.detail}`);
+        }
+
+        return {
+            state: "success",
+            data: {
+                code: response.status,
+                info: responseJson,
+            }
+        }
+    }
+    catch (error) {
+        return {state: "error", data: null};
+    }
+}

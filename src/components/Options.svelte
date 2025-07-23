@@ -1,4 +1,5 @@
 <script>
+	import { goto } from "$app/navigation";
     import { ui, user } from "../shared.svelte.js";
 
     let optionIsOpen = $state(false);
@@ -34,7 +35,7 @@
             <i class="ph-bold ph-gavel"></i>
             <p>Legals</p>
         </button> 
-        <button class="option-button">
+        <button class="option-button" onclick={() => {goto("/about");}}>
             <i class="ph-bold ph-info"></i>
             <p>About</p>
         </button> 

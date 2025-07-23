@@ -173,3 +173,11 @@ export function getUserLevel(pixelsPlaced) {
 export function padWithZeros(num, length) {
   return String(num).padStart(length, '0');
 }
+
+export function changeColorSchema(palette) {
+  const root = document.documentElement;
+
+  for (let varName in palette) {
+    root.style.setProperty(varName, palette[varName]);
+  }
+}

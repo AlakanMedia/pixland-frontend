@@ -1,5 +1,6 @@
 <script>
 	import { onMount } from "svelte";
+    import { scale } from "svelte/transition";
     import { drawingState } from "../shared.svelte.js";
     import { padWithZeros } from "../utils.js";
 
@@ -16,7 +17,12 @@
 
 <div id="pixel-queue">
     <i class="ph-fill ph-square-logo"></i>
-    {padWithZeros(drawingState.availablePixels, 2)} / {padWithZeros(drawingState.pixelLimit, 2)}
+    {#key drawingState.availablePixels}
+        <span in:scale>
+            {padWithZeros(drawingState.availablePixels, 2)}
+        </span> 
+    {/key}
+    / {padWithZeros(drawingState.pixelLimit, 2)}
 </div>
 
 <style>

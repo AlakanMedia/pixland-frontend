@@ -2,9 +2,9 @@
     import { onMount, onDestroy } from "svelte";
     import { fade } from "svelte/transition";
     import { Spring } from "svelte/motion";
-    import { getUserInformation, getCellsBox } from "../pixlandApi.js";
+    import { getUserInformation, getCellsBox, getPalette } from "../pixlandApi.js";
     import { ui, user, drawingState } from "../shared.svelte.js";
-    import { generateDynamicKey, getUserLevel } from "../utils.js";
+    import { generateDynamicKey, getUserLevel, changeColorSchema } from "../utils.js";
     import Widgets from "../components/Widgets.svelte";
 
     const API_URL = import.meta.env.VITE_API_URL
@@ -46,7 +46,7 @@
     let needsRedraw = true;
 
     onMount(async () => {
-        const response = await getUserInformation()
+        let response = await getUserInformation()
 
         if (response.state !== "success") {
             user.id = null;
@@ -54,6 +54,19 @@
         }
         else {
             const userInfo = response.data.info;
+
+            if (userInfo.palette_theme !== "default") {
+                response = await getPalette(userInfo.palette_theme);
+
+                if (response.state === "success") {
+                    const newPalette = response.data.info.colors;
+                    changeColorSchema(newPalette);
+                }
+                else {
+                    console.log("Error loading palette, default palette is being used");
+                }
+            }
+
             const userLevel = getUserLevel(userInfo.pixels_placed);
 
             drawingState.availablePixels = 0;
