@@ -31,7 +31,7 @@
             <i class="ph-bold ph-gear"></i>
             <p>Settings</p>
         </button> 
-        <button class="option-button">
+        <button class="option-button" onclick={() => {goto("/legals");}}>
             <i class="ph-bold ph-gavel"></i>
             <p>Legals</p>
         </button> 
