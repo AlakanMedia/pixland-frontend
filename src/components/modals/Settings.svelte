@@ -1,7 +1,7 @@
 <script>
     import { ui, drawingState, user } from "../../shared.svelte.js";
 	import { getPalette, updateUserConfigurations } from "../../pixlandApi.js";
-    import { changeColorSchema, showAlert } from "../../utils.js";
+    import { changeColorSchema, showAlert, MESSAGES_TYPES } from "$lib/utils.js";
 
     let palette = $state(drawingState.palette);
     let showGrid = $state(drawingState.showGrid);
@@ -17,16 +17,16 @@
                     }
                 });
 
-                if (response.state !== "success") {
-                    showAlert("error", "Error Updating Settings", "An unexpected error occurred while saving your changes. Please try again later.");
+                if (response.state !== MESSAGES_TYPES.SUCCESS) {
+                    showAlert(MESSAGES_TYPES.ERROR, "Error Updating Settings", "An unexpected error occurred while saving your changes. Please try again later.");
                     return;
                 }
 
                 if (palette !== drawingState.palette) {
                     response = await getPalette(palette);
 
-                    if (response.state !== "success") {
-                        showAlert("error", "Error Updating Color Palette", "An unexpected error occurred while trying to update the color palette. Please try again later.");
+                    if (response.state !== MESSAGES_TYPES.SUCCESS) {
+                        showAlert(MESSAGES_TYPES.ERROR, "Error Updating Color Palette", "An unexpected error occurred while trying to update the color palette. Please try again later.");
                         return;
                     }
 

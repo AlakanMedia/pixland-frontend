@@ -4,7 +4,7 @@
     import { Spring } from "svelte/motion";
     import { getUserInformation, getCellsBox, getPalette } from "../pixlandApi.js";
     import { ui, user, drawingState } from "../shared.svelte.js";
-    import { generateDynamicKey, getUserLevel, changeColorSchema } from "../utils.js";
+    import { generateDynamicKey, getUserLevel, changeColorSchema, MESSAGES_TYPES } from "$lib/utils.js";
     import Widgets from "../components/Widgets.svelte";
 
     const API_URL = import.meta.env.VITE_API_URL
@@ -48,7 +48,7 @@
     onMount(async () => {
         let response = await getUserInformation()
 
-        if (response.state !== "success") {
+        if (response.state !== MESSAGES_TYPES.SUCCESS) {
             user.id = null;
             user.isLoggedIn = false;
         }
@@ -58,7 +58,7 @@
             if (userInfo.settings.palette !== "default") {
                 response = await getPalette(userInfo.settings.palette);
 
-                if (response.state === "success") {
+                if (response.state === MESSAGES_TYPES.SUCCESS) {
                     const newPalette = response.data.info.colors;
                     changeColorSchema(newPalette);
                 }
@@ -165,7 +165,7 @@
 
                     const cellBox = await getCellsBox([topLeft.x, topLeft.y], [bottomRight.x, bottomRight.y]);
 
-                    if (cellBox.state === "success") {
+                    if (cellBox.state === MESSAGES_TYPES.SUCCESS) {
                         const cells = cellBox.data.info;
                         for (let k = 0; k < cells.length; k++) {
                             const cellInfo = cells[k];

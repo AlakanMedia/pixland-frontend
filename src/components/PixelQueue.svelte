@@ -2,14 +2,14 @@
 	import { onMount } from "svelte";
     import { scale } from "svelte/transition";
     import { drawingState } from "../shared.svelte.js";
-    import { padWithZeros } from "../utils.js";
+    import { padWithZeros } from "$lib/utils.js";
 
     onMount(() => {
         const intervalId = setInterval(() => {
             if (drawingState.availablePixels < drawingState.pixelLimit) {
                 drawingState.availablePixels++;
             }
-        }, 4000);
+        }, 3000);
 
         return () => clearInterval(intervalId);
     });

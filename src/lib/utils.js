@@ -1,4 +1,4 @@
-import { ui } from "./shared.svelte.js";
+import { ui } from "../shared.svelte.js";
 
 export function isValidEmail(emailToValid) {
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -181,3 +181,9 @@ export function changeColorSchema(palette) {
     root.style.setProperty(varName, palette[varName]);
   }
 }
+
+export const MESSAGES_TYPES = Object.freeze({
+  SUCCESS: Symbol(),
+  INFO: Symbol(),
+  ERROR: Symbol(),
+});

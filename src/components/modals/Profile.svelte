@@ -1,7 +1,7 @@
 <script>
 	import { onMount } from "svelte";
     import { ui, user } from "../../shared.svelte.js";
-    import { showAlert, formatToLocalDate, getUserLevel } from "../../utils.js";
+    import { showAlert, formatToLocalDate, getUserLevel, MESSAGES_TYPES } from "$lib/utils.js";
 	import { getUserInformation, deleteCookies } from "../../pixlandApi.js";
 
     let profileUsername = $state("...");
@@ -13,8 +13,8 @@
     onMount(async () => {
         const response = await getUserInformation();
 
-        if (response.state !== "success") {
-            showAlert("error", "User Info Error", "There was an issue retrieving your user information. Please try again later.");
+        if (response.state !== MESSAGES_TYPES.SUCCESS) {
+            showAlert(MESSAGES_TYPES.ERROR, "User Info Error", "There was an issue retrieving your user information. Please try again later.");
         }
         else {
             const userInfo = response.data.info;

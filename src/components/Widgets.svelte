@@ -6,7 +6,7 @@
     import ModalContainer from "./ModalContainer.svelte";
     import { ui, user } from "../shared.svelte.js";
 	import { scale } from "svelte/transition";
-    import { padWithZeros } from "../utils.js";
+    import { padWithZeros } from "$lib/utils.js";
 </script>
 
 <ColorPalette/>

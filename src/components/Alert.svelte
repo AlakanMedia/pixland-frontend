@@ -2,12 +2,7 @@
     import { onMount } from "svelte";
     import { fly } from "svelte/transition";
     import { ui } from "../shared.svelte.js";
-
-    const alertIcons = {
-        "error": "<i class='ph-bold ph-bug' style='font-size: 2rem;'></i>",
-        "success": "<i class='ph-bold ph-check-circle' style='font-size: 2rem;'></i>",
-        "info": "<i class='ph-bold ph-info' style='font-size: 2rem;'></i>",
-    };
+    import { MESSAGES_TYPES } from "$lib/utils.js";
 
     onMount(() => {
         const interval = setInterval(() => {
@@ -20,11 +15,11 @@
 
 <div
     id="alert"
-    class={ui.alert.type === "error" ? "alert-error" : ui.alert.type === "success" ? "alert-success" : "alert-warning"}
+    class={ui.alert.type === MESSAGES_TYPES.ERROR ? "alert-error" : ui.alert.type === MESSAGES_TYPES.SUCCESS ? "alert-success" : "alert-warning"}
     transition:fly={{x: 400, duration: 1600}}
 >
     <div class="alert-icon">
-        {@html alertIcons[ui.alert.type]}
+        <i class={["ph-bold", ui.alert.type === MESSAGES_TYPES.ERROR ? "ph-bug" : ui.alert.type === MESSAGES_TYPES.SUCCESS ? "ph-check-circle" : "ph-info"]}></i>
     </div>
     <div class="alert-content">
         <div class="alert-title">{ui.alert.title}</div>
@@ -80,6 +75,10 @@
         font-size: 24px;
         margin-top: 2px;
         flex-shrink: 0;
+    }
+
+    .alert-icon > i {
+        font-size: 2rem;
     }
 
     .alert-content {

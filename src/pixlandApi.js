@@ -1,3 +1,5 @@
+import { MESSAGES_TYPES } from "$lib/utils.js";
+
 const API_URL = import.meta.env.VITE_API_URL;
 
 /**
@@ -27,7 +29,7 @@ async function apiClient(endpoint, options = {}) {
         if (!response.ok) {
             // Si la respuesta no es OK, devuelve una estructura de error estandarizada.
             return {
-                state: "error",
+                state: MESSAGES_TYPES.ERROR,
                 data: {
                     code: response.status,
                     message: responseData.detail || `Error ${response.status}`,
@@ -37,7 +39,7 @@ async function apiClient(endpoint, options = {}) {
 
         // Si la respuesta es OK, devuelve la estructura de éxito.
         return {
-            state: "success",
+            state: MESSAGES_TYPES.SUCCESS,
             data: {
                 code: response.status,
                 info: responseData,
@@ -46,7 +48,7 @@ async function apiClient(endpoint, options = {}) {
     } catch (error) {
         // Captura errores de red o fallos graves.
         console.error("API Client Error:", error);
-        return { state: "error", data: null };
+        return { state: MESSAGES_TYPES.ERROR, data: null };
     }
 }
 
@@ -87,7 +89,7 @@ export function getCellsBox(upperLeftLimit, lowerRightLimit) {
         !Array.isArray(lowerRightLimit) || lowerRightLimit.length !== 2
     ) {
         console.error("Parámetros de getCellsBox inválidos.");
-        return Promise.resolve({ state: "error", data: null }); // Retorna una promesa resuelta
+        return Promise.resolve({ state: MESSAGES_TYPES.ERROR, data: null }); // Retorna una promesa resuelta
     }
 
     return apiClient("/cells/box", {

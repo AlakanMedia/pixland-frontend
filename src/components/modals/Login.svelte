@@ -1,7 +1,7 @@
 <script>
     import { user, drawingState, ui } from "../../shared.svelte.js";
     import { registerNewUser, loginUser, getUserInformation, getPalette } from "../../pixlandApi.js";
-    import { showAlert, isValidEmail, getUserLevel, changeColorSchema } from "../../utils.js";
+    import { showAlert, isValidEmail, getUserLevel, changeColorSchema, MESSAGES_TYPES } from "$lib/utils.js";
 
     let username = $state("");
     let email = $state("");
@@ -26,7 +26,7 @@
                 inputPassword.classList.add("error");
             }
 
-            showAlert("info", "Missing Information", "Please fill in all required fields before submitting the form. Make sure no fields are left empty.");
+            showAlert(MESSAGES_TYPES.INFO, "Missing Information", "Please fill in all required fields before submitting the form. Make sure no fields are left empty.");
             return false;
         }
 
@@ -34,7 +34,7 @@
             const inputUsername = document.body.querySelector("#input-username");
             inputUsername.classList.add("error");
 
-            showAlert("info", "Username Too Short", "Your username must be at least 1 character long.");
+            showAlert(MESSAGES_TYPES.INFO, "Username Too Short", "Your username must be at least 1 character long.");
             return false;
         }
 
@@ -42,7 +42,7 @@
             const inputEmail = document.body.querySelector("#input-email");
             inputEmail.classList.add("error");
 
-            showAlert("info", "Invalid Email", "The email address you entered is not valid. Please check for any typos or use a valid email format.");
+            showAlert(MESSAGES_TYPES.INFO, "Invalid Email", "The email address you entered is not valid. Please check for any typos or use a valid email format.");
             return false;
         }
 
@@ -50,7 +50,7 @@
             const inputPassword = document.body.querySelector("#input-password");
             inputPassword.classList.add("error");
 
-            showAlert("info", "Password Too Short", "Your password must be at least 4 characters long.");
+            showAlert(MESSAGES_TYPES.INFO, "Password Too Short", "Your password must be at least 4 characters long.");
             return false;
         }
 
@@ -58,7 +58,7 @@
             const inputConfirmPassword = document.body.querySelector("#input-confirm-password");
             inputConfirmPassword.classList.add("error");
 
-            showAlert("info", "Password Mismatch", "The passwords you entered do not match. Please ensure both passwords are identical and try again.");
+            showAlert(MESSAGES_TYPES.INFO, "Password Mismatch", "The passwords you entered do not match. Please ensure both passwords are identical and try again.");
             return false;
         }
 
@@ -76,20 +76,20 @@
             password: password,
         });
 
-        if (response.state !== "success") {
+        if (response.state !== MESSAGES_TYPES.SUCCESS) {
             const data = response.data;
 
             if (data && data.code === 409) {
-                showAlert("info", "Username or Email Already Taken", "The username or email you entered is already in use. Please choose a different username or email address to proceed with your registration.");
+                showAlert(MESSAGES_TYPES.INFO, "Username or Email Already Taken", "The username or email you entered is already in use. Please choose a different username or email address to proceed with your registration.");
             }
             else {
-                showAlert("error", "Unexpected Error Occurred", "An unexpected error has occurred while processing your request. Please try again later. If the problem persists, contact support for assistance.");
+                showAlert(MESSAGES_TYPES.ERROR, "Unexpected Error Occurred", "An unexpected error has occurred while processing your request. Please try again later. If the problem persists, contact support for assistance.");
             }
 
             return false;
         }
 
-        showAlert("success", "Registration Successful", "Your account has been successfully registered. You can now log in and start to play. Welcome aboard!");
+        showAlert(MESSAGES_TYPES.SUCCESS, "Registration Successful", "Your account has been successfully registered. You can now log in and start to play. Welcome aboard!");
         return true;
     }
 
@@ -105,20 +105,20 @@
                 inputPassword.classList.add("error");
             }
             
-            showAlert("info", "Missing Information", "Please fill in all required fields before submitting the form. Make sure no fields are left empty.");
+            showAlert(MESSAGES_TYPES.INFO, "Missing Information", "Please fill in all required fields before submitting the form. Make sure no fields are left empty.");
             return false;
         }
 
         const response = await loginUser(username, password);
 
-        if (response.state !== "success") {
+        if (response.state !== MESSAGES_TYPES.SUCCESS) {
             const data = response.data;
 
             if (data && data.code === 401) {
-                showAlert("info", "Login Failed", "The username or password you entered is incorrect. Please try again.");
+                showAlert(MESSAGES_TYPES.INFO, "Login Failed", "The username or password you entered is incorrect. Please try again.");
             }
             else {
-                showAlert("error", "Unexpected Error Occurred", "An unexpected error has occurred while processing your request. Please try again later. If the problem persists, contact support for assistance.");
+                showAlert(MESSAGES_TYPES.ERROR, "Unexpected Error Occurred", "An unexpected error has occurred while processing your request. Please try again later. If the problem persists, contact support for assistance.");
             }
 
             return false;
@@ -144,8 +144,8 @@
             if (userLoged) {
                 let response = await getUserInformation();
 
-                if (response.state !== "success") {
-                    showAlert("error", "Unexpected Error Occurred", "An error occurred while retrieving user information. Please try again.");
+                if (response.state !== MESSAGES_TYPES.SUCCESS) {
+                    showAlert(MESSAGES_TYPES.ERROR, "Unexpected Error Occurred", "An error occurred while retrieving user information. Please try again.");
                     return;
                 }
 
@@ -154,7 +154,7 @@
                 if (userInfo.settings.palette !== "default") {
                     response = await getPalette(userInfo.settings.palette);
 
-                    if (response.state === "success") {
+                    if (response.state === MESSAGES_TYPES.SUCCESS) {
                         const newPalette = response.data.info.colors;
                         changeColorSchema(newPalette);
                         drawingState.needsUpdate = true;
