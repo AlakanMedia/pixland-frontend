@@ -55,8 +55,8 @@
         else {
             const userInfo = response.data.info;
 
-            if (userInfo.palette_theme !== "default") {
-                response = await getPalette(userInfo.palette_theme);
+            if (userInfo.settings.palette !== "default") {
+                response = await getPalette(userInfo.settings.palette);
 
                 if (response.state === "success") {
                     const newPalette = response.data.info.colors;
@@ -64,6 +64,7 @@
                 }
                 else {
                     console.log("Error loading palette, default palette is being used");
+                    userInfo.settings.palette = "default";
                 }
             }
 
@@ -71,6 +72,8 @@
 
             drawingState.availablePixels = 0;
             drawingState.pixelLimit = userLevel.pixelsLimit;
+            drawingState.showGrid = userInfo.settings.show_grid;
+            drawingState.palette = userInfo.settings.palette;
 
             user.id = userInfo.id;
             user.isLoggedIn = true;
@@ -197,14 +200,16 @@
     }
 
     function drawMatrix() {
+        const rootStyles = getComputedStyle(document.documentElement);
+
         contextCanvas.clearRect(0, 0, canvasElement.width, canvasElement.height);
+        contextCanvas.fillStyle = rootStyles.getPropertyValue("--color01").trim();
+        contextCanvas.fillRect(0, 0, canvasElement.width, canvasElement.height);
 
         const startCellX = Math.floor(cameraOffsetX / effectiveCellSize);
         const startCellY = Math.floor(cameraOffsetY / effectiveCellSize);
         const endCellX = Math.min(Math.floor((cameraOffsetX + canvasElement.width) / effectiveCellSize), maxNumberCells - 1);
         const endCellY = Math.min(Math.floor((cameraOffsetY + canvasElement.height) / effectiveCellSize), maxNumberCells - 1);
-
-        const rootStyles = getComputedStyle(document.documentElement);
 
         for (let i = startCellX; i <= endCellX; i++) {
             for (let j = startCellY; j <= endCellY; j++) {
@@ -219,7 +224,7 @@
                 const chunkString = `${chunkX},${chunkY}`;
 
                 if (loadingChunks.has(chunkString)) {
-                    contextCanvas.fillStyle = rootStyles.getPropertyValue("--color01").trim();
+                    contextCanvas.fillStyle = rootStyles.getPropertyValue("--color02").trim();
                     contextCanvas.fillRect(screenX, screenY, effectiveCellSize, effectiveCellSize);
                 } else {
                     const cellColor = cellCache.get(generateDynamicKey(i, j, maxNumberCells - 1));
@@ -229,7 +234,7 @@
                         contextCanvas.fillRect(screenX, screenY, effectiveCellSize, effectiveCellSize);
                     }
 
-                    if (cellScale >= 2) {
+                    if (drawingState.showGrid && cellScale >= 2) {
                         contextCanvas.strokeStyle = rootStyles.getPropertyValue("--color04").trim();
                         contextCanvas.strokeRect(screenX, screenY, effectiveCellSize, effectiveCellSize);
                     }

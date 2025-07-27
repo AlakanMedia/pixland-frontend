@@ -3,6 +3,7 @@ export const ui = $state({
     activeUsers: 0,
     loginModalIsOpen: false,
     profileModalIsOpen: false,
+    settingsModalIsOpen: false,
     alert: {
         show: false,
         type: "", // "success", "error", "info"
@@ -24,4 +25,6 @@ export const drawingState = $state({
     availablePixels: 0,
     pixelLimit: null,
     needsUpdate: false,
+    showGrid: true,
+    palette: "default",
 });

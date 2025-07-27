@@ -18,26 +18,36 @@
 {#if optionIsOpen}
     <div id="options-menu">
         {#if !user.isLoggedIn}
-            <button class="option-button" onclick={(e) => {
-                e.stopPropagation();
-                ui.loginModalIsOpen = true;
-                optionIsOpen = false;
-            }}>
+            <button
+                class="option-button"
+                onclick={(e) => {
+                    e.stopPropagation();
+                    ui.loginModalIsOpen = true;
+                    optionIsOpen = false;
+                }}
+            >
                 <i class="ph-bold ph-user"></i>
-                <p>Login</p>
+                <p>login</p>
             </button> 
         {/if}
-        <button class="option-button">
+        <button
+            class="option-button"
+            onclick={(e) => {
+                e.stopPropagation();
+                ui.settingsModalIsOpen = true;
+                optionIsOpen = false;
+            }}
+        >
             <i class="ph-bold ph-gear"></i>
-            <p>Settings</p>
+            <p>settings</p>
         </button> 
         <button class="option-button" onclick={() => {goto("/legals");}}>
             <i class="ph-bold ph-gavel"></i>
-            <p>Legals</p>
+            <p>legals</p>
         </button> 
         <button class="option-button" onclick={() => {goto("/about");}}>
             <i class="ph-bold ph-info"></i>
-            <p>About</p>
+            <p>about</p>
         </button> 
     </div>
 {/if}
@@ -68,7 +78,7 @@
         top: calc(42px + 1rem);
         left: 0.5rem;
         background-color: var(--overlay-bg);
-        border-radius: 6px;
+        border-radius: 12px;
         padding: 6px;
         display: flex;
         flex-direction: column;
@@ -80,13 +90,20 @@
         align-items: center;
         gap: 0.5rem;
         font-size: 1.25rem;
-        padding: 3px 8px;
+        padding: 8px 12px;
         background-color: var(--action-primary);
         color: var(--action-primary-text);
-        border: 2px solid var(--border-default);
+        border: none;
+        border-radius: 6px;
+        transition: background-color 0.3s ease;
+    }
+
+    .option-button:hover {
+        background-color: var(--action-primary-hover);
     }
 
     .option-button > p {
-        margin: 0;
+        font-size: 1rem;
+        font-weight: bold;
     }
 </style>

@@ -435,7 +435,7 @@
     .container {
         max-width: 800px;
         margin: 0 auto;
-        padding: 3rem 2rem;
+        padding: 2rem 1rem;
     }
 
     .legal-header {

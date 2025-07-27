@@ -161,8 +161,8 @@
 
                 const userInfo = response.data.info;
 
-                if (userInfo.palette_theme !== "default") {
-                    response = await getPalette(userInfo.palette_theme);
+                if (userInfo.settings.palette !== "default") {
+                    response = await getPalette(userInfo.settings.palette);
 
                     if (response.state === "success") {
                         const newPalette = response.data.info.colors;
@@ -171,6 +171,7 @@
                     }
                     else {
                         console.log("Error loading palette, default palette is being used");
+                        userInfo.settings.palette = "default";
                     }
                 }
 
@@ -178,6 +179,8 @@
 
                 drawingState.availablePixels = 0;
                 drawingState.pixelLimit = userLevel.pixelsLimit;
+                drawingState.showGrid = userInfo.settings.show_grid;
+                drawingState.palette = userInfo.settings.palette
 
                 user.id = userInfo.id;
                 user.isLoggedIn = true;
@@ -326,10 +329,11 @@
         justify-content: center;
         align-items: center;
         flex-direction: column;
-        background-color: var(--bg-elevated-2);
+        gap: 12px;
+        background-color: var(--bg-elevated-1);
         box-shadow: var(--shadow-colored);
+        border: 1px solid var(--border-default);
         border-radius: 6px;
-        width: 260px;
         padding: 12px;
     }
 
@@ -339,20 +343,23 @@
         align-items: center;
         gap: 12px;
         width: 100%;
+        padding: 0 8px;
     }
 
     .login-button {
         height: 42px;
         width: 100%;
+        padding: 8px 12px;
         border-radius: 6px;
-        color: var(--action-primary-text);
-        background-color: var(--action-primary);
-        border: 2px solid var(--border-default);
-        transition: transform 0.3s ease;
+        border: none;
+        color: var(--action-secondary-text);
+        background-color: var(--action-secondary);
+        transition: all 0.3s ease;
     }
 
     .login-button:hover {
-        transform: scale(1.04);
+        background-color: var(--action-secondary-hover);
+        box-shadow: var(--shadow-md);
     }
 
     .login-button > i {
@@ -364,12 +371,11 @@
         width: 100%;
         justify-content: center;
         align-items: center;
-        margin: 12px 0;
     }
 
-    #login-separator > hr{
+    #login-separator > hr {
         width: 100%;
-        border: 2px solid var(--border-default);
+        border: 1px solid var(--border-subtle);
     }
 
     #login-separator > hr:first-of-type {
@@ -387,15 +393,16 @@
         align-items: center;
         gap: 6px;
         width: 100%;
+        padding: 0 8px;
     }
 
     #summit-container{
         width: 100%;
+        padding: 0 8px;
         display: flex;
         justify-content: space-between;
         align-items: center;
         gap: 6px;
-        margin-top: 12px;
     }
 
     .input-form {
@@ -424,17 +431,18 @@
         align-items: center;
         gap: 0.5rem;
         height: 42px;
-        padding: 0 0.5rem;
+        padding: 8px 12px;
         border-radius: 6px;
+        border: none;
         color: var(--action-primary-text);
         background-color: var(--action-primary);
-        border: 2px solid var(--border-default);
-        transition: transform 0.3s ease;
+        transition: all 0.3s ease;
         font-size: 1rem;
     }
 
     #sign-button:hover {
-        transform: scale(1.04);
+        background-color: var(--action-primary-hover);
+        box-shadow: var(--shadow-md);
     }
 
     #sign-button > i {

@@ -3,10 +3,11 @@
     import PixelQueue from "./PixelQueue.svelte";
     import Options from "../components/Options.svelte";
     import Login from "./Login.svelte";
+	import Profile from "./Profile.svelte";
+    import Settings from "./Settings.svelte";
     import Alert from "./Alert.svelte";
     import { ui, user } from "../shared.svelte.js";
 	import { scale } from "svelte/transition";
-	import Profile from "./Profile.svelte";
     import { padWithZeros } from "../utils.js";
 </script>
 
@@ -18,6 +19,9 @@
 <Options/>
 {#if ui.loginModalIsOpen}
     <Login/>
+{/if}
+{#if ui.settingsModalIsOpen}
+    <Settings/>
 {/if}
 {#if user.isLoggedIn}
     <input
@@ -32,6 +36,9 @@
 {/if}
 {#if ui.profileModalIsOpen}
     <Profile/> 
+{/if}
+{#if ui.settingsModalIsOpen}
+    <Settings/>
 {/if}
 {#if ui.alert.show}
     <Alert/>

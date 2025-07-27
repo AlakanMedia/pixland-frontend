@@ -146,9 +146,9 @@ export async function getCellsBox(upperLeftLimit, lowerRightLimit) {
         }
 
         const response = await fetch(`${API_URL}/cells/box`, {
-            method:"POST",
-            headers:{'Content-Type': 'application/json',},
-            body:JSON.stringify({
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
                 upper_left_limit: upperLeftLimit,
                 lower_right_limit: lowerRightLimit,
             })
@@ -191,6 +191,33 @@ export async function getPalette(name) {
             data: {
                 code: response.status,
                 info: responseJson,
+            }
+        }
+    }
+    catch (error) {
+        return {state: "error", data: null};
+    }
+}
+
+export async function updateUserConfigurations(config) {
+    try {
+        const response = await fetch(`${API_URL}/users/modify`, {
+            method: "PATCH",
+            headers: {"Content-Type": "application/json"},
+            credentials: "include",
+            body: JSON.stringify(config)
+
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error ${response.status}`);
+        }
+
+        return {
+            state: "success",
+            data: {
+                code: response.status,
+                info: "Successful update",
             }
         }
     }

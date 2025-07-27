@@ -80,6 +80,7 @@
             <h2 class="profile-text">{profileUsername}</h2>
             <p class="profile-text">{profileMessage}</p>
         </div>
+        <hr>
         <div id="profile-stats">
             <div class="stat-container">
                 <div class="stat-icon">
@@ -103,6 +104,7 @@
                 <div class="stat-label">created at</div>
             </div>
         </div>
+        <hr>
         <div id="profile-actions">
             <button class="btn btn-primary" onclick={async () => {logOut();}}>
               <i class="ph-bold ph-sign-out"></i>
@@ -117,6 +119,11 @@
 </div>
 
 <style>
+    hr {
+        width: 100%;
+        border: 1px solid var(--border-subtle);
+    }
+
     #profile-container {
         position: fixed;
         width: 100%;
@@ -128,18 +135,23 @@
     }
 
     #profile-card {
-        width: 320px;
-        background-color: var(--bg-elevated-2);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        padding: 12px;
+        background-color: var(--bg-elevated-1);
+        border: 1px solid var(--border-default);
         border-radius: 6px;
         box-shadow: var(--shadow-colored);
-        overflow: hidden;
-        transition: transform 0.2s ease;
+        gap: 12px;
+        /* overflow: hidden; */
+        /* transition: transform 0.2s ease; */
     }
 
     #profile-header {
-        padding: 24px;
+        padding: 0 8px;
         text-align: center;
-        border-bottom: 1px solid var(--border-default);
     }
 
     #profile-header > h2 {
@@ -165,14 +177,17 @@
     }
 
     #profile-stats {
-        padding: 16px 24px;
-        border-bottom: 1px solid var(--border-default);
+        padding: 0px 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
     }
 
     .stat-container {
         display: flex;
+        justify-content: space-between;
         align-items: center;
-        margin: 16px 0;
+        gap: 0.5rem;
     }
 
     .stat-icon {
@@ -181,7 +196,6 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-right: 12px;
         background-color: var(--accent-tertiary);
         border-radius: 6px;
     }
@@ -204,7 +218,8 @@
     }
 
     #profile-actions {
-        padding: 24px;
+        width: 100%;
+        padding: 0 8px;
         display: flex;
         justify-content: space-between;
         gap: 0.5rem;
@@ -215,31 +230,33 @@
         justify-content: center;
         align-items: center;
         gap: 0.5rem;
-        padding: 0.5rem;
+        padding: 8px 12px;
+        border: none;
         border-radius: 6px;
         font-size: 1rem;
         font-weight: bold;
         height: 42px;
         overflow: hidden;
+        transition: all 0.3s ease;
     }
 
     .btn-primary {
         color: var(--action-primary-text);
         background-color: var(--action-primary);
-        border: 2px solid var(--border-default);
     }
 
     .btn-primary:hover {
         background-color: var(--action-primary-hover);
+        box-shadow: var(--shadow-md);
     }
 
     .btn-danger {
-        color: var(--action-tertiary-text);
-        background-color: var(--action-tertiary);
-        border: 2px solid var(--border-default);
+        color: var(--action-primary-text);
+        background-color: var(--error-500);
     }
 
     .btn-danger:hover {
-        background-color: var(--action-tertiary-hover);
+        background-color: var(--error-600);
+        box-shadow: var(--shadow-md);
     }
 </style>
