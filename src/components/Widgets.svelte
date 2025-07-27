@@ -2,10 +2,8 @@
     import ColorPalette from "../components/ColorPalette.svelte";
     import PixelQueue from "./PixelQueue.svelte";
     import Options from "../components/Options.svelte";
-    import Login from "./Login.svelte";
-	import Profile from "./Profile.svelte";
-    import Settings from "./Settings.svelte";
     import Alert from "./Alert.svelte";
+    import ModalContainer from "./ModalContainer.svelte";
     import { ui, user } from "../shared.svelte.js";
 	import { scale } from "svelte/transition";
     import { padWithZeros } from "../utils.js";
@@ -17,12 +15,6 @@
     {padWithZeros(ui.activeUsers, 2)}
 </div>
 <Options/>
-{#if ui.loginModalIsOpen}
-    <Login/>
-{/if}
-{#if ui.settingsModalIsOpen}
-    <Settings/>
-{/if}
 {#if user.isLoggedIn}
     <input
         id="button-profile"
@@ -34,11 +26,8 @@
     />
     <PixelQueue/>
 {/if}
-{#if ui.profileModalIsOpen}
-    <Profile/> 
-{/if}
-{#if ui.settingsModalIsOpen}
-    <Settings/>
+{#if ui.loginModalIsOpen || ui.profileModalIsOpen || ui.settingsModalIsOpen}
+    <ModalContainer/>
 {/if}
 {#if ui.alert.show}
     <Alert/>

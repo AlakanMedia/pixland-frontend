@@ -1,9 +1,8 @@
 <script>
-	import { onMount, tick } from "svelte";
-    import { ui, user } from "../shared.svelte.js";
-	import { fade, scale } from "svelte/transition";
-    import { showAlert, formatToLocalDate, getUserLevel } from "../utils.js";
-	import { getUserInformation, deleteCookies } from "../pixlandApi.js";
+	import { onMount } from "svelte";
+    import { ui, user } from "../../shared.svelte.js";
+    import { showAlert, formatToLocalDate, getUserLevel } from "../../utils.js";
+	import { getUserInformation, deleteCookies } from "../../pixlandApi.js";
 
     let profileUsername = $state("...");
     let profileLevel = $state("...");
@@ -11,13 +10,7 @@
     let profileCreatedAt = $state("...");
     let profilePixelxPlaced = $state(0);
 
-    let profile;
-    let profileContainer;
-
     onMount(async () => {
-        profileContainer.focus();
-        await tick();
-
         const response = await getUserInformation();
 
         if (response.state !== "success") {
@@ -34,19 +27,6 @@
             profilePixelxPlaced = userInfo.pixels_placed;
         }
     });
-
-    function closeProfile(event) {
-        if (event.type === "click"){
-            if (event.target !== profile && !profile.contains(event.target)) {
-                ui.profileModalIsOpen = false;
-            }
-        }
-        else if (event.type === "keydown") {
-            if (event.key === "Escape") {
-                ui.profileModalIsOpen = false;
-            }
-        }
-    }
 
     async function logOut() {
         user.id = null;
@@ -65,56 +45,46 @@
     }
 </script>
 
-<div
-    id="profile-container"
-    onclick={(e) => {closeProfile(e);}}
-    onkeydown={(e) => {closeProfile(e);}}
-    role="dialog"
-    tabindex="0"
-    bind:this={profileContainer}
-    transition:fade={{duration: 600}}
->
-    <div id="profile-card" bind:this={profile} in:scale={{duration: 900}}>
-        <div id="profile-header">
-            <img id="profile-image" src="/profile_placeholder.png" alt="profile_photo"/>
-            <h2 class="profile-text">{profileUsername}</h2>
-            <p class="profile-text">{profileMessage}</p>
-        </div>
-        <hr>
-        <div id="profile-stats">
-            <div class="stat-container">
-                <div class="stat-icon">
-                    <i class="ph-fill ph-paint-brush"></i>
-                </div>
-                <div class="stat-value">{profileLevel}</div>
-                <div class="stat-label">level</div>
+<div id="profile-card">
+    <div id="profile-header">
+        <img id="profile-image" src="/profile_placeholder.png" alt="profile_photo"/>
+        <h2 class="profile-text">{profileUsername}</h2>
+        <p class="profile-text">{profileMessage}</p>
+    </div>
+    <hr>
+    <div id="profile-stats">
+        <div class="stat-container">
+            <div class="stat-icon">
+                <i class="ph-fill ph-paint-brush"></i>
             </div>
-            <div class="stat-container">
-                <div class="stat-icon">
-                    <i class="ph-fill ph-grid-four"></i>
-                </div>
-                <div class="stat-value">{profilePixelxPlaced}</div>
-                <div class="stat-label">pixels placed</div>
-            </div>
-            <div class="stat-container">
-                <div class="stat-icon">
-                    <i class="ph ph-calendar-dots"></i>
-                </div>
-                <div class="stat-value">{formatToLocalDate(profileCreatedAt)}</div>
-                <div class="stat-label">created at</div>
-            </div>
+            <div class="stat-value">{profileLevel}</div>
+            <div class="stat-label">level</div>
         </div>
-        <hr>
-        <div id="profile-actions">
-            <button class="btn btn-primary" onclick={async () => {logOut();}}>
-              <i class="ph-bold ph-sign-out"></i>
-              sign out
-            </button>
-            <button class="btn btn-danger" title="Delete Account">
-              <i class="ph-bold ph-trash"></i>
-              delete
-            </button>
+        <div class="stat-container">
+            <div class="stat-icon">
+                <i class="ph-fill ph-grid-four"></i>
+            </div>
+            <div class="stat-value">{profilePixelxPlaced}</div>
+            <div class="stat-label">pixels placed</div>
         </div>
+        <div class="stat-container">
+            <div class="stat-icon">
+                <i class="ph ph-calendar-dots"></i>
+            </div>
+            <div class="stat-value">{formatToLocalDate(profileCreatedAt)}</div>
+            <div class="stat-label">created at</div>
+        </div>
+    </div>
+    <hr>
+    <div id="profile-actions">
+        <button class="btn btn-primary" onclick={async () => {logOut();}}>
+          <i class="ph-bold ph-sign-out"></i>
+          sign out
+        </button>
+        <button class="btn btn-danger" title="Delete Account">
+          <i class="ph-bold ph-trash"></i>
+          delete
+        </button>
     </div>
 </div>
 
@@ -122,16 +92,6 @@
     hr {
         width: 100%;
         border: 1px solid var(--border-subtle);
-    }
-
-    #profile-container {
-        position: fixed;
-        width: 100%;
-        height: 100%;
-        background-color: var(--overlay-bg);
-        display: flex;
-        justify-content: center;
-        align-items: center;
     }
 
     #profile-card {

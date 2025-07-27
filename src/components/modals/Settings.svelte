@@ -1,34 +1,11 @@
 <script>
-    import { fade, scale } from "svelte/transition";
-    import { ui, drawingState, user } from "../shared.svelte.js";
-	import { onMount, tick } from "svelte";
-	import { getPalette, updateUserConfigurations } from "../pixlandApi.js";
-    import { changeColorSchema, showAlert } from "../utils.js";
-
-    let settingsContainer;
-    let settings;
+    import { ui, drawingState, user } from "../../shared.svelte.js";
+	import { getPalette, updateUserConfigurations } from "../../pixlandApi.js";
+    import { changeColorSchema, showAlert } from "../../utils.js";
 
     let palette = $state(drawingState.palette);
     let showGrid = $state(drawingState.showGrid);
     let PALETTES = $state(["default", "reversed"]);
-
-    onMount(async () => {
-        settingsContainer.focus();
-        await tick();
-    });
-
-    function closeSettings(event) {
-        if (event.type === "click"){
-            if (event.target !== settings && !settings.contains(event.target)) {
-                ui.settingsModalIsOpen = false;
-            }
-        }
-        else if (event.type === "keydown") {
-            if (event.key === "Escape") {
-                ui.settingsModalIsOpen = false;
-            }
-        }
-    }
 
     async function saveConfiguration() {
         if (user.isLoggedIn) {
@@ -72,74 +49,54 @@
     }
 </script>
 
-<div
-    id="settings-container"
-    onclick={(e) => {closeSettings(e);}}
-    onkeydown={(e) => {closeSettings(e);}}
-    role="dialog"
-    tabindex="0"
-    bind:this={settingsContainer}
-    transition:fade={{duration: 600}}
->
-    <div id="settings" bind:this={settings} in:scale={{duration: 900}}>
-        <div id="settings-header" class="settings-icon-text">
-            <i class="ph ph-gear-six"></i>
-            <h2>Settings</h2>
+<div id="settings">
+    <div id="settings-header" class="settings-icon-text">
+        <i class="ph ph-gear-six"></i>
+        <h2>Settings</h2>
+    </div>
+    <hr>
+    <div id="settings-options">
+        <div class="display-option">
+            <div class="settings-icon-text">
+                <i class="ph ph-ruler"></i>
+                <h4>show grid</h4>
+            </div>
+            <label class="switch">
+                <input type="checkbox" bind:checked={showGrid}>
+                <span class="slider"></span>
+            </label>
         </div>
-        <hr>
-        <div id="settings-options">
+
+        {#if user.isLoggedIn}
             <div class="display-option">
                 <div class="settings-icon-text">
-                    <i class="ph ph-ruler"></i>
-                    <h4>show grid</h4>
+                    <i class="ph ph-palette"></i>
+                    <h4>change palette</h4>
                 </div>
-                <label class="switch">
-                    <input type="checkbox" bind:checked={showGrid}>
-                    <span class="slider"></span>
-                </label>
+             <select bind:value={palette}>
+              	{#each PALETTES as plt}
+              		<option value={plt}>
+              			{plt}
+              		</option>
+                 {/each}
+             </select>
             </div>
-
-            {#if user.isLoggedIn}
-                <div class="display-option">
-                    <div class="settings-icon-text">
-                        <i class="ph ph-palette"></i>
-                        <h4>change palette</h4>
-                    </div>
-	                <select bind:value={palette}>
-	                 	{#each PALETTES as plt}
-	                 		<option value={plt}>
-	                 			{plt}
-	                 		</option>
-	                    {/each}
-	                </select>
-                </div>
-            {/if}
-        </div>
-        <hr>
-        <div id="settings-buttons">
-            <button id="restore-button" onclick={async () => {await saveConfiguration();}}>
-                <i class="ph ph-clock-counter-clockwise"></i>
-                <p>restore</p>
-            </button>
-            <button id="save-button" onclick={async () => {await saveConfiguration();}}>
-                <i class="ph ph-floppy-disk"></i>
-                <p>save</p>
-            </button>
-        </div>
+        {/if}
+    </div>
+    <hr>
+    <div id="settings-buttons">
+        <button id="restore-button" onclick={async () => {await saveConfiguration();}}>
+            <i class="ph ph-clock-counter-clockwise"></i>
+            <p>restore</p>
+        </button>
+        <button id="save-button" onclick={async () => {await saveConfiguration();}}>
+            <i class="ph ph-floppy-disk"></i>
+            <p>save</p>
+        </button>
     </div>
 </div>
 
 <style>
-    #settings-container {
-        position: fixed;
-        width: 100%;
-        height: 100%;
-        background-color: var(--overlay-bg);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-
     #settings {
         display: flex;
         justify-content: center;

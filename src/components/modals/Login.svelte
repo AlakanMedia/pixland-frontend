@@ -1,23 +1,13 @@
 <script>
-    import { onMount, tick } from "svelte";
-    import { fade, scale } from "svelte/transition";
-    import { user, drawingState, ui } from "../shared.svelte.js";
-    import { registerNewUser, loginUser, getUserInformation, getPalette } from "../pixlandApi.js";
-    import { showAlert, isValidEmail, getUserLevel, changeColorSchema } from "../utils.js";
+    import { user, drawingState, ui } from "../../shared.svelte.js";
+    import { registerNewUser, loginUser, getUserInformation, getPalette } from "../../pixlandApi.js";
+    import { showAlert, isValidEmail, getUserLevel, changeColorSchema } from "../../utils.js";
 
     let username = $state("");
     let email = $state("");
     let password = $state("");
     let confirmPassword = $state("");
     let register = $state(false);
-
-    let login;
-    let loginContainer;
-
-    onMount(async () => {
-        loginContainer.focus();
-        await tick();
-    });
 
     function isValidFields() {
         if (!(username && email && password)) {
@@ -198,7 +188,7 @@
     }
 
     function closeLogin(event) {
-        if (event.type === "click"){
+        if (event.type === "click") {
             if (event.target !== login && !login.contains(event.target)) {
                 ui.loginModalIsOpen = false;
             }
@@ -210,101 +200,82 @@
         }
     }
 
-    async function handleKeyDown(event) {
-        if (event.key === "Enter") {
-            await handleSignButton();
-        }
-        else {
-            closeLogin(event);
-        }
-    }
-
     function removeErrorClass(element) {
         element.classList.remove("error");
     }
 </script>
 
-<div
-    id="login-container"
-    onclick={(e) => {closeLogin(e);}}
-    onkeydown={async (e) => {handleKeyDown(e);}}
-    role="dialog"
-    tabindex="0"
-    bind:this={loginContainer}
-    transition:fade={{duration: 600}}
->
-    <div id="login" bind:this={login} in:scale={{duration: 900}}>
-        <div id="login-buttons-container">
-            <button class="login-button" aria-label="Google">
-                <i class="ph-bold ph-google-logo"></i>
-            </button>
-            <button class="login-button" aria-label="Discord">
-                <i class="ph-bold ph-discord-logo"></i>
-            </button>
-        </div>
-        <div id="login-separator">
-            <hr><p>or</p><hr>
-        </div>
-        <form id="login-form">
+<div id="login">
+    <div id="login-buttons-container">
+        <button class="login-button" aria-label="Google">
+            <i class="ph-bold ph-google-logo"></i>
+        </button>
+        <button class="login-button" aria-label="Discord">
+            <i class="ph-bold ph-discord-logo"></i>
+        </button>
+    </div>
+    <div id="login-separator">
+        <hr><p>or</p><hr>
+    </div>
+    <form id="login-form">
+        <input
+            id="input-username"
+            class="input-form"
+            bind:value={username}
+            placeholder="username"
+            type="text"
+            onfocus={(e) => {removeErrorClass(e.target);}}
+            required
+        />
+        {#if register}
             <input
-                id="input-username"
+                id="input-email"
                 class="input-form"
-                bind:value={username}
-                placeholder="username"
-                type="text"
+                bind:value={email}
+                placeholder="email"
+                type="email"
                 onfocus={(e) => {removeErrorClass(e.target);}}
                 required
             />
-            {#if register}
-                <input
-                    id="input-email"
-                    class="input-form"
-                    bind:value={email}
-                    placeholder="email"
-                    type="email"
-                    onfocus={(e) => {removeErrorClass(e.target);}}
-                    required
-                />
-            {/if}
+        {/if}
+        <input
+            id="input-password"
+            class="input-form"
+            bind:value={password}
+            placeholder="password"
+            type="password"
+            onfocus={(e) => {removeErrorClass(e.target);}}
+            required
+        />
+        {#if register}
             <input
-                id="input-password"
-                class="input-form"
-                bind:value={password}
-                placeholder="password"
+                id="input-confirm-password"
+                class={["input-form", confirmPassword && password !== confirmPassword ? "error" : ""]}
+                bind:value={confirmPassword}
+                placeholder="confirm password"
                 type="password"
-                onfocus={(e) => {removeErrorClass(e.target);}}
                 required
             />
+        {/if}
+    </form>
+    <div id="summit-container">
+        <label id="register-checkbox">
+            <input id="register-button" type="checkbox" bind:checked={register}/>
+            <span>register</span>
+        </label>
+        <button
+            id="sign-button"
+            aria-label="Pixland"
+            onclick={async () => {handleSignButton();}}
+        >
             {#if register}
-                <input
-                    id="input-confirm-password"
-                    class={["input-form", confirmPassword && password !== confirmPassword ? "error" : ""]}
-                    bind:value={confirmPassword}
-                    placeholder="confirm password"
-                    type="password"
-                    required
-                />
+                <i class="ph-bold ph-user-plus"></i>
+                <p>sign up</p>
+            {:else} 
+                <i class="ph-bold ph-sign-in"></i>
+                <p>sign in</p>
             {/if}
-        </form>
-        <div id="summit-container">
-            <label id="register-checkbox">
-                <input id="register-button" type="checkbox" bind:checked={register}/>
-                <span>register</span>
-            </label>
-            <button
-                id="sign-button"
-                aria-label="Pixland"
-                onclick={async () => {handleSignButton();}}
-            >
-                {#if register}
-                    <i class="ph-bold ph-user-plus"></i>
-                    <p>sign up</p>
-                {:else} 
-                    <i class="ph-bold ph-sign-in"></i>
-                    <p>sign in</p>
-                {/if}
-            </button>
-        </div>
+        </button>
     </div>
 </div>
 
@@ -312,16 +283,6 @@
     #login p, 
     #login label {
         color: var(--text-primary);
-    }
-
-    #login-container {
-        position: fixed;
-        width: 100%;
-        height: 100%;
-        background-color: var(--overlay-bg);
-        display: flex;
-        justify-content: center;
-        align-items: center;
     }
 
     #login {
