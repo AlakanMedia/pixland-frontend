@@ -1,16 +1,9 @@
 <script>
-	import { onMount } from "svelte";
     import { ui, user } from "../../shared.svelte.js";
     import { showAlert, formatToLocalDate, getUserLevel, MESSAGES_TYPES } from "$lib/utils.js";
 	import { getUserInformation, deleteCookies } from "../../pixlandApi.js";
 
-    let profileUsername = $state("...");
-    let profileLevel = $state("...");
-    let profileMessage = $state("...");
-    let profileCreatedAt = $state("...");
-    let profilePixelxPlaced = $state(0);
-
-    onMount(async () => {
+    async function updateUserInfo() {
         const response = await getUserInformation();
 
         if (response.state !== MESSAGES_TYPES.SUCCESS) {
@@ -18,18 +11,17 @@
         }
         else {
             const userInfo = response.data.info;
-            const userLevel = getUserLevel(userInfo.pixels_placed);
 
-            profileUsername = userInfo.username;
-            profileLevel = userLevel.level;
-            profileMessage = userLevel.message;
-            profileCreatedAt = userInfo.created_at;
-            profilePixelxPlaced = userInfo.pixels_placed;
+            user.name = userInfo.username;
+            user.pixelsPlaced = userInfo.pixels_placed;
         }
-    });
+    }
 
     async function logOut() {
         user.id = null;
+        user.name = null;
+        user.pixelsPlaced = null;
+        user.createdAt = null;
         user.isLoggedIn = false;
 
         if (user.websocket) {
@@ -47,9 +39,19 @@
 
 <div id="profile-card">
     <div id="profile-header">
-        <img id="profile-image" src="/profile_placeholder.png" alt="profile_photo"/>
-        <h2 class="profile-text">{profileUsername}</h2>
-        <p class="profile-text">{profileMessage}</p>
+        <button
+            class="profile-button"
+            aria-label="Update user information"
+            onclick={async () => {updateUserInfo();}}
+        >
+            <img
+                id="profile-image"
+                src="/profile_placeholder.png"
+                alt="Update user information"
+            />
+        </button>
+        <h2 class="profile-text">{user.name}</h2>
+        <p class="profile-text">{getUserLevel(user.pixelsPlaced).message}</p>
     </div>
     <hr>
     <div id="profile-stats">
@@ -57,21 +59,21 @@
             <div class="stat-icon">
                 <i class="ph-fill ph-paint-brush"></i>
             </div>
-            <div class="stat-value">{profileLevel}</div>
+            <div class="stat-value">{getUserLevel(user.pixelsPlaced).level}</div>
             <div class="stat-label">level</div>
         </div>
         <div class="stat-container">
             <div class="stat-icon">
                 <i class="ph-fill ph-grid-four"></i>
             </div>
-            <div class="stat-value">{profilePixelxPlaced}</div>
+            <div class="stat-value">{user.pixelsPlaced}</div>
             <div class="stat-label">pixels placed</div>
         </div>
         <div class="stat-container">
             <div class="stat-icon">
                 <i class="ph ph-calendar-dots"></i>
             </div>
-            <div class="stat-value">{formatToLocalDate(profileCreatedAt)}</div>
+            <div class="stat-value">{formatToLocalDate(user.createdAt)}</div>
             <div class="stat-label">created at</div>
         </div>
     </div>
@@ -122,13 +124,26 @@
         color: var(--text-secondary);
     }
 
-    #profile-image {
+    .profile-button {
+        background: none;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+        border-radius: 50%;
+    }
+
+    .profile-button img {
+        display: block; /* Para evitar espacios extra debajo de la imagen */
         width: 100px;
         height: 100px;
         border-radius: 50%;
         object-fit: cover;
         border: 3px solid var(--border-accent);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transition: transform 0.1s ease;
+    }
+
+    .profile-button:active img {
+        transform: scale(0.95);
     }
 
     .profile-text {

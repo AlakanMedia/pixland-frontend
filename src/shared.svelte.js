@@ -16,6 +16,9 @@ export const ui = $state({
 // Store para el usuario
 export const user = $state({
     id: null,
+    name: null,
+    pixelsPlaced: null,
+    createdAt: null,
     isLoggedIn: false,
     websocket: null,
 });

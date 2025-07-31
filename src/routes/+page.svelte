@@ -76,6 +76,9 @@
             drawingState.palette = userInfo.settings.palette;
 
             user.id = userInfo.id;
+            user.name = userInfo.username;
+            user.pixelsPlaced = userInfo.pixels_placed;
+            user.createdAt = userInfo.created_at;
             user.isLoggedIn = true;
         }
 
