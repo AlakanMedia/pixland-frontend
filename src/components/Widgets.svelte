@@ -26,7 +26,7 @@
     />
     <PixelQueue/>
 {/if}
-{#if ui.loginModalIsOpen || ui.profileModalIsOpen || ui.settingsModalIsOpen}
+{#if ui.generateImageModalIsOpen || ui.loginModalIsOpen || ui.profileModalIsOpen || ui.settingsModalIsOpen}
     <ModalContainer/>
 {/if}
 {#if ui.alert.show}

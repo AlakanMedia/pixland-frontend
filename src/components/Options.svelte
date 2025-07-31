@@ -17,7 +17,19 @@
 </button>
 {#if optionIsOpen}
     <div id="options-menu">
-        {#if !user.isLoggedIn}
+        {#if user.isLoggedIn}
+            <button
+                class="option-button"
+                onclick={(e) => {
+                    e.stopPropagation();
+                    ui.generateImageModalIsOpen = true;
+                    optionIsOpen = false;
+                }}
+            >
+                <i class="ph-bold ph-image"></i>
+                <p>generate</p>
+            </button> 
+        {:else}
             <button
                 class="option-button"
                 onclick={(e) => {

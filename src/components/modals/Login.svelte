@@ -372,7 +372,7 @@
         border: 1px solid var(--input-border);
         transition: border-color 0.3s ease;
         background-color: var(--input-bg);
-        color: var(--text-primary);
+        color: var(--input-text);
         padding: 0.5rem 0.75rem;
         font-size: 1rem;
     }

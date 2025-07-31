@@ -1,6 +1,7 @@
 // Store para la Interfaz de Usuario (UI)
 export const ui = $state({
     activeUsers: 0,
+    generateImageModalIsOpen: false,
     loginModalIsOpen: false,
     profileModalIsOpen: false,
     settingsModalIsOpen: false,
