@@ -1,4 +1,4 @@
-import { ui } from "../shared.svelte.js";
+import { ui, colorPalette } from "../shared.svelte.js";
 
 export function isValidEmail(emailToValid) {
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -175,10 +175,8 @@ export function padWithZeros(num, length) {
 }
 
 export function changeColorSchema(palette) {
-  const root = document.documentElement;
-
   for (let varName in palette) {
-    root.style.setProperty(varName, palette[varName]);
+    colorPalette[varName] = palette[varName];
   }
 }
 

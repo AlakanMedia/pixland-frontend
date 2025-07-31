@@ -3,7 +3,7 @@
     import { fade } from "svelte/transition";
     import { Spring } from "svelte/motion";
     import { getUserInformation, getCellsBox, getPalette } from "../pixlandApi.js";
-    import { ui, user, drawingState } from "../shared.svelte.js";
+    import { ui, user, drawingState, colorPalette } from "../shared.svelte.js";
     import { generateDynamicKey, getUserLevel, changeColorSchema, MESSAGES_TYPES } from "$lib/utils.js";
     import Widgets from "../components/Widgets.svelte";
 
@@ -200,10 +200,8 @@
     }
 
     function drawMatrix() {
-        const rootStyles = getComputedStyle(document.documentElement);
-
         contextCanvas.clearRect(0, 0, canvasElement.width, canvasElement.height);
-        contextCanvas.fillStyle = rootStyles.getPropertyValue("--color01").trim();
+        contextCanvas.fillStyle = colorPalette["color01"];
         contextCanvas.fillRect(0, 0, canvasElement.width, canvasElement.height);
 
         const startCellX = Math.floor(cameraOffsetX / effectiveCellSize);
@@ -224,18 +222,18 @@
                 const chunkString = `${chunkX},${chunkY}`;
 
                 if (loadingChunks.has(chunkString)) {
-                    contextCanvas.fillStyle = rootStyles.getPropertyValue("--color02").trim();
+                    contextCanvas.fillStyle = colorPalette["color02"]
                     contextCanvas.fillRect(screenX, screenY, effectiveCellSize, effectiveCellSize);
                 } else {
                     const cellColor = cellCache.get(generateDynamicKey(i, j, maxNumberCells - 1));
 
                     if (cellColor) {
-                        contextCanvas.fillStyle = rootStyles.getPropertyValue(cellColor).trim();
+                        contextCanvas.fillStyle = colorPalette[cellColor]
                         contextCanvas.fillRect(screenX, screenY, effectiveCellSize, effectiveCellSize);
                     }
 
                     if (drawingState.showGrid && cellScale >= 2) {
-                        contextCanvas.strokeStyle = rootStyles.getPropertyValue("--color04").trim();
+                        contextCanvas.strokeStyle = colorPalette["color04"];
                         contextCanvas.strokeRect(screenX, screenY, effectiveCellSize, effectiveCellSize);
                     }
                 }
@@ -249,7 +247,9 @@
         const coordinateY = Math.floor((cameraOffsetY + event.clientY) / effectiveCellSize);
         const dynamicKey = generateDynamicKey(coordinateX, coordinateY, maxNumberCells - 1);
 
-        if (cellCache.get(dynamicKey) === drawingState.selectedColor) {
+        const previousColor = cellCache.get(dynamicKey);
+
+        if ((previousColor === undefined && drawingState.selectedColor === "color01") || previousColor === drawingState.selectedColor) {
             return false;
         }
 
@@ -398,7 +398,7 @@
 	        cx={coords.current.x}
 	    	cy={coords.current.y}
 	    	r={size.current}
-            style={`fill: rgb(from var(${drawingState.selectedColor}) r g b / 0.4); stroke: white; stroke-width: 2;`}
+            style={`fill: rgb(from ${colorPalette[drawingState.selectedColor]} r g b / 0.4); stroke: white; stroke-width: 2;`}
             transition:fade
 	    />
     {/if}

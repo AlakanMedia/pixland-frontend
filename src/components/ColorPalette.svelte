@@ -1,23 +1,23 @@
 <script>
-    import { drawingState } from "../shared.svelte.js";
+    import { drawingState, colorPalette } from "../shared.svelte.js";
 
     const COLORS = [
-        {varName: "--color01", varText: "Very Dark Gray"},
-        {varName: "--color02", varText: "Black"},
-        {varName: "--color03", varText: "Gray"},
-        {varName: "--color04", varText: "White"},
-        {varName: "--color05", varText: "Dark Tan"},
-        {varName: "--color06", varText: "Pastel Pink"},
-        {varName: "--color07", varText: "Light Purple"},
-        {varName: "--color08", varText: "Purple"},
-        {varName: "--color09", varText: "Red"},
-        {varName: "--color10", varText: "Orange"},
-        {varName: "--color11", varText: "Yellow"},
-        {varName: "--color12", varText: "Lime Green"},
-        {varName: "--color13", varText: "Green"},
-        {varName: "--color14", varText: "Aqua"},
-        {varName: "--color15", varText: "Dodger Blue"},
-        {varName: "--color16", varText: "Blue"},
+        {varName: "color01", varText: "Very Dark Gray"},
+        {varName: "color02", varText: "Black"},
+        {varName: "color03", varText: "Gray"},
+        {varName: "color04", varText: "White"},
+        {varName: "color05", varText: "Dark Tan"},
+        {varName: "color06", varText: "Pastel Pink"},
+        {varName: "color07", varText: "Light Purple"},
+        {varName: "color08", varText: "Purple"},
+        {varName: "color09", varText: "Red"},
+        {varName: "color10", varText: "Orange"},
+        {varName: "color11", varText: "Yellow"},
+        {varName: "color12", varText: "Lime Green"},
+        {varName: "color13", varText: "Green"},
+        {varName: "color14", varText: "Aqua"},
+        {varName: "color15", varText: "Dodger Blue"},
+        {varName: "color16", varText: "Blue"},
     ];
 </script>
 
@@ -25,7 +25,7 @@
     {#each COLORS as color}
        <button
             class={["palette-button", drawingState.selectedColor === color.varName ? "selected" : ""]}
-            style={`background-color: var(${color.varName});`}
+            style={`background-color: ${colorPalette[color.varName]};`}
             onclick={(e) => {
                 e.stopPropagation();
                 drawingState.selectedColor = color.varName;
