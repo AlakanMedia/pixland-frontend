@@ -16,36 +16,29 @@
     });
 
     function closeModal(event) {
+        function closeActiveModal() {
+            if (ui.generateImageModalIsOpen) {
+                ui.generateImageModalIsOpen = false;
+            }
+            else if (ui.loginModalIsOpen) {
+                ui.loginModalIsOpen = false;
+            }
+            else if (ui.profileModalIsOpen) {
+                ui.profileModalIsOpen = false;
+            }
+            else if (ui.settingsModalIsOpen) {
+                ui.settingsModalIsOpen = false;
+            }
+        }
+
         if (event.type === "click") {
             if (event.target !== containerChild && !containerChild.contains(event.target)) {
-                if (ui.generateImageModalIsOpen) {
-                    ui.generateImageModalIsOpen = false;
-                }
-                else if (ui.loginModalIsOpen) {
-                    ui.loginModalIsOpen = false;
-                }
-                else if (ui.profileModalIsOpen) {
-                    ui.profileModalIsOpen = false;
-                }
-                else if (ui.settingsModalIsOpen) {
-                    ui.settingsModalIsOpen = false;
-                }
+                closeActiveModal();
             }
         }
         else if (event.type === "keydown") {
             if (event.key === "Escape") {
-                if (ui.generateImageModalIsOpen) {
-                    ui.generateImageModalIsOpen = false;
-                }
-                else if (ui.loginModalIsOpen) {
-                    ui.loginModalIsOpen = false;
-                }
-                else if (ui.profileModalIsOpen) {
-                    ui.profileModalIsOpen = false;
-                }
-                else if (ui.settingsModalIsOpen) {
-                    ui.settingsModalIsOpen = false;
-                }
+                closeActiveModal();
             }
         }
     }
