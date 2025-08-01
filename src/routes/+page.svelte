@@ -2,13 +2,14 @@
     import { onMount, onDestroy } from "svelte";
     import { fade } from "svelte/transition";
     import { Spring } from "svelte/motion";
-    import { getUserInformation, getCellsBox, getPalette } from "../pixlandApi.js";
+    import { getCellsBox } from "../pixlandApi.js";
     import { ui, user, drawingState, colorPalette } from "../shared.svelte.js";
     import { generateDynamicKey, getUserLevel, changeColorSchema, MESSAGES_TYPES } from "$lib/utils.js";
     import Widgets from "../components/Widgets.svelte";
 
     const API_URL = import.meta.env.VITE_API_URL
 
+    /** @type {import('./$types').PageProps} */
     let { data } = $props(); // Recibimos la información de +page.server.js
 
     let canvasElement; // Referencia al canvas
