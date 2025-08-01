@@ -9,6 +9,8 @@
 
     const API_URL = import.meta.env.VITE_API_URL
 
+    let { data } = $props(); // Recibimos la información de +page.server.js
+
     let canvasElement; // Referencia al canvas
     let contextCanvas; // Contexto del canvas
 
@@ -46,39 +48,24 @@
     let needsRedraw = true;
 
     onMount(async () => {
-        let response = await getUserInformation()
+        const { initialUser, initialPalette } = data;
 
-        if (response.state !== MESSAGES_TYPES.SUCCESS) {
-            user.id = null;
-            user.isLoggedIn = false;
-        }
-        else {
-            const userInfo = response.data.info;
-
-            if (userInfo.settings.palette !== "default") {
-                response = await getPalette(userInfo.settings.palette);
-
-                if (response.state === MESSAGES_TYPES.SUCCESS) {
-                    const newPalette = response.data.info.colors;
-                    changeColorSchema(newPalette);
-                }
-                else {
-                    console.log("Error loading palette, default palette is being used");
-                    userInfo.settings.palette = "default";
-                }
+        if (initialUser) {
+            if (initialPalette) {
+                changeColorSchema(initialPalette);
             }
 
-            const userLevel = getUserLevel(userInfo.pixels_placed);
+            const userLevel = getUserLevel(initialUser.pixelsPlaced);
 
             drawingState.availablePixels = 0;
             drawingState.pixelLimit = userLevel.pixelsLimit;
-            drawingState.showGrid = userInfo.settings.show_grid;
-            drawingState.palette = userInfo.settings.palette;
+            drawingState.showGrid = initialUser.settings.show_grid;
+            drawingState.palette = initialUser.settings.palette;
 
-            user.id = userInfo.id;
-            user.name = userInfo.username;
-            user.pixelsPlaced = userInfo.pixels_placed;
-            user.createdAt = userInfo.created_at;
+            user.id = initialUser.id;
+            user.name = initialUser.name;
+            user.pixelsPlaced = initialUser.pixelsPlaced;
+            user.createdAt = initialUser.createdAt;
             user.isLoggedIn = true;
         }
 

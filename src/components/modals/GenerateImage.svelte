@@ -6,11 +6,11 @@
         </div>
         <div class="input-row">
             <div class="input-group">
-                <label class="input-label" for="top-left-x">X:</label>
+                <label class="input-label" for="top-left-x">x:</label>
                 <input type="number" min="0" step="1" id="top-left-x" class="input-field" placeholder="0" value="0">
             </div>
             <div class="input-group">
-                <label class="input-label" for="top-left-y">Y:</label>
+                <label class="input-label" for="top-left-y">y:</label>
                 <input type="number" min="0" step="1" id="top-left-y" class="input-field" placeholder="0" value="0">
             </div>
         </div>
@@ -22,11 +22,11 @@
         </div>
         <div class="input-row">
             <div class="input-group">
-                <label class="input-label" for="down-right-x">X:</label>
+                <label class="input-label" for="down-right-x">x:</label>
                 <input type="number" id="down-right-x" class="input-field" placeholder="100" value="100">
             </div>
             <div class="input-group">
-                <label class="input-label" for="down-right-y">Y:</label>
+                <label class="input-label" for="down-right-y">y:</label>
                 <input type="number" min="0" step="1" id="down-right-y" class="input-field" placeholder="100" value="100">
             </div>
         </div>

@@ -5,7 +5,7 @@
 
     let palette = $state(drawingState.palette);
     let showGrid = $state(drawingState.showGrid);
-    let PALETTES = $state(["default", "reversed"]);
+    let PALETTES = $state(["default", "reversed", "solarized", "dracula", "gruvbox"]);
 
     async function saveConfiguration() {
         if (user.isLoggedIn) {
@@ -73,7 +73,7 @@
                     <i class="ph ph-palette"></i>
                     <h4>change palette</h4>
                 </div>
-             <select bind:value={palette}>
+             <select id="select-theme" bind:value={palette}>
               	{#each PALETTES as plt}
               		<option value={plt}>
               			{plt}
@@ -192,6 +192,10 @@
     #restore-button:hover {
         background-color: var(--action-secondary-hover);
         box-shadow: var(--shadow-md);
+    }
+
+    #select-theme {
+        cursor: pointer;
     }
 
     /* ========== Switch Button - From Uiverse.io by namecho ========== */

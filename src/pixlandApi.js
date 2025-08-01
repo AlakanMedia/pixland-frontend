@@ -9,9 +9,9 @@ const API_URL = import.meta.env.VITE_API_URL;
  * @param {object} options - El objeto de opciones para la función fetch (method, headers, body, etc.).
  * @returns {Promise<{state: "success" | "error", data: object | null}>}
  */
-async function apiClient(endpoint, options = {}) {
+async function apiClient(endpoint, options = {}, customFetch = fetch) {
     try {
-        const response = await fetch(`${API_URL}${endpoint}`, {
+        const response = await customFetch(`${API_URL}${endpoint}`, {
             credentials: "omit", // Por defecto, no enviar credenciales
             ...options, // Las opciones pasadas pueden sobreescribir los valores por defecto
         });
@@ -52,11 +52,19 @@ async function apiClient(endpoint, options = {}) {
     }
 }
 
-export function getUserInformation() {
-    return apiClient("/users/me", {
-        method: "GET",
-        credentials: "include",
-    });
+export function getUserInformation(customFetch = null) {
+    if (customFetch) {
+        return apiClient("/users/me", {
+            method: "GET",
+            credentials: "include",
+        }, customFetch);
+    }
+    else {
+        return apiClient("/users/me", {
+            method: "GET",
+            credentials: "include",
+        });
+    }
 }
 
 export function loginUser(username, password) {
