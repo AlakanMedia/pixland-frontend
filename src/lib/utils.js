@@ -1,4 +1,4 @@
-import { ui, colorPalette } from "../shared.svelte.js";
+import { ui, colorPalette, canvasInfo } from "../shared.svelte.js";
 
 export function isValidEmail(emailToValid) {
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -179,6 +179,10 @@ export function changeColorSchema(palette) {
     colorPalette[varName] = palette[varName];
   }
 }
+
+export function getEffectiveCellSize() {
+    return canvasInfo.baseCellSize * canvasInfo.cellScale;
+};
 
 export const MESSAGES_TYPES = Object.freeze({
   SUCCESS: Symbol(),

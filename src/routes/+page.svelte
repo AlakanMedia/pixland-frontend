@@ -3,8 +3,8 @@
     import { fade } from "svelte/transition";
     import { Spring } from "svelte/motion";
     import { getCellsBox } from "../pixlandApi.js";
-    import { ui, user, drawingState, colorPalette } from "../shared.svelte.js";
-    import { generateDynamicKey, getUserLevel, changeColorSchema, MESSAGES_TYPES } from "$lib/utils.js";
+    import { ui, user, drawingState, colorPalette, mousePosition, canvasInfo } from "../shared.svelte.js";
+    import { generateDynamicKey, getUserLevel, changeColorSchema, MESSAGES_TYPES, getEffectiveCellSize } from "$lib/utils.js";
     import Widgets from "../components/Widgets.svelte";
 
     const API_URL = import.meta.env.VITE_API_URL
@@ -21,21 +21,16 @@
 
     // Variables para el manejo del zoom y la configuración del mundo
     const maxNumberCells = 2048;
-    const baseCellSize = 16;
     const chunkSize = 64;
     const zoomStep = 0.25;
-    let cellScale = $state(1); // La variable debe de ser $state para que $derived pueda funcionar
     let oldCellScale; // Scala antes del haber hecho zoom in o zoom out
-    let effectiveCellSize = $derived(baseCellSize * cellScale);
+    let effectiveCellSize = $derived(getEffectiveCellSize());
     let worldPxWidth = $derived(effectiveCellSize * maxNumberCells);
     let worldPxHeight = $derived(effectiveCellSize * maxNumberCells);
 
     // Variables de configuración del mouse chaser
-    let coords = new Spring({x:50, y: 50}, {stiffness: 0.1, damping: 0.25});
     let size = new Spring(6);
 
-    let cameraOffsetX = 0; // Coordenada en píxeles de la esquina izquierda de la cámara
-    let cameraOffsetY = 0; // Coordenada en píxeles de la esquina superior de la cámara
     let startCameraX = 0; // Para saber la posición previa de la cámara antes del arrastre
     let startCameraY = 0; // Para saber la posición previa de la cámara antes del arrastre
 
@@ -124,10 +119,10 @@
     }
 
     async function fetchChunk() {
-        const xCellUpperLeft = Math.floor(cameraOffsetX / effectiveCellSize);
-        const yCellUpperLeft = Math.floor(cameraOffsetY / effectiveCellSize);
-        const xCellBottomRight = Math.floor((cameraOffsetX + canvasElement.width) / effectiveCellSize);
-        const yCellBottomRight = Math.floor((cameraOffsetY + canvasElement.height) / effectiveCellSize);
+        const xCellUpperLeft = Math.floor(canvasInfo.cameraOffsetX / effectiveCellSize);
+        const yCellUpperLeft = Math.floor(canvasInfo.cameraOffsetY / effectiveCellSize);
+        const xCellBottomRight = Math.floor((canvasInfo.cameraOffsetX + canvasElement.width) / effectiveCellSize);
+        const yCellBottomRight = Math.floor((canvasInfo.cameraOffsetY + canvasElement.height) / effectiveCellSize);
 
         const xChunkUpperLeft = Math.floor(xCellUpperLeft / chunkSize);
         const yChunkUpperLeft = Math.floor(yCellUpperLeft / chunkSize);
@@ -195,17 +190,17 @@
         contextCanvas.fillStyle = colorPalette["color01"];
         contextCanvas.fillRect(0, 0, canvasElement.width, canvasElement.height);
 
-        const startCellX = Math.floor(cameraOffsetX / effectiveCellSize);
-        const startCellY = Math.floor(cameraOffsetY / effectiveCellSize);
-        const endCellX = Math.min(Math.floor((cameraOffsetX + canvasElement.width) / effectiveCellSize), maxNumberCells - 1);
-        const endCellY = Math.min(Math.floor((cameraOffsetY + canvasElement.height) / effectiveCellSize), maxNumberCells - 1);
+        const startCellX = Math.floor(canvasInfo.cameraOffsetX / effectiveCellSize);
+        const startCellY = Math.floor(canvasInfo.cameraOffsetY / effectiveCellSize);
+        const endCellX = Math.min(Math.floor((canvasInfo.cameraOffsetX + canvasElement.width) / effectiveCellSize), maxNumberCells - 1);
+        const endCellY = Math.min(Math.floor((canvasInfo.cameraOffsetY + canvasElement.height) / effectiveCellSize), maxNumberCells - 1);
 
         for (let i = startCellX; i <= endCellX; i++) {
             for (let j = startCellY; j <= endCellY; j++) {
                 const worldX = i * effectiveCellSize;
                 const worldY = j * effectiveCellSize;
-                const screenX = Math.round(worldX - cameraOffsetX);
-                const screenY = Math.round(worldY - cameraOffsetY);
+                const screenX = Math.round(worldX - canvasInfo.cameraOffsetX);
+                const screenY = Math.round(worldY - canvasInfo.cameraOffsetY);
 
                 // Determinar a qué chunk pertenece la celda actual
                 const chunkX = Math.floor(i / chunkSize);
@@ -223,7 +218,7 @@
                         contextCanvas.fillRect(screenX, screenY, effectiveCellSize, effectiveCellSize);
                     }
 
-                    if (drawingState.showGrid && cellScale >= 2) {
+                    if (drawingState.showGrid && canvasInfo.cellScale >= 2) {
                         contextCanvas.strokeStyle = colorPalette["color04"];
                         contextCanvas.strokeRect(screenX, screenY, effectiveCellSize, effectiveCellSize);
                     }
@@ -234,8 +229,8 @@
 
     function handleSetColor(event) {
         // Coordenadas (x, y)
-        const coordinateX = Math.floor((cameraOffsetX + event.clientX) / effectiveCellSize);
-        const coordinateY = Math.floor((cameraOffsetY + event.clientY) / effectiveCellSize);
+        const coordinateX = Math.floor((canvasInfo.cameraOffsetX + event.clientX) / effectiveCellSize);
+        const coordinateY = Math.floor((canvasInfo.cameraOffsetY + event.clientY) / effectiveCellSize);
         const dynamicKey = generateDynamicKey(coordinateX, coordinateY, maxNumberCells - 1);
 
         const previousColor = cellCache.get(dynamicKey);
@@ -269,8 +264,8 @@
 
         clickMouseX = event.clientX;
         clickMouseY = event.clientY;
-        startCameraX = cameraOffsetX;
-        startCameraY = cameraOffsetY;
+        startCameraX = canvasInfo.cameraOffsetX;
+        startCameraY = canvasInfo.cameraOffsetY;
         isMouseDown = true;
         size.target = 10;
     }
@@ -288,8 +283,8 @@
 
                 // Solución de los límites del mapa más corta, para la versión más larga
                 // que hice tengo que ir a ver el pantallazo que tomé
-                cameraOffsetX = Math.max(0, Math.min(startCameraX - deltaX, worldPxWidth - canvasElement.width));
-                cameraOffsetY = Math.max(0, Math.min(startCameraY - deltaY, worldPxHeight - canvasElement.height));
+                canvasInfo.cameraOffsetX = Math.max(0, Math.min(startCameraX - deltaX, worldPxWidth - canvasElement.width));
+                canvasInfo.cameraOffsetY = Math.max(0, Math.min(startCameraY - deltaY, worldPxHeight - canvasElement.height));
 
                 await fetchChunk();
             }
@@ -305,7 +300,7 @@
                 ui.loginModalIsOpen = true;
             }
             else {
-                if (cellScale >= 1 && drawingState.availablePixels > 0) {
+                if (canvasInfo.cellScale >= 1 && drawingState.availablePixels > 0) {
                     const pixelPlaced = handleSetColor(event);
 
                     if (pixelPlaced) {
@@ -323,29 +318,29 @@
     async function handleOnWheel(event) {
         event.preventDefault();
 
-        oldCellScale = cellScale;
+        oldCellScale = canvasInfo.cellScale;
 
         let newCellScale;
-        const worldXBeforeZoom = cameraOffsetX + event.clientX;
-        const worldYBeforeZoom = cameraOffsetY + event.clientY;
+        const worldXBeforeZoom = canvasInfo.cameraOffsetX + event.clientX;
+        const worldYBeforeZoom = canvasInfo.cameraOffsetY + event.clientY;
 
         if (event.deltaY < 0) { // Zoom In
-            newCellScale = cellScale + zoomStep;
+            newCellScale = canvasInfo.cellScale + zoomStep;
         }
         else { // Zoom Out
-            newCellScale = cellScale - zoomStep;
+            newCellScale = canvasInfo.cellScale - zoomStep;
         }
 
         // Opcional pero recomendado: poner límites al zoom
-        cellScale = Math.max(0.25, Math.min(newCellScale, 4)); 
+        canvasInfo.cellScale = Math.max(0.25, Math.min(newCellScale, 4)); 
 
         // La nueva coordenada del punto de anclaje en el mundo re-escalado
-        const newWorldX = worldXBeforeZoom * (cellScale / oldCellScale);
-        const newWorldY = worldYBeforeZoom * (cellScale / oldCellScale);
+        const newWorldX = worldXBeforeZoom * (canvasInfo.cellScale / oldCellScale);
+        const newWorldY = worldYBeforeZoom * (canvasInfo.cellScale / oldCellScale);
 
         // Calculamos el nuevo offset de la cámara para que ese punto quede bajo el ratón
-        cameraOffsetX = Math.max(0, Math.min(newWorldX - event.clientX, worldPxWidth - canvasElement.width));
-        cameraOffsetY = Math.max(0, Math.min(newWorldY - event.clientY, worldPxHeight - canvasElement.height));
+        canvasInfo.cameraOffsetX = Math.max(0, Math.min(newWorldX - event.clientX, worldPxWidth - canvasElement.width));
+        canvasInfo.cameraOffsetY = Math.max(0, Math.min(newWorldY - event.clientY, worldPxHeight - canvasElement.height));
             
         await fetchChunk();
     }
@@ -371,7 +366,7 @@
 />
 <svelte:body
     onmousemove={(e) => {
-        coords.target = {x: e.clientX, y: e.clientY};
+        mousePosition.coords.target = {x: e.clientX, y: e.clientY};
     }}
 />
 
@@ -384,10 +379,10 @@
     onmouseup={(e) => {handleOnMouseUp(e);}}
     onwheel={async (e) => {handleOnWheel(e);}}
 >
-    {#if cellScale >= 1}
+    {#if canvasInfo.cellScale >= 1}
 	    <circle
-	        cx={coords.current.x}
-	    	cy={coords.current.y}
+	        cx={mousePosition.coords.current.x}
+	    	cy={mousePosition.coords.current.y}
 	    	r={size.current}
             style={`fill: rgb(from ${colorPalette[drawingState.selectedColor]} r g b / 0.4); stroke: white; stroke-width: 2;`}
             transition:fade

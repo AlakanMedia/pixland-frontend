@@ -1,3 +1,16 @@
+import { Spring } from "svelte/motion";
+
+export const canvasInfo = $state({
+    cellScale: 1,
+    baseCellSize: 16,
+    cameraOffsetX: 0,
+    cameraOffsetY: 0,
+});
+
+export const mousePosition = $state({
+    coords: new Spring({x:50, y: 50}, {stiffness: 0.1, damping: 0.25}),
+});
+
 // Store para la Interfaz de Usuario (UI)
 export const ui = $state({
     activeUsers: 0,

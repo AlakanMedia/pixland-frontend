@@ -84,7 +84,15 @@
         transform: scale(1.08);
     }
 
-    @media (max-width: 580px) {
+    @media (max-width: 600px) {
+        #palette {
+            right: 0.5rem;
+            left: auto;
+            transform: none;
+        }
+    }
+
+    @media (max-width: 510px) {
         #palette {
             width: calc((4 * 42px) + (6px * 5));
         }

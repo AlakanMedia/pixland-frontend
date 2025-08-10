@@ -4,15 +4,23 @@
     import Options from "../components/Options.svelte";
     import Alert from "./Alert.svelte";
     import ModalContainer from "./ModalContainer.svelte";
-    import { ui, user } from "../shared.svelte.js";
+    import { ui, user, mousePosition, canvasInfo } from "../shared.svelte.js";
 	import { scale } from "svelte/transition";
-    import { padWithZeros } from "$lib/utils.js";
+    import { padWithZeros, getEffectiveCellSize } from "$lib/utils.js";
+
+    let effectiveCellSize = $derived(getEffectiveCellSize());
+    let xCellMouse = $derived(Math.floor((canvasInfo.cameraOffsetX + mousePosition.coords.current.x) / effectiveCellSize));
+    let yCellMouse = $derived(Math.floor((canvasInfo.cameraOffsetY + mousePosition.coords.current.y) / effectiveCellSize));
 </script>
 
 <ColorPalette/>
 <div id="current-users">
     <i class="ph-bold ph-users-three"></i>
     {padWithZeros(ui.activeUsers, 2)}
+</div>
+<div id="mouse-position">
+    <p>x: {padWithZeros(xCellMouse, 4)}</p>
+    <p>y: {padWithZeros(yCellMouse, 4)}</p>
 </div>
 <Options/>
 {#if user.isLoggedIn}
@@ -51,7 +59,7 @@
 
     #current-users {
         position: fixed;
-        bottom: 0.5rem;
+        bottom: calc(62px + 1rem);
         left: 0.5rem;
         height: 42px;
         border-radius: 6px;
@@ -61,6 +69,24 @@
         gap: 0.5rem;
         padding: 0.5rem;
         color: var(--text-primary);
+        font-size: 1.25rem;
+    }
+
+    #current-users > i {
         font-size: 1.5rem;
+    }
+
+    #mouse-position {
+        position: fixed;
+        bottom: 0.5rem;
+        left: 0.5rem;
+        border-radius: 6px;
+        background-color: var(--overlay-bg);
+        padding: 0.5rem;
+        color: var(--text-primary);
+        font-size: 1.25rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
     }
 </style>
