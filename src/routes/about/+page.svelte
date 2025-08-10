@@ -129,12 +129,6 @@
 </div>
 
 <style>
-    :global(*) {
-		margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-	}
-
     #principal {
         width: 100%;
         background-color: var(--bg-base);

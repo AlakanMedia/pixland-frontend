@@ -392,16 +392,6 @@
 <Widgets/>
 
 <style>
-	:global(*) {
-		margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-	}
-
-    :global(button) {
-        cursor: pointer;
-    }
-
     #matrix {
         position: fixed;
         width: 100%;

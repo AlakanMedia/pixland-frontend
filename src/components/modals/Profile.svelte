@@ -162,7 +162,7 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        gap: 0.5rem;
+        gap: 1rem;
     }
 
     .stat-icon {
@@ -182,7 +182,7 @@
 
     .stat-value {
         font-weight: 700;
-        font-size: 1.1rem;
+        font-size: 1rem;
         color: var(--text-secondary);
     }
 
