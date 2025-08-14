@@ -9,9 +9,7 @@
                 <i class="ph ph-grid-four"></i>
                 PixLand
             </div>
-            <p class="subtitle">
-                A free online pixel art playground where creativity meets community. Paint, create, and share your digital artwork on our collaborative canvas.
-            </p>
+            <p class="subtitle">A free online pixel art playground where your creativity is the only limit. Paint, create, and collaborate on a massive digital canvas.</p>
         </header>
 
         <main class="main-content">
@@ -21,14 +19,14 @@
                     What is PixLand?
                 </h2>
                 <p>
-                    PixLand is a free online pixel art game designed for artists, gamers, and anyone who loves to create. 
-                    Our shared canvas allows you to paint alongside other creators in real-time, building a constantly 
-                    evolving masterpiece together.
+                    PixLand is a collaborative, online pixel art game where you can leave your mark on a
+                    massive, shared canvas. Place pixels one by one, team up with friends, or just relax and
+                    watch the digital world evolve in real-time.
                 </p>
                 <p>
-                    Whether you're a seasoned pixel artist or just starting out, PixLand provides all the tools you need 
-                    to bring your imagination to life. Create stunning artwork, download your creations, and become part 
-                    of our growing creative community.
+                    As you contribute to the canvas, you'll gain experience and level up, unlocking new
+                    rewards and colors to expand your artistic toolkit. It's a simple concept with endless
+                    possibilities, built for anyone who loves to create.
                 </p>
             </div>
 
@@ -39,50 +37,24 @@
                 </h2>
                 <div class="features">
                     <div class="feature-item">
-                        <i class="ph ph-palette"></i>
-                        <h3>Custom Palettes</h3>
-                        <p>Create and customize your own color palettes for unique artistic expression</p>
-                    </div>
-                    <div class="feature-item">
                         <i class="ph ph-users-three"></i>
-                        <h3>Real-time Collaboration</h3>
-                        <p>Paint alongside other artists on our shared canvas in real-time</p>
+                        <h3>Real-time Canvas</h3>
+                        <p>Paint alongside other artists on our shared canvas and see your art come to life instantly.</p>
                     </div>
                     <div class="feature-item">
-                        <i class="ph ph-download-simple"></i>
-                        <h3>Download Creations</h3>
-                        <p>Save and download your pixel art masterpieces in high quality</p>
+                        <i class="ph ph-trophy"></i>
+                        <h3>Level Up & Unlock</h3>
+                        <p>Place pixels to gain XP, level up, and earn new rewards to show off your dedication.</p>
+                    </div>
+                    <div class="feature-item">
+                        <i class="ph ph-crop"></i>
+                        <h3>Canvas Image Exporter</h3>
+                        <p>Capture a snapshot of any part of the canvas by defining coordinates to download your favorite creations.</p>
                     </div>
                     <div class="feature-item">
                         <i class="ph ph-heart"></i>
-                        <h3>100% Free</h3>
-                        <p>No subscriptions, no ads, just pure creative fun for everyone</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card">
-                <h2>
-                    <i class="ph ph-globe"></i>
-                    Our Community
-                </h2>
-                <p>
-                    PixLand has grown into a vibrant community of pixel artists from around the world. 
-                    Every day, hundreds of creators come together to contribute to our ever-changing canvas, 
-                    sharing techniques, inspiration, and friendship along the way.
-                </p>
-                <div class="community-stats">
-                    <div class="stat-item">
-                        <div class="stat-number">10K+</div>
-                        <div class="stat-label">Active Artists</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-number">50K+</div>
-                        <div class="stat-label">Artworks Created</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-number">∞</div>
-                        <div class="stat-label">Fun & Creativity</div>
+                        <h3>100% Free & For Fun</h3>
+                        <p>No subscriptions, no hidden costs. Just pure, creative fun built as a passion project.</p>
                     </div>
                 </div>
             </div>
@@ -92,15 +64,16 @@
                     <i class="ph ph-rocket-launch"></i>
                     Getting Started
                 </h2>
-                <p>
-                    Jump right in! No account required, no downloads necessary. Just visit our canvas, 
-                    pick up your digital brush, and start creating. Whether you want to add a single pixel 
-                    or craft an elaborate scene, every contribution makes PixLand more amazing.
-                </p>
-                <p>
-                    New to pixel art? Don't worry! Our community is incredibly welcoming and always happy 
-                    to share tips and techniques. The best way to learn is by doing, so dive in and start experimenting!
-                </p>
+                <p>It couldn't be easier. Jump right in—no account required, no downloads necessary. Just head to the canvas, pick a color, and place your first pixel.</p>
+                <p>Whether you want to add a single dot or craft an elaborate scene, every contribution makes PixLand a more interesting place. Go on, give it a try!</p>
+            </div>
+            <div class="card">
+                <h2>
+            	    <i class="ph ph-binoculars"></i>
+            	    An Ode to Our Inspiration
+                </h2>
+                <p>If you're looking at our layout and thinking, "Hey, this feels... familiar," you've got a good eye! PixLand's design is heavily inspired by (okay, fine, lovingly copied from) the awesome <a href="https://pixelzone.io" target="_blank" rel="noopener noreferrer">pixelzone.io</a>.</p>
+                <p>They built something amazing, and this project is, in many ways, a tribute to their great work. We're just standing on the shoulders of giants... and maybe borrowing their fashion sense.</p>
             </div>
         </main>
 
@@ -109,17 +82,14 @@
                 <i class="ph ph-play"></i>
                 Start Creating
             </a>
-            <a href="https://github.com/AlakanMedia" class="btn btn-secondary">
+            <a href="https://github.com/AlakanMedia" class="btn btn-secondary" target="_blank" rel="noopener noreferrer">
                 <i class="ph ph-coffee"></i>
-                Support PixLand
+                Support the Creator
             </a>
         </div>
 
         <div class="creator-note">
-            <p>
-                PixLand was created as a passion project for the love of pixel art and community. 
-                It's built by creators, for creators, with no corporate agenda – just pure creative joy.
-            </p>
+            <p>PixLand is a one-person passion project, built in my spare time for the love of pixel art and online communities. It's made by a creator, for creators, with no corporate agenda—just a fun place to draw.</p>
         </div>
     </div>
 
@@ -180,6 +150,11 @@
         box-shadow: var(--shadow-md);
     }
 
+    .card a {
+        color: var(--accent-primary);
+        text-decoration: underline;
+    }
+
     .card h2 {
         color: var(--text-primary);
         font-size: 1.5rem;
@@ -196,6 +171,11 @@
     .card p {
         color: var(--text-secondary);
         margin-bottom: 1rem;
+        line-height: 1.6;
+    }
+
+    .card p:last-child {
+        margin-bottom: 0;
     }
 
     .features {
@@ -216,6 +196,7 @@
         font-size: 2rem;
         color: var(--accent-primary);
         margin-bottom: 0.5rem;
+        display: block; /* Para centrar el icono correctamente */
     }
 
     .feature-item h3 {
@@ -227,31 +208,7 @@
     .feature-item p {
         color: var(--text-tertiary);
         font-size: 0.9rem;
-    }
-
-    .community-stats {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap: 1rem;
-        margin-top: 1.5rem;
-    }
-
-    .stat-item {
-        text-align: center;
-        padding: 1rem;
-        background: var(--bg-elevated-3);
-        border-radius: 8px;
-    }
-
-    .stat-number {
-        font-size: 1.5rem;
-        font-weight: bold;
-        color: var(--accent-secondary);
-    }
-
-    .stat-label {
-        color: var(--text-tertiary);
-        font-size: 0.9rem;
+        margin-bottom: 0;
     }
 
     .actions {
@@ -338,26 +295,27 @@
     .creator-note p {
         color: var(--text-secondary);
         font-style: italic;
+        margin-bottom: 0;
     }
 
     @media (max-width: 768px) {
         .container {
             padding: 1rem;
         }
-        
+
         .logo {
             font-size: 2rem;
         }
-        
+
         .features {
             grid-template-columns: 1fr;
         }
-        
+
         .actions {
             flex-direction: column;
             align-items: center;
         }
-        
+
         .home-button {
             bottom: 1rem;
             right: 1rem;

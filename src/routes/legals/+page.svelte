@@ -1,352 +1,228 @@
 <script>
-    import { onMount } from "svelte";
     import { goto } from "$app/navigation";
 
-    onMount(() => {
-        // Set current date
-        document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
+	let activeTab = $state("terms");
 
-        // Smooth scrolling for in-page navigation
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                }
-            });
-        });
+    const tabs = [
+        { id: "terms", label: "Terms of Use", icon: "ph-file-text" },
+        { id: "privacy", label: "Privacy Policy", icon: "ph-shield-check" },
+        { id: "usage", label: "Usage Guidelines", icon: "ph-user-check" },
+        { id: "content", label: "Content Policy", icon: "ph-image" }
+    ];
 
-        // Enhanced tab navigation with keyboard support
-        document.querySelectorAll('.nav-tab').forEach((tab, index) => {
-            tab.addEventListener('keydown', function(e) {
-                const tabs = Array.from(document.querySelectorAll('.nav-tab'));
-                let newIndex;
-
-                switch(e.key) {
-                    case 'ArrowRight':
-                        newIndex = (index + 1) % tabs.length;
-                        tabs[newIndex].focus();
-                        tabs[newIndex].click();
-                        e.preventDefault();
-                        break;
-                    case 'ArrowLeft':
-                        newIndex = (index - 1 + tabs.length) % tabs.length;
-                        tabs[newIndex].focus();
-                        tabs[newIndex].click();
-                        e.preventDefault();
-                        break;
-                    case 'Home':
-                        tabs[0].focus();
-                        tabs[0].click();
-                        e.preventDefault();
-                        break;
-                    case 'End':
-                        tabs[tabs.length - 1].focus();
-                        tabs[tabs.length - 1].click();
-                        e.preventDefault();
-                        break;
-                }
-            });
-        });
+	// Variable para la fecha de actualización.
+    const lastUpdatedDate = new Date().toLocaleDateString('en-US', {
+        year: "numeric",
+        month: "long",
+        day: "numeric"
     });
 
-    // Tab navigation functionality
-    function showSection(event, sectionId) {
-        // Hide all sections
-        const sections = document.querySelectorAll('.content-section');
-        sections.forEach(section => section.classList.remove('active'));
-        
-        // Remove active class from all tabs
-        const tabs = document.querySelectorAll('.nav-tab');
-        tabs.forEach(tab => tab.classList.remove('active'));
-        
-        // Show selected section
-        document.getElementById(sectionId).classList.add('active');
-        
-        // Add active class to clicked tab
-        event.target.classList.add('active');
+	// La navegación con teclado también es un caso de uso avanzado del DOM.
+	// Esta función ahora es mucho más simple y no necesita consultar el DOM.
+	function handleKeydown(e, currentIndex) {
+		const tabCount = tabs.length;
+		let newIndex;
+
+		switch (e.key) {
+			case 'ArrowRight':
+			case 'ArrowDown':
+				newIndex = (currentIndex + 1) % tabCount;
+				break;
+			case 'ArrowLeft':
+			case 'ArrowUp':
+				newIndex = (currentIndex - 1 + tabCount) % tabCount;
+				break;
+			case 'Home':
+				newIndex = 0;
+				break;
+			case 'End':
+				newIndex = tabCount - 1;
+				break;
+			default:
+				return; // Salir si no es una tecla de navegación
+		}
+
+		e.preventDefault();
+		// Cambiamos el estado reactivo, y Svelte se encarga del resto.
+		activeTab = tabs[newIndex].id;
+
+		// Movemos el foco al nuevo tab. Necesitaremos bind:this en el HTML.
+		// Usamos un pequeño timeout para asegurar que el DOM se actualice antes de mover el foco.
+		setTimeout(() => {
+			const nextTab = document.querySelector(`[data-tabid="${tabs[newIndex].id}"]`);
+			nextTab?.focus();
+		}, 0);
     }
 </script>
 
 <div id="principal">
-    <header class="header">
-        <div class="header-content">
-            <a href="/" class="logo">
-                <i class="ph ph-palette logo-icon"></i>
-                <div class="logo-text">
-                    <h1>PixLand</h1>
-                    <p>Collaborative Pixel Art Canvas</p>
-                </div>
-            </a>
-        </div>
-    </header>
+	<header class="header">
+		<div class="header-content">
+			<a href="/" class="logo">
+				<i class="ph ph-palette logo-icon"></i>
+				<div class="logo-text">
+					<h1>PixLand</h1>
+					<p>Collaborative Pixel Art Canvas</p>
+				</div>
+			</a>
+		</div>
+	</header>
 
     <main class="container">
         <div class="legal-header">
             <h1>
                 <i class="ph ph-scroll icon"></i>
-                Legal Terms & Privacy Policy
+                Legal & Privacy Stuff
             </h1>
-            <p>
-                Please read these terms carefully before using PixLand. By accessing and using our pixel art canvas platform, you agree to comply with these terms and conditions.
-            </p>
+            <p>Here's the simple, no-fluff breakdown of how things work at PixLand. By using theplatform, you agree to these terms.</p>
         </div>
 
-        <nav class="nav-tabs">
-            <button class="nav-tab active" onclick={(e) => {showSection(e, "terms");}}>
-                <i class="ph ph-file-text"></i>
-                Terms of Use
-            </button>
-            <button class="nav-tab" onclick={(e) => {showSection(e, "privacy");}}>
-                <i class="ph ph-shield-check"></i>
-                Privacy Policy
-            </button>
-            <button class="nav-tab" onclick={(e) => {showSection(e, "usage");}}>
-                <i class="ph ph-user-check"></i>
-                Usage Guidelines
-            </button>
-            <button class="nav-tab" onclick={(e) => {showSection(e, "content");}}>
-                <i class="ph ph-image"></i>
-                Content Policy
-            </button>
-        </nav>
+        <div class="nav-tabs" role="tablist">
+            {#each tabs as tab, index}
+                <button
+                    class="nav-tab"
+                    class:active={activeTab === tab.id}
+                    onclick={() => (activeTab = tab.id)}
+                    onkeydown={(e) => handleKeydown(e, index)}
+                    role="tab"
+                    aria-selected={activeTab === tab.id}
+                    aria-controls={tab.id}
+                    tabindex={activeTab === tab.id ? 0 : -1}
+                    data-tabid={tab.id}
+                >
+                    <i class="ph {tab.icon}"></i>
+                    {tab.label}
+                </button>
+            {/each}
+        </div>
 
-        <!-- Terms of Use Section -->
-        <section id="terms" class="content-section active">
-            <div class="section-card">
-                <h2 class="section-title">
-                    <i class="ph ph-file-text icon"></i>
-                    Terms of Use
-                </h2>
-
-                <div class="subsection">
-                    <h3><i class="ph ph-info icon"></i>1. Acceptance of Terms</h3>
-                    <p>
-                        By accessing, using, or participating in PixLand's collaborative pixel art canvas, you agree to be bound by these Terms of Use. These terms may be updated periodically, and continued use of the service constitutes acceptance of any modifications.
-                    </p>
-                    <p>
-                        PixLand is a platform that allows users to create pixel art collaboratively on a shared canvas, customize color palettes, and download their creations. Users must be at least 13 years of age to use this service.
-                    </p>
+        {#if activeTab === "terms"}
+            <section id="terms" class="content-section active">
+                <div class="section-card">
+                    <h2 class="section-title"><i class="ph ph-file-text icon"></i> Terms of Use</h2>
+                    <div class="subsection">
+                        <h3><i class="ph ph-info icon"></i>1. The Basics</h3>
+                        <p>
+                            Welcome to PixLand. This is a collaborative art project. By placing a pixel, you're
+                            part of it. We expect you to be at least 13 years old to participate. These terms
+                            might change, and if you keep using the site, it means you're cool with the new ones.
+                        </p>
+                    </div>
+                    <div class="subsection">
+                        <h3><i class="ph ph-user-circle icon"></i>2. Your Responsibilities</h3>
+                        <p>We trust you to be responsible. Your main obligations are simple:</p>
+                        <ul>
+                            <li>Don't try to break the site, overload our servers, or mess with the experience for others.</li>
+                            <li><strong>Do not use bots, scripts, or any automated tools to place pixels.</strong> This is a human-only project.</li>
+                        </ul>
+                        <p>Regarding content, this canvas is a space for free expression. <strong>Pretty much anything goes.</strong> We don't police art, ideas, or messages. Your creations are your own responsibility.</p>
+                    </div>
+                    <div class="subsection">
+                        <h3><i class="ph ph-copyright icon"></i>3. Intellectual Property (or lack thereof)</h3>
+                        <p>This is simple: <strong>there is none.</strong> Everything created on the PixLand canvas is dedicated to the <strong>public domain</strong>.</p>
+                        <p>That means any art you create here is free for anyone—including yourself—to use for any purpose, personal or commercial, without any credit or attribution required. By placing a pixel, you agree to waive all rights to your contribution. Go wild with it.</p>
+                    </div>
+                    <div class="highlight-box warning">
+                        <h4><i class="ph ph-warning"></i>A Quick Heads-Up</h4>
+                        <p>While we champion free expression, we will take action against users who are actively trying to harm the platform's functionality (like using bots or DDoSing). Play fair.</p>
+                    </div>
                 </div>
+            </section>
 
-                <div class="subsection">
-                    <h3><i class="ph ph-user-circle icon"></i>2. User Responsibilities</h3>
-                    <p>As a user of PixLand, you agree to:</p>
-                    <ul>
-                        <li>Use the service responsibly and in accordance with these terms</li>
-                        <li>Respect other users and their creative contributions</li>
-                        <li>Not engage in harassment, discrimination, or abusive behavior</li>
-                        <li>Not create or contribute offensive, illegal, or inappropriate content</li>
-                        <li>Not attempt to disrupt or interfere with the platform's functionality</li>
-                        <li>Not use automated tools, bots, or scripts to place pixels</li>
-                    </ul>
+        {:else if activeTab === "privacy"}
+            <section id="privacy" class="content-section active">
+                <div class="section-card">
+                    <h2 class="section-title"><i class="ph ph-shield-check icon"></i> Privacy Policy</h2>
+
+                    <div class="subsection">
+                        <h3><i class="ph ph-database icon"></i>1. What We Store About You</h3>
+                        <p>We keep our data collection to the absolute minimum needed to run the service. If you create an account, this is what we store:</p>
+                        <ul>
+                            <li>Your <strong>username</strong> (which is public).</li>
+                            <li>Your <strong>email address</strong> (kept private).</li>
+                            <li>Your <strong>password</strong> (which is hashed, meaning even we can't see it).</li>
+                            <li>Your saved <strong>platform settings</strong> (like custom color palettes).</li>
+                        </ul>
+                    </div>
+                    <div class="subsection">
+                        <h3><i class="ph ph-cookie icon"></i>2. Cookies</h3>
+                        <p>We use a single, essential cookie. Its only job is to store your access token.</p>
+                        <p>This token proves that you're logged in, so you don't have to enter your password on every page. That's it. We don't use cookies for tracking, advertising, or anything else.</p>
+                    </div>
+                    <div class="highlight-box info">
+                        <h4><i class="ph ph-info"></i>Our Promise</h4>
+                        <p>We will never sell or share your personal data with third parties. This is a passion project, not a data-harvesting business.</p>
+                    </div>
                 </div>
+            </section>
 
-                <div class="subsection">
-                    <h3><i class="ph ph-copyright icon"></i>3. Intellectual Property</h3>
-                    <p>
-                        Content created on PixLand's canvas becomes part of a collaborative work. By contributing pixels to the canvas, you grant PixLand and other users a non-exclusive license to use, display, and modify your contributions as part of the collective artwork.
-                    </p>
-                    <p>
-                        You retain rights to any original artwork you create and download from the platform. However, you acknowledge that collaborative canvas content may be built upon by other users.
-                    </p>
+        {:else if activeTab === "usage"}
+            <section id="usage" class="content-section active">
+                <div class="section-card">
+                    <h2 class="section-title"><i class="ph ph-user-check icon"></i> Usage Guidelines</h2>
+                    <div class="subsection">
+                        <h3><i class="ph ph-hand-palm icon"></i>1. Prohibited Technical Activities</h3>
+                        <p>To keep the game fair and fun for everyone, the following are strictly forbidden:</p>
+                        <ul>
+                            <li><strong>No automated tools:</strong> Bots, scripts, or any form of automated pixel placement will result in a ban.</li>
+                            <li><strong>No circumvention:</strong> Don't use VPNs, proxies, or other means to get around cooldown timers or other restrictions.</li>
+                            <li><strong>No disruption:</strong> Any attempt to intentionally crash the server or disrupt the service for other users is off-limits.</li>
+                        </ul>
+                    </div>
+                    <div class="subsection">
+                        <h3><i class="ph ph-check-circle icon"></i>2. Encouraged Behavior</h3>
+                        <ul>
+                            <li><strong>Be creative:</strong> The canvas is your oyster. Make something cool.</li>
+                            <li><strong>Collaborate (or don't):</strong> Team up with others to build massive projects, or carve out your own little corner. It's up to you.</li>
+                            <li><strong>Experiment:</strong> Try new things, develop new techniques, and see what happens. The canvas is constantly changing.</li>
+                        </ul>
+                    </div>
+                    <div class="highlight-box success">
+                        <h4><i class="ph ph-robot"></i>The Golden Rule</h4>
+                        <p>If a human is placing the pixel, you're good. If a machine is doing it for you, you're not.</p>
+                    </div>
                 </div>
+            </section>
 
-                <div class="highlight-box warning">
-                    <h4><i class="ph ph-warning"></i>Important Notice</h4>
-                    <p>
-                        PixLand reserves the right to remove content, suspend accounts, or terminate access for users who violate these terms or engage in disruptive behavior.
-                    </p>
+        {:else if activeTab === "content"}
+            <section id="content" class="content-section active">
+                <div class="section-card">
+                    <h2 class="section-title"><i class="ph ph-image icon"></i> Content Policy</h2>
+                    <div class="subsection">
+                        <h3><i class="ph ph-scales icon"></i>1. Our Stance on Content</h3>
+                        <p>PixLand is a platform for free expression. We do not moderate artwork, political statements, offensive content, or anything else you choose to create. The canvas reflects the raw creativity (and chaos) of the internet.</p>
+                        <p>However, there are two hard lines we draw to protect individuals and comply with the law.</p>
+                    </div>
+                    <div class="subsection">
+                        <h3><i class="ph ph-gavel icon"></i>2. Prohibited Content</h3>
+                        <p>The only content that will be removed and can lead to a ban is:</p>
+                        <ul>
+                            <li><strong>Personal Information:</strong> Posting someone's private, identifying information without their consent (doxxing).</li>
+                        </ul>
+                    </div>
+                    <div class="subsection">
+                        <h3><i class="ph ph-download icon"></i>3. Content Downloads</h3>
+                        <p>As stated in our Terms of Use, all art on the canvas is in the public domain. You can download an image of any section of the canvas and use it for whatever you want. No strings attached.</p>
+                    </div>
                 </div>
-            </div>
-        </section>
-
-        <!-- Privacy Policy Section -->
-        <section id="privacy" class="content-section">
-            <div class="section-card">
-                <h2 class="section-title">
-                    <i class="ph ph-shield-check icon"></i>
-                    Privacy Policy
-                </h2>
-
-                <div class="subsection">
-                    <h3><i class="ph ph-database icon"></i>1. Information We Collect</h3>
-                    <p>
-                        PixLand collects minimal information necessary to provide our services:
-                    </p>
-                    <ul>
-                        <li>Basic technical information: IP address, browser type, device information</li>
-                        <li>Canvas interactions: Pixel placements, color choices, timing data</li>
-                        <li>Session data: Temporary information stored during your visit</li>
-                        <li>Optional user preferences: Color palettes, display settings</li>
-                    </ul>
-                </div>
-
-                <div class="subsection">
-                    <h3><i class="ph ph-cookie icon"></i>2. Cookies and Local Storage</h3>
-                    <p>
-                        We use cookies and browser local storage to enhance your experience:
-                    </p>
-                    <ul>
-                        <li>Saving your color palette preferences</li>
-                        <li>Remembering your canvas view settings</li>
-                        <li>Maintaining session continuity</li>
-                        <li>Analyzing platform usage for improvements</li>
-                    </ul>
-                    <p>
-                        You can disable cookies in your browser settings, though this may limit some functionality.
-                    </p>
-                </div>
-
-                <div class="subsection">
-                    <h3><i class="ph ph-lock icon"></i>3. Data Protection</h3>
-                    <p>
-                        We implement appropriate security measures to protect your information. However, no internet transmission is completely secure. We do not store personal identifying information beyond what's necessary for service operation.
-                    </p>
-                    <p>
-                        Canvas data and pixel contributions are stored to maintain the collaborative artwork and may be retained indefinitely as part of the platform's creative history.
-                    </p>
-                </div>
-
-                <div class="highlight-box info">
-                    <h4><i class="ph ph-info"></i>Data Retention</h4>
-                    <p>
-                        Canvas data is preserved to maintain the integrity of collaborative artworks. Personal session data is automatically cleared after extended periods of inactivity.
-                    </p>
-                </div>
-            </div>
-        </section>
-
-        <!-- Usage Guidelines Section -->
-        <section id="usage" class="content-section">
-            <div class="section-card">
-                <h2 class="section-title">
-                    <i class="ph ph-user-check icon"></i>
-                    Usage Guidelines
-                </h2>
-
-                <div class="subsection">
-                    <h3><i class="ph ph-hand-palm icon"></i>1. Prohibited Activities</h3>
-                    <ul>
-                        <li><strong>No automated tools:</strong> Bots, scripts, or automated pixel placement tools are strictly forbidden</li>
-                        <li><strong>No circumvention:</strong> Using VPNs, proxies, or multiple accounts to bypass cooldowns or restrictions</li>
-                        <li><strong>No disruption:</strong> Intentionally overloading servers or interfering with other users' experience</li>
-                        <li><strong>No malicious content:</strong> Creating offensive, hateful, or inappropriate imagery</li>
-                    </ul>
-                </div>
-
-                <div class="subsection">
-                    <h3><i class="ph ph-check-circle icon"></i>2. Encouraged Behavior</h3>
-                    <ul>
-                        <li><strong>Collaborate respectfully:</strong> Work with others to create amazing pixel art</li>
-                        <li><strong>Be creative:</strong> Contribute original and interesting designs</li>
-                        <li><strong>Help newcomers:</strong> Welcome new users and share tips</li>
-                        <li><strong>Report issues:</strong> Help us maintain a positive community by reporting problems</li>
-                    </ul>
-                </div>
-
-                <div class="subsection">
-                    <h3><i class="ph ph-palette icon"></i>3. Canvas Etiquette</h3>
-                    <ul>
-                        <li>Respect existing artwork and consider collaborative improvements</li>
-                        <li>Use the color palette thoughtfully and considerately</li>
-                        <li>Avoid covering others' work without artistic purpose</li>
-                        <li>Participate in community discussions about canvas direction</li>
-                    </ul>
-                </div>
-
-                <div class="highlight-box success">
-                    <h4><i class="ph ph-users"></i>Community First</h4>
-                    <p>
-                        PixLand is a collaborative space. The best creations come from users working together respectfully and creatively.
-                    </p>
-                </div>
-            </div>
-        </section>
-
-        <!-- Content Policy Section -->
-        <section id="content" class="content-section">
-            <div class="section-card">
-                <h2 class="section-title">
-                    <i class="ph ph-image icon"></i>
-                    Content Policy
-                </h2>
-
-                <div class="subsection">
-                    <h3><i class="ph ph-x-circle icon"></i>1. Prohibited Content</h3>
-                    <p>The following types of content are not allowed on PixLand:</p>
-                    <ul>
-                        <li>Hateful, discriminatory, or harassing imagery</li>
-                        <li>Sexually explicit or inappropriate content</li>
-                        <li>Violence, gore, or disturbing imagery</li>
-                        <li>Copyrighted material used without permission</li>
-                        <li>Personal information or doxxing attempts</li>
-                        <li>Spam, advertising, or promotional content</li>
-                        <li>Content that violates local laws or regulations</li>
-                    </ul>
-                </div>
-
-                <div class="subsection">
-                    <h3><i class="ph ph-flag icon"></i>2. Reporting System</h3>
-                    <p>
-                        If you encounter inappropriate content or behavior:
-                    </p>
-                    <ul>
-                        <li>Report the issue through our contact system</li>
-                        <li>Provide specific details about the violation</li>
-                        <li>Include screenshots or coordinates when helpful</li>
-                        <li>Allow our moderation team time to review and respond</li>
-                    </ul>
-                </div>
-
-                <div class="subsection">
-                    <h3><i class="ph ph-gavel icon"></i>3. Moderation Actions</h3>
-                    <p>
-                        Violations may result in:
-                    </p>
-                    <ul>
-                        <li>Content removal or modification</li>
-                        <li>Temporary cooldown extensions</li>
-                        <li>Account restrictions or suspension</li>
-                        <li>Permanent ban for severe or repeated violations</li>
-                    </ul>
-                </div>
-
-                <div class="subsection">
-                    <h3><i class="ph ph-download icon"></i>4. Content Downloads</h3>
-                    <p>
-                        Users can download canvas images for personal use. However:
-                    </p>
-                    <ul>
-                        <li>Downloaded content remains subject to collaborative nature of creation</li>
-                        <li>Commercial use of canvas content may require additional permissions</li>
-                        <li>Individual pixel contributions are part of the collective work</li>
-                        <li>Credit to PixLand and the community is appreciated when sharing</li>
-                    </ul>
-                </div>
-            </div>
-        </section>
+            </section>
+        {/if}
     </main>
 
     <footer class="footer">
         <div class="footer-content">
-            <p><strong>PixLand</strong> - Collaborative Pixel Art Platform</p>
-            <p>Last updated: <span id="currentDate"></span></p>
-            <p>
-                Questions or concerns? <a href="mailto:legal@pixland.com" class="contact-link">Contact us</a>
-            </p>
+            <p><strong>PixLand</strong> - A Public Domain Art Experiment</p>
+            <p>Last updated: {lastUpdatedDate}</p>
+            <p>Questions? <a href="mailto:contact@pixland.com" class="contact-link">Contact us</a></p>
         </div>
     </footer>
 
-    <button class="home-button" onclick={() => {goto("/");}} title="Go to Play" aria-label="Go to Play">
+    <button
+        class="home-button"
+        onclick={() => {goto('/');}}
+        title="Go to Play"
+        aria-label="Go to Play"
+    >
         <i class="ph ph-house"></i>
     </button>
 </div>
@@ -465,6 +341,7 @@
     /* === NAVIGATION === */
     .nav-tabs {
         display: flex;
+        justify-content: center;
         gap: 0.5rem;
         margin-bottom: 2rem;
         background-color: var(--bg-elevated-1);
