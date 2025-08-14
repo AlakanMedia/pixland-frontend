@@ -353,7 +353,6 @@
 
 <style>
     #principal {
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
         background-color: var(--bg-base);
         color: var(--text-primary);
         line-height: 1.6;

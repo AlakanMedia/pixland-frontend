@@ -181,11 +181,31 @@ export function changeColorSchema(palette) {
 }
 
 export function getEffectiveCellSize() {
-    return canvasInfo.baseCellSize * canvasInfo.cellScale;
-};
+  return canvasInfo.baseCellSize * canvasInfo.cellScale;
+}
 
 export const MESSAGES_TYPES = Object.freeze({
   SUCCESS: Symbol(),
   INFO: Symbol(),
   ERROR: Symbol(),
 });
+
+export function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+export const callWithProgress = async (fn, params, maxAttempts, depth = 0) => {
+  const response = await fn(...params);
+
+  if (response.data.info.status === "SUCCESS") {
+    return response.data.info;
+  }
+  else {
+    if (depth > maxAttempts) {
+      return null;
+    }
+
+    await sleep(2 ** depth * 3000);
+    return callWithProgress(fn, params, maxAttempts, depth + 1);
+  }
+}

@@ -1,5 +1,50 @@
+<script>
+    import { generateImage, getImageStatus } from "../../pixlandApi.js";
+    import { MESSAGES_TYPES, showAlert, callWithProgress } from "$lib/utils.js";
+    import { drawingState } from "../../shared.svelte.js";
+
+    let topLeftX = $state(0);
+    let topLeftY = $state(0);
+    let downRightX = $state(100);
+    let downRightY = $state(100);
+
+    let isLoading = $state(false);
+    let imageWasGenerated = $state(false);
+
+    async function handleImageGeneration() {
+        if (topLeftX >= downRightX || topLeftY >= downRightY) {
+            showAlert(MESSAGES_TYPES.ERROR, "Invalid Coordinates", "Please check your input, the coordinates you entered are not valid.");
+            return;
+        }
+
+        imageWasGenerated = false;
+        isLoading = true;
+
+        const response = await generateImage(drawingState.palette, [topLeftX, topLeftY], [downRightX, downRightY]);
+
+        if (response.state !== MESSAGES_TYPES.SUCCESS) {
+            showAlert(MESSAGES_TYPES.ERROR, "Image Request Failed", "We couldn't process your request. Please check your input and try again.");
+            isLoading = false;
+            return;
+        }
+
+        const taskId = response.data.info.task_id;
+        const result = await callWithProgress(getImageStatus, [taskId], 10);
+        
+        if (!result) {
+            showAlert(MESSAGES_TYPES.ERROR, "Image Generation Error", "Something went wrong while creating the image. Please try again later.");
+            isLoading = false;
+            return;
+        }
+
+        imageWasGenerated = true;
+        isLoading = false;
+        console.log("La imagen se generó", result);
+    }
+</script>
+
 <div id="generate-image">
-    <div class="section">
+    <div class="input-section">
         <div class="coord-header">
             <i class="ph-bold ph-arrow-square-up-left"></i>
             <h3>up left</h3>
@@ -7,15 +52,31 @@
         <div class="input-row">
             <div class="input-group">
                 <label class="input-label" for="top-left-x">x:</label>
-                <input type="number" min="0" step="1" id="top-left-x" class="input-field" placeholder="0" value="0">
+                <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    id="top-left-x"
+                    class={["input-field", topLeftX >= downRightX ? "error" : ""]}
+                    placeholder="0"
+                    bind:value={topLeftX}
+                >
             </div>
             <div class="input-group">
                 <label class="input-label" for="top-left-y">y:</label>
-                <input type="number" min="0" step="1" id="top-left-y" class="input-field" placeholder="0" value="0">
+                <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    id="top-left-y"
+                    class={["input-field", topLeftY >= downRightY ? "error" : ""]}
+                    placeholder="0"
+                    bind:value={topLeftY}
+                >
             </div>
         </div>
     </div>
-    <div class="section">
+    <div class="input-section">
         <div class="coord-header">
             <i class="ph-bold ph-arrow-square-down-right"></i>
             <h3>down right</h3>
@@ -23,20 +84,46 @@
         <div class="input-row">
             <div class="input-group">
                 <label class="input-label" for="down-right-x">x:</label>
-                <input type="number" id="down-right-x" class="input-field" placeholder="100" value="100">
+                <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    id="down-right-x"
+                    class="input-field"
+                    placeholder="100"
+                    bind:value={downRightX}
+                >
             </div>
             <div class="input-group">
                 <label class="input-label" for="down-right-y">y:</label>
-                <input type="number" min="0" step="1" id="down-right-y" class="input-field" placeholder="100" value="100">
+                <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    id="down-right-y"
+                    class="input-field"
+                    placeholder="100"
+                    bind:value={downRightY}
+                >
             </div>
         </div>
     </div>
     <hr>
-    <div class="section">
-        <button id="generate-button">
-            <i class="ph-bold ph-dna"></i>
-            <p>generate</p>
+    <div id="buttons-section">
+        <button id="generate-button" onclick={async () => {handleImageGeneration();}}>
+            {#if isLoading}
+                <span class="loader"></span>
+            {:else}
+                <i class="ph-bold ph-dna"></i>
+                <p>generate</p>
+            {/if}
         </button>
+        {#if imageWasGenerated}
+            <button id="download-button">
+                <i class="ph-bold ph-download-simple"></i>
+                <p>download</p>
+            </button>
+        {/if}
     </div>
 </div>
 
@@ -58,11 +145,21 @@
         color: var(--text-primary);
     }
 
-    .section {
+    .input-section {
         padding: 0 8px;
         display: flex;
         flex-direction: column;
         gap: 12px;
+    }
+
+    #buttons-section {
+        padding: 0 8px;
+        display: flex;
+        gap: 12px;
+    }
+
+    #buttons-section > button {
+        flex: 1;
     }
 
     .coord-header {
@@ -120,5 +217,49 @@
     #generate-button:hover {
         background-color: var(--action-primary-hover);
         box-shadow: var(--shadow-md);
+    }
+
+    #download-button {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+        height: 42px;
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: none;
+        color: var(--action-secondary-text);
+        background-color: var(--action-secondary);
+        transition: all 0.3s ease;
+        font-size: 1rem;
+    }
+
+    #download-button:hover {
+        background-color: var(--action-secondary-hover);
+        box-shadow: var(--shadow-md);
+    }
+
+    .loader {
+        width: 1.5rem;
+        height: 1.5rem;
+        border: 5px solid var(--text-primary);
+        border-bottom-color: var(--text-tertiary);
+        border-radius: 50%;
+        display: inline-block;
+        box-sizing: border-box;
+        animation: rotation 1s linear infinite;
+    }
+
+    @keyframes rotation {
+        0% {
+            transform: rotate(0deg);
+        }
+        100% {
+            transform: rotate(360deg);
+        }
+    } 
+
+    .error {
+        border-color: var(--state-error-border) !important;
     }
 </style>

@@ -124,3 +124,33 @@ export function updateUserConfigurations(config) {
         body: JSON.stringify(config),
     });
 }
+
+export function generateImage(palette, upperLeftLimit, lowerRightLimit) {
+    if (
+        !Array.isArray(upperLeftLimit) || upperLeftLimit.length !== 2 ||
+        !Array.isArray(lowerRightLimit) || lowerRightLimit.length !== 2
+    ) {
+        console.error("Invalid getCellsBox parameters.");
+        return Promise.resolve({ state: MESSAGES_TYPES.ERROR, data: null });
+    }
+
+    const queryParams = new URLSearchParams();
+    queryParams.append("palette", palette);
+
+    return apiClient(`/cells/image?${queryParams.toString()}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+            upper_left_limit: upperLeftLimit,
+            lower_right_limit: lowerRightLimit,
+        }),
+    });
+}
+
+export function getImageStatus(taskId) {
+    return apiClient(`/cells/image/status/${taskId}`, {
+        method: "GET",
+        credentials: "include",
+    });
+}
