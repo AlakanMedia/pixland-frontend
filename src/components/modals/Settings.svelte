@@ -5,15 +5,17 @@
 
     let palette = $state(drawingState.palette);
     let showGrid = $state(drawingState.showGrid);
+    let showMouseChaser = $state(drawingState.showMouseChaser);
     let PALETTES = $state(["default", "reversed", "solarized", "dracula", "gruvbox"]);
 
     async function saveConfiguration() {
         if (user.isLoggedIn) {
-            if (showGrid !== drawingState.showGrid || palette !== drawingState.palette) {
+            if (showGrid !== drawingState.showGrid || showMouseChaser !== drawingState.showMouseChaser || palette !== drawingState.palette) {
                 let response = await updateUserConfigurations({
                     settings: {
                         show_grid: showGrid,
                         palette: palette,
+                        show_mouse_chaser: showMouseChaser,
                     }
                 });
 
@@ -35,12 +37,14 @@
 
                 drawingState.showGrid = showGrid;
                 drawingState.palette = palette;
+                drawingState.showMouseChaser = showMouseChaser;
                 drawingState.needsUpdate = true;
             }
         }
         else {
-            if (showGrid !== drawingState.showGrid) {
+            if (showGrid !== drawingState.showGrid || showMouseChaser !== drawingState.showMouseChaser) {
                 drawingState.showGrid = showGrid;
+                drawingState.showMouseChaser = showMouseChaser;
                 drawingState.needsUpdate = true;
             }
         }
@@ -82,6 +86,17 @@
              </select>
             </div>
         {/if}
+
+        <div class="display-option">
+            <div class="settings-icon-text">
+                <i class="ph ph-cursor"></i>
+                <h4>show chaser</h4>
+            </div>
+            <label class="switch">
+                <input type="checkbox" bind:checked={showMouseChaser}>
+                <span class="slider"></span>
+            </label>
+        </div>
     </div>
     <hr>
     <div id="settings-buttons">

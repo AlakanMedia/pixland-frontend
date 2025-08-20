@@ -57,6 +57,7 @@
             drawingState.pixelLimit = userLevel.pixelsLimit;
             drawingState.showGrid = initialUser.settings.show_grid;
             drawingState.palette = initialUser.settings.palette;
+            drawingState.showMouseChaser = initialUser.settings.show_mouse_chaser;
 
             user.id = initialUser.id;
             user.name = initialUser.name;
@@ -187,7 +188,7 @@
 
     function drawMatrix() {
         contextCanvas.clearRect(0, 0, canvasElement.width, canvasElement.height);
-        contextCanvas.fillStyle = colorPalette["color01"];
+        contextCanvas.fillStyle = colorPalette["c01"];
         contextCanvas.fillRect(0, 0, canvasElement.width, canvasElement.height);
 
         const startCellX = Math.floor(canvasInfo.cameraOffsetX / effectiveCellSize);
@@ -208,7 +209,7 @@
                 const chunkString = `${chunkX},${chunkY}`;
 
                 if (loadingChunks.has(chunkString)) {
-                    contextCanvas.fillStyle = colorPalette["color02"]
+                    contextCanvas.fillStyle = colorPalette["c02"]
                     contextCanvas.fillRect(screenX, screenY, effectiveCellSize, effectiveCellSize);
                 } else {
                     const cellColor = cellCache.get(generateDynamicKey(i, j, maxNumberCells - 1));
@@ -219,7 +220,7 @@
                     }
 
                     if (drawingState.showGrid && canvasInfo.cellScale >= 2) {
-                        contextCanvas.strokeStyle = colorPalette["color04"];
+                        contextCanvas.strokeStyle = colorPalette["c04"];
                         contextCanvas.strokeRect(screenX, screenY, effectiveCellSize, effectiveCellSize);
                     }
                 }
@@ -235,7 +236,7 @@
 
         const previousColor = cellCache.get(dynamicKey);
 
-        if ((previousColor === undefined && drawingState.selectedColor === "color01") || previousColor === drawingState.selectedColor) {
+        if ((previousColor === undefined && drawingState.selectedColor === "c01") || previousColor === drawingState.selectedColor) {
             return false;
         }
 
@@ -379,7 +380,7 @@
     onmouseup={(e) => {handleOnMouseUp(e);}}
     onwheel={async (e) => {handleOnWheel(e);}}
 >
-    {#if canvasInfo.cellScale >= 1}
+    {#if drawingState.showMouseChaser && canvasInfo.cellScale >= 1}
 	    <circle
 	        cx={mousePosition.coords.current.x}
 	    	cy={mousePosition.coords.current.y}

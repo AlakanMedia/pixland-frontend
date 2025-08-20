@@ -1,13 +1,14 @@
 <script>
     import { user, drawingState, ui } from "../../shared.svelte.js";
     import { registerNewUser, loginUser, getUserInformation, getPalette } from "../../pixlandApi.js";
-    import { showAlert, isValidEmail, getUserLevel, changeColorSchema, MESSAGES_TYPES } from "$lib/utils.js";
+    import { showAlert, isValidEmail, getUserLevel, changeColorSchema, MESSAGES_TYPES, sleep } from "$lib/utils.js";
 
     let username = $state("");
     let email = $state("");
     let password = $state("");
     let confirmPassword = $state("");
     let register = $state(false);
+    let pressed = $state(false);
 
     function isValidFields() {
         if (!(username && email && password)) {
@@ -128,6 +129,10 @@
     }
 
     async function handleSignButton() {
+        pressed = true;
+        await sleep(300);
+        pressed = false;
+
         if (register) {
             const userAdded = await handleRegister();
 
@@ -190,19 +195,6 @@
         }
     }
 
-    function closeLogin(event) {
-        if (event.type === "click") {
-            if (event.target !== login && !login.contains(event.target)) {
-                ui.loginModalIsOpen = false;
-            }
-        }
-        else if (event.type === "keydown") {
-            if (event.key === "Escape") {
-                ui.loginModalIsOpen = false;
-            }
-        }
-    }
-
     function removeErrorClass(element) {
         element.classList.remove("error");
     }
@@ -220,7 +212,13 @@
     <div id="login-separator">
         <hr><p>or</p><hr>
     </div>
-    <form id="login-form">
+    <form
+        id="login-form"
+        onsubmit={async (e) => {
+            e.preventDefault();
+            await handleSignButton();
+        }}
+    >
         <input
             id="input-username"
             class="input-form"
@@ -260,26 +258,22 @@
                 required
             />
         {/if}
+        <div id="summit-container">
+            <label id="register-checkbox">
+                <input id="register-button" type="checkbox" bind:checked={register}/>
+                <span>register</span>
+            </label>
+            <button id="sign-button" class={[{pressed}]} type="submit">
+                {#if register}
+                    <i class="ph-bold ph-user-plus"></i>
+                    <p>sign up</p>
+                {:else} 
+                    <i class="ph-bold ph-sign-in"></i>
+                    <p>sign in</p>
+                {/if}
+            </button>
+        </div>
     </form>
-    <div id="summit-container">
-        <label id="register-checkbox">
-            <input id="register-button" type="checkbox" bind:checked={register}/>
-            <span>register</span>
-        </label>
-        <button
-            id="sign-button"
-            aria-label="Pixland"
-            onclick={async () => {handleSignButton();}}
-        >
-            {#if register}
-                <i class="ph-bold ph-user-plus"></i>
-                <p>sign up</p>
-            {:else} 
-                <i class="ph-bold ph-sign-in"></i>
-                <p>sign in</p>
-            {/if}
-        </button>
-    </div>
 </div>
 
 <style>
@@ -362,7 +356,7 @@
 
     #summit-container{
         width: 100%;
-        padding: 0 8px;
+        margin-top: 6px;
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -407,6 +401,12 @@
     #sign-button:hover {
         background-color: var(--action-primary-hover);
         box-shadow: var(--shadow-md);
+    }
+
+    #sign-button:active,
+    #sign-button.pressed {
+        transform: scale(0.98);
+        background-color: var(--action-primary-active);
     }
 
     #sign-button > i {

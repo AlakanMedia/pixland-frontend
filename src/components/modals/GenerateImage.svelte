@@ -29,7 +29,7 @@
         }
 
         const taskId = response.data.info.task_id;
-        const result = await callWithProgress(getImageStatus, [taskId], 10);
+        const result = await callWithProgress(getImageStatus, [taskId], 4);
         
         if (!result) {
             showAlert(MESSAGES_TYPES.ERROR, "Image Generation Error", "Something went wrong while creating the image. Please try again later.");
@@ -110,7 +110,11 @@
     </div>
     <hr>
     <div id="buttons-section">
-        <button id="generate-button" onclick={async () => {handleImageGeneration();}}>
+        <button
+            id="generate-button"
+            disabled={isLoading}
+            onclick={async () => {handleImageGeneration();}}
+        >
             {#if isLoading}
                 <span class="loader"></span>
             {:else}
@@ -217,6 +221,11 @@
     #generate-button:hover {
         background-color: var(--action-primary-hover);
         box-shadow: var(--shadow-md);
+    }
+
+    #generate-button:disabled {
+        cursor: default;
+        background-color: var(--action-primary-disabled);
     }
 
     #download-button {

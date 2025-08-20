@@ -47,7 +47,8 @@
 <div
     id="modal-container"
     role="dialog"
-    tabindex="0"
+    aria-modal="true"
+    tabindex="-1"
     onclick={(e) => {closeModal(e);}}
     onkeydown={(e) => {closeModal(e);}}
     bind:this={container}

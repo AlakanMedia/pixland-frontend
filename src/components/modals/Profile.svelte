@@ -3,6 +3,12 @@
     import { showAlert, formatToLocalDate, getUserLevel, MESSAGES_TYPES } from "$lib/utils.js";
 	import { getUserInformation, deleteCookies } from "../../pixlandApi.js";
 
+    let userLevel = $state(getUserLevel(user.pixelsPlaced));
+
+    function getPercentageOfLimit(limit, current) {
+        return ((current / limit) * 100).toFixed(2);
+    }
+
     async function updateUserInfo() {
         const response = await getUserInformation();
 
@@ -14,6 +20,7 @@
 
             user.name = userInfo.username;
             user.pixelsPlaced = userInfo.pixels_placed;
+            userLevel = getUserLevel(user.pixelsPlaced);
         }
     }
 
@@ -51,7 +58,16 @@
             />
         </button>
         <h2 class="profile-text">{user.name}</h2>
-        <p class="profile-text">{getUserLevel(user.pixelsPlaced).message}</p>
+        <p class="profile-text">{userLevel.message}</p>
+    </div>
+    <div id="progress-container">
+        <div class="progress-info">
+            <span>progress toward the next level</span>
+            <span id="progress-percentage">{getPercentageOfLimit(userLevel.pixelsToNextLevel, user.pixelsPlaced)}%</span>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" style={`width: ${getPercentageOfLimit(userLevel.pixelsToNextLevel, user.pixelsPlaced)}%;`}></div>
+        </div>
     </div>
     <hr>
     <div id="profile-stats">
@@ -59,7 +75,7 @@
             <div class="stat-icon">
                 <i class="ph-fill ph-paint-brush"></i>
             </div>
-            <div class="stat-value">{getUserLevel(user.pixelsPlaced).level}</div>
+            <div class="stat-value">{userLevel.level}</div>
             <div class="stat-label">level</div>
         </div>
         <div class="stat-container">
@@ -107,8 +123,6 @@
         border-radius: 6px;
         box-shadow: var(--shadow-colored);
         gap: 12px;
-        /* overflow: hidden; */
-        /* transition: transform 0.2s ease; */
     }
 
     #profile-header {
@@ -233,5 +247,53 @@
     .btn-danger:hover {
         background-color: var(--error-600);
         box-shadow: var(--shadow-md);
+    }
+
+    #progress-container {
+        width: 100%;
+        padding: 0 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .progress-info {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.75rem;
+        color: var(--text-tertiary);
+    }
+
+    .progress-bar {
+        height: 10px;
+        background-color: var(--bg-base);
+        border-radius: 4px;
+        border: 1px solid var(--border-prominent);
+        overflow: hidden;
+    }
+
+    .progress-fill {
+        position: relative;
+        height: 100%;
+        background-color: var(--action-secondary);
+        border-radius: 4px;
+        transition: width 0.5s ease;
+        overflow: hidden;
+    }
+
+    .progress-fill::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -50%;
+        width: 50%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+        animation: shimmer 4s infinite;
+    }
+
+    @keyframes shimmer {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(300%); }
     }
 </style>
