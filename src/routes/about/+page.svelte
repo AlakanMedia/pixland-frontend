@@ -3,15 +3,19 @@
 </script>
 
 <div id="principal">
-    <div class="container">
-        <header class="header">
-            <div class="logo">
-                <i class="ph ph-grid-four"></i>
-                PixLand
-            </div>
-            <p class="subtitle">A free online pixel art playground where your creativity is the only limit. Paint, create, and collaborate on a massive digital canvas.</p>
-        </header>
+	<header class="header">
+		<div class="header-content">
+			<a href="/" class="logo">
+				<i class="ph ph-palette logo-icon"></i>
+				<div class="logo-text">
+					<h1>PixLand</h1>
+					<p>Collaborative Pixel Art Canvas</p>
+				</div>
+			</a>
+		</div>
+	</header>
 
+    <div class="container">
         <main class="main-content">
             <div class="card">
                 <h2>
@@ -102,6 +106,7 @@
     #principal {
         width: 100%;
         background-color: var(--bg-base);
+        line-height: 1.6;
     }
 
     .container {
@@ -111,29 +116,47 @@
     }
 
     .header {
-        text-align: center;
-        margin-bottom: 3rem;
+        background-color: var(--bg-elevated-1);
+        border-bottom: 1px solid var(--border-default);
+        padding: 1.5rem 0;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .header-content {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 0 2rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
     }
 
     .logo {
-        display: inline-flex;
+        display: flex;
         align-items: center;
-        gap: 0.5rem;
-        font-size: 2.5rem;
-        font-weight: bold;
+        gap: 0.75rem;
+        text-decoration: none;
+        color: var(--text-primary);
+    }
+
+    .logo-icon {
+        font-size: 2rem;
         color: var(--accent-primary);
-        margin-bottom: 1rem;
     }
 
-    .logo i {
-        font-size: 2.5rem;
+    .logo-text h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
     }
 
-    .subtitle {
+    .logo-text p {
+        font-size: 0.875rem;
         color: var(--text-secondary);
-        font-size: 1.2rem;
-        max-width: 600px;
-        margin: 0 auto;
+        margin: 0;
     }
 
     .main-content {

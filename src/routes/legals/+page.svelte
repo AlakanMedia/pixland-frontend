@@ -560,7 +560,7 @@
     /* === RESPONSIVE === */
     @media (max-width: 768px) {
         .container {
-            padding: 2rem 1rem;
+            padding: 1rem;
         }
 
         .header-content {

@@ -50,7 +50,7 @@ export const drawingState = $state({
 export const colorPalette = $state({
     c01: "#262626",
     c02: "#000000",
-    c03: "#808080",
+    c03: "#B0B0B0",
     c04: "#ffffff",
     c05: "#99623d",
     c06: "#ffa3c8",

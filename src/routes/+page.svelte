@@ -68,7 +68,7 @@
 
         canvasElement.width = window.innerWidth;
         canvasElement.height = window.innerHeight;
-        contextCanvas = canvasElement.getContext("2d", { alpha: false });
+        contextCanvas = canvasElement.getContext("2d");
         contextCanvas.imageSmoothingEnabled = false;
 
         requestAnimationFrame(renderLoop);
@@ -218,13 +218,31 @@
                         contextCanvas.fillStyle = colorPalette[cellColor]
                         contextCanvas.fillRect(screenX, screenY, effectiveCellSize, effectiveCellSize);
                     }
-
-                    if (drawingState.showGrid && canvasInfo.cellScale >= 2) {
-                        contextCanvas.strokeStyle = colorPalette["c04"];
-                        contextCanvas.strokeRect(screenX, screenY, effectiveCellSize, effectiveCellSize);
-                    }
                 }
             }
+        }
+
+        // Dibujamos el Grid si es necesario
+        if (drawingState.showGrid && canvasInfo.cellScale >= 2) {
+            contextCanvas.strokeStyle = "rgba(128, 128, 128, 0.4)";
+            contextCanvas.lineWidth = 2;
+            contextCanvas.beginPath();
+
+            // Líneas verticales
+            for (let i = startCellX; i <= endCellX + 1; i++) {
+                const x = Math.round(i * effectiveCellSize - canvasInfo.cameraOffsetX);
+                contextCanvas.moveTo(x, 0);
+                contextCanvas.lineTo(x, canvasElement.height);
+            }
+
+            // Líneas horizontales
+            for (let j = startCellY; j <= endCellY + 1; j++) {
+                const y = Math.round(j * effectiveCellSize - canvasInfo.cameraOffsetY);
+                contextCanvas.moveTo(0, y);
+                contextCanvas.lineTo(canvasElement.width, y);
+            }
+
+            contextCanvas.stroke();
         }
     }
 
