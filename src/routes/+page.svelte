@@ -36,12 +36,15 @@
 
     // Variables para el clic y arrastre
     const dragThreshold = 4;
-    let isDragging = $state(false);
+    let isDragging = false;
     let isMouseDown = false;
     let clickMouseX;
     let clickMouseY;
 
     let needsRedraw = true;
+
+    let isSelecting = false;
+    let selectingArea = null;
 
     onMount(async () => {
         const { initialUser, initialPalette } = data;
@@ -244,6 +247,29 @@
 
             contextCanvas.stroke();
         }
+
+        if (selectingArea) {
+            contextCanvas.fillStyle = "rgba(45, 128, 255, 0.2)";
+            contextCanvas.strokeStyle = "rgb(45, 128, 255)";
+            contextCanvas.lineWidth = 2;
+        
+            // 1. Determina las coordenadas de las celdas de inicio y fin reales (esquina superior-izquierda y esquina inferior-derecha)
+            const minCellX = Math.min(selectingArea.startCellX, selectingArea.endCellX);
+            const minCellY = Math.min(selectingArea.startCellY, selectingArea.endCellY);
+            const maxCellX = Math.max(selectingArea.startCellX, selectingArea.endCellX);
+            const maxCellY = Math.max(selectingArea.startCellY, selectingArea.endCellY);
+
+            // 2. Calcula la posición inicial (x, y) en píxeles de la pantalla
+            const rectScreenX = Math.round(minCellX * effectiveCellSize - canvasInfo.cameraOffsetX);
+            const rectScreenY = Math.round(minCellY * effectiveCellSize - canvasInfo.cameraOffsetY);
+        
+            // 3. Calcula el ancho y alto en píxeles. El "+ 1" es para incluir la celda final.
+            const rectWidth = (maxCellX - minCellX + 1) * effectiveCellSize;
+            const rectHeight = (maxCellY - minCellY + 1) * effectiveCellSize;
+        
+            contextCanvas.fillRect(rectScreenX, rectScreenY, rectWidth, rectHeight);
+            contextCanvas.strokeRect(rectScreenX, rectScreenY, rectWidth, rectHeight);
+        }
     }
 
     function handleSetColor(event) {
@@ -283,8 +309,22 @@
 
         clickMouseX = event.clientX;
         clickMouseY = event.clientY;
-        startCameraX = canvasInfo.cameraOffsetX;
-        startCameraY = canvasInfo.cameraOffsetY;
+
+        if (event.ctrlKey) {
+            isSelecting = true;
+
+            if (!selectingArea) {
+                selectingArea = {};
+            }
+
+            selectingArea.startCellX = Math.floor((canvasInfo.cameraOffsetX + clickMouseX) / effectiveCellSize);
+            selectingArea.startCellY = Math.floor((canvasInfo.cameraOffsetY + clickMouseY) / effectiveCellSize);
+        }
+        else {
+            startCameraX = canvasInfo.cameraOffsetX;
+            startCameraY = canvasInfo.cameraOffsetY;
+        }
+
         isMouseDown = true;
         size.target = 10;
     }
@@ -297,39 +337,59 @@
             const dragDistance = Math.hypot(deltaX, deltaY);
 
             if (dragDistance > dragThreshold) {
-                document.body.style.cursor = "move";
                 isDragging = true;
 
-                // Solución de los límites del mapa más corta, para la versión más larga
-                // que hice tengo que ir a ver el pantallazo que tomé
-                canvasInfo.cameraOffsetX = Math.max(0, Math.min(startCameraX - deltaX, worldPxWidth - canvasElement.width));
-                canvasInfo.cameraOffsetY = Math.max(0, Math.min(startCameraY - deltaY, worldPxHeight - canvasElement.height));
+                if (isSelecting) {
+                    document.body.style.cursor = "crosshair";
+                    selectingArea.endCellX = Math.floor((canvasInfo.cameraOffsetX + event.clientX) / effectiveCellSize);
+                    selectingArea.endCellY = Math.floor((canvasInfo.cameraOffsetY + event.clientY) / effectiveCellSize);
 
-                await fetchChunk();
+                    needsRedraw = true;
+                }
+                else {
+                    // Solución de los límites del mapa más corta, para la versión más larga
+                    // que hice tengo que ir a ver el pantallazo que tomé
+                    document.body.style.cursor = "move";
+                    canvasInfo.cameraOffsetX = Math.max(0, Math.min(startCameraX - deltaX, worldPxWidth - canvasElement.width));
+                    canvasInfo.cameraOffsetY = Math.max(0, Math.min(startCameraY - deltaY, worldPxHeight - canvasElement.height));
+
+                    await fetchChunk();
+                }
             }
         }
     }
 
     function handleOnMouseUp(event) {
         if (isDragging) {
+            isDragging = false;
+
+            if (isSelecting) {
+                isSelecting = false;
+            }
+
             document.body.style.cursor = "default";
         }
         else {
-            if (!user.isLoggedIn) {
-                ui.loginModalIsOpen = true;
+            if (selectingArea) {
+                selectingArea = null;
+                needsRedraw = true;
             }
             else {
-                if (canvasInfo.cellScale >= 1 && drawingState.availablePixels > 0) {
-                    const pixelPlaced = handleSetColor(event);
+                if (!user.isLoggedIn) {
+                    ui.loginModalIsOpen = true;
+                }
+                else {
+                    if (canvasInfo.cellScale >= 1 && drawingState.availablePixels > 0) {
+                        const pixelPlaced = handleSetColor(event);
 
-                    if (pixelPlaced) {
-                        drawingState.availablePixels--;
+                        if (pixelPlaced) {
+                            drawingState.availablePixels--;
+                        }
                     }
                 }
             }
         }
 
-        isDragging = false;
         isMouseDown = false;
         size.target = 6;
     }

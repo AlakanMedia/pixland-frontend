@@ -53,6 +53,10 @@
             <i class="ph-bold ph-gear"></i>
             <p>settings</p>
         </button> 
+        <button class="option-button" onclick={() => {goto("/editor");}}>
+            <i class="ph-bold ph-file-text"></i>
+            <p>editor</p>
+        </button> 
         <button class="option-button" onclick={() => {goto("/legals");}}>
             <i class="ph-bold ph-gavel"></i>
             <p>legals</p>
