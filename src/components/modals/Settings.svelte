@@ -77,13 +77,13 @@
                     <i class="ph ph-palette"></i>
                     <h4>change palette</h4>
                 </div>
-             <select id="select-theme" bind:value={palette}>
-              	{#each PALETTES as plt}
-              		<option value={plt}>
-              			{plt}
-              		</option>
-                 {/each}
-             </select>
+                <select id="select-theme" bind:value={palette}>
+                 	{#each PALETTES as plt}
+                 		<option value={plt}>
+                 			{plt}
+                 		</option>
+                    {/each}
+                </select>
             </div>
         {/if}
 

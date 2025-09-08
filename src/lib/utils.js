@@ -55,154 +55,150 @@ export function generateDynamicKey(x, y, maxValue) {
   return (x << bits) | y;
 }
 
-const LEVEL_LIMITS = {
-  pixelPeasant: 500,
-  colorDabbler: 1500,
-  dotDropper: 3000,
-  hueHustler: 6000,
-  shadeSlinger: 10000,
-  gridGraffiti: 15000,
-  palettePioneer: 25000,
-  canvasCommander: 40000,
-  bitmaster: 70000,
-  pixelPicasso: 120000,
-  colorOverlord: 200000,
-  ditheringDuke: 350000,
-  hueSorcerer: 500000,
-  renderRuler: 700000,
-  pixelProphet: 1000000,
-  glitchGod: Infinity
-};
+const LEVELS_CONFIG = [
+  {
+    name: "Pixel Peasant",
+    minPixels: 0,
+    message: "You've placed your first humble dot.",
+    pixelLimit: 6,
+    src: "images/profiles/pixel-peasant.png"
+  },
+  {
+    name: "Color Dabbler",
+    minPixels: 500,
+    message: "Starting to make a mess — in style.",
+    pixelLimit: 7,
+    src: "images/profiles/color-dabbler.png"
+  },
+  {
+    name: "Dot Dropper",
+    minPixels: 1500,
+    message: "You're making tiny waves in the canvas ocean.",
+    pixelLimit: 8,
+    src: "images/profiles/dot-dropper.png"
+  },
+  {
+    name: "Hue Hustler",
+    minPixels: 3000,
+    message: "You've got an eye for color and no shame in clicking.",
+    pixelLimit: 9,
+    src: "images/profiles/hue-hustler.png"
+  },
+  {
+    name: "Shade Slinger",
+    minPixels: 6000,
+    message: "Flipping palettes like a cowboy flips coins.",
+    pixelLimit: 10,
+    src: "images/profiles/shade-slinger.png"
+  },
+  {
+    name: "Grid Graffiti",
+    minPixels: 10000,
+    message: "Who needs permission to paint?",
+    pixelLimit: 11,
+    src: "images/profiles/grid-graffiti.png"
+  },
+  {
+    name: "Palette Pioneer",
+    minPixels: 15000,
+    message: "Blazing trails through pixels unknown.",
+    pixelLimit: 12,
+    src: "images/profiles/palette-pioneer.png"
+  },
+  {
+    name: "Canvas Commander",
+    minPixels: 25000,
+    message: "You don't paint pixels — you order them around.",
+    pixelLimit: 13,
+    src: "images/profiles/canvas-commander.png"
+  },
+  {
+    name: "Bitmaster",
+    minPixels: 40000,
+    message: "The binary bows to your will.",
+    pixelLimit: 14,
+    src: "images/profiles/bitmaster.png"
+  },
+  {
+    name: "Pixel Picasso",
+    minPixels: 70000,
+    message: "Your mess is starting to look like art.",
+    pixelLimit: 15,
+    src: "images/profiles/pixel-picasso.png"
+  },
+  {
+    name: "Color Overlord",
+    minPixels: 120000,
+    message: "You control more shades than the sunset.",
+    pixelLimit: 16,
+    src: "images/profiles/color-overlord.png"
+  },
+  {
+    name: "The Dithering Duke",
+    minPixels: 200000,
+    message: "Smoothing edges like a royal.",
+    pixelLimit: 18,
+    src: "images/profiles/dithering-duke.png"
+  },
+  {
+    name: "Hue Sorcerer",
+    minPixels: 350000,
+    message: "Summoning colors with a click and a curse.",
+    pixelLimit: 20,
+    src: "images/profiles/hue-sorcerer.png"
+  },
+  {
+    name: "Render Ruler",
+    minPixels: 500000,
+    message: "The canvas is your kingdom. The cursor is your crown.",
+    pixelLimit: 22,
+    src: "images/profiles/render-ruler.png"
+  },
+  {
+    name: "Pixel Prophet",
+    minPixels: 700000,
+    message: "You see the final image before it even exists.",
+    pixelLimit: 24,
+    src: "images/profiles/pixel-prophet.png"
+  },
+  {
+    name: "The Glitch God",
+    minPixels: 1000000,
+    message: "Reality bends at the power of your pixels.",
+    pixelLimit: 30,
+    src: "images/profiles/glitch-god.png"
+  }
+];
 
 export function getUserLevel(pixelsPlaced) {
-  if (pixelsPlaced >= 0 && pixelsPlaced <= LEVEL_LIMITS.pixelPeasant) {
-    return {
-      level: "Pixel Peasant",
-      message: "You've placed your first humble dot.",
-      pixelsToNextLevel: LEVEL_LIMITS.pixelPeasant,
-      pixelsLimit: 6
-    };
+  let currentLevelIndex = -1;
+
+  for (let i = LEVELS_CONFIG.length - 1; i >= 0; i--) {
+    if (pixelsPlaced >= LEVELS_CONFIG[i].minPixels) {
+      currentLevelIndex = i;
+      break;
+    }
   }
-  else if (pixelsPlaced <= LEVEL_LIMITS.colorDabbler) {
-    return {
-      level: "Color Dabbler",
-      message: "Starting to make a mess — in style.",
-      pixelsToNextLevel: LEVEL_LIMITS.colorDabbler,
-      pixelsLimit: 7
-    };
-  }
-  else if (pixelsPlaced <= LEVEL_LIMITS.dotDropper) {
-    return {
-      level: "Dot Dropper",
-      message: "You're making tiny waves in the canvas ocean.",
-      pixelsToNextLevel: LEVEL_LIMITS.dotDropper,
-      pixelsLimit: 8
-    };
-  }
-  else if (pixelsPlaced <= LEVEL_LIMITS.hueHustler) {
-    return {
-      level: "Hue Hustler",
-      message: "You've got an eye for color and no shame in clicking.",
-      pixelsToNextLevel: LEVEL_LIMITS.hueHustler,
-      pixelsLimit: 9
-    };
-  }
-  else if (pixelsPlaced <= LEVEL_LIMITS.shadeSlinger) {
-    return {
-      level: "Shade Slinger",
-      message: "Flipping palettes like a cowboy flips coins.",
-      pixelsToNextLevel: LEVEL_LIMITS.shadeSlinger,
-      pixelsLimit: 10
-    };
-  }
-  else if (pixelsPlaced <= LEVEL_LIMITS.gridGraffiti) {
-    return {
-      level: "Grid Graffiti",
-      message: "Who needs permission to paint?",
-      pixelsToNextLevel: LEVEL_LIMITS.gridGraffiti,
-      pixelsLimit: 11
-    };
-  }
-  else if (pixelsPlaced <= LEVEL_LIMITS.palettePioneer) {
-    return {
-      level: "Palette Pioneer",
-      message: "Blazing trails through pixels unknown.",
-      pixelsToNextLevel: LEVEL_LIMITS.palettePioneer,
-      pixelsLimit: 12
-    };
-  }
-  else if (pixelsPlaced <= LEVEL_LIMITS.canvasCommander) {
-    return {
-      level: "Canvas Commander",
-      message: "You don't paint pixels — you order them around.",
-      pixelsToNextLevel: LEVEL_LIMITS.canvasCommander,
-      pixelsLimit: 13
-    };
-  }
-  else if (pixelsPlaced <= LEVEL_LIMITS.bitmaster) {
-    return {
-      level: "Bitmaster",
-      message: "The binary bows to your will.",
-      pixelsToNextLevel: LEVEL_LIMITS.bitmaster,
-      pixelsLimit: 14
-    };
-  }
-  else if (pixelsPlaced <= LEVEL_LIMITS.pixelPicasso) {
-    return {
-      level: "Pixel Picasso",
-      message: "Your mess is starting to look like art.",
-      pixelsToNextLevel: LEVEL_LIMITS.pixelPicasso,
-      pixelsLimit: 15
-    };
-  }
-  else if (pixelsPlaced <= LEVEL_LIMITS.colorOverlord) {
-    return {
-      level: "Color Overlord",
-      message: "You control more shades than the sunset.",
-      pixelsToNextLevel: LEVEL_LIMITS.colorOverlord,
-      pixelsLimit: 16
-    };
-  }
-  else if (pixelsPlaced <= LEVEL_LIMITS.ditheringDuke) {
-    return {
-      level: "The Dithering Duke",
-      message: "Smoothing edges like a royal.",
-      pixelsToNextLevel: LEVEL_LIMITS.ditheringDuke,
-      pixelsLimit: 18
-    };
-  }
-  else if (pixelsPlaced <= LEVEL_LIMITS.hueSorcerer) {
-    return {
-      level: "Hue Sorcerer",
-      message: "Summoning colors with a click and a curse.",
-      pixelsToNextLevel: LEVEL_LIMITS.hueSorcerer,
-      pixelsLimit: 20
-    };
-  }
-  else if (pixelsPlaced <= LEVEL_LIMITS.renderRuler) {
-    return {
-      level: "Render Ruler",
-      message: "The canvas is your kingdom. The cursor is your crown.",
-      pixelsToNextLevel: LEVEL_LIMITS.renderRuler,
-      pixelsLimit: 22
-    };
-  }
-  else if (pixelsPlaced <= LEVEL_LIMITS.pixelProphet) {
-    return {
-      level: "Pixel Prophet",
-      message: "You see the final image before it even exists.",
-      pixelsToNextLevel: LEVEL_LIMITS.pixelProphet,
-      pixelsLimit: 24
-    };
-  }
-  else {
-    return {
-      level: "The Glitch God",
-      message: "Reality bends at the power of your pixels.",
-      pixelsToNextLevel: LEVEL_LIMITS.glitchGod,
-      pixelsLimit: 30
-    };
-  }
+  
+  const currentLevel = LEVELS_CONFIG[currentLevelIndex];
+  const nextLevel = LEVELS_CONFIG[currentLevelIndex + 1];
+
+  return {
+    level: currentLevel.name,
+    message: currentLevel.message,
+    pixelsLimit: currentLevel.pixelLimit,
+    imageSrc: currentLevel.src,
+    pixelsForCurrentLevel: currentLevel.minPixels,
+    pixelsToNextLevel: nextLevel ? nextLevel.minPixels : Infinity,
+  };
+}
+
+export function getAvailableProfileImages(pixelsPlaced) {
+  return LEVELS_CONFIG.map(level => ({
+    name: level.name,
+    src: level.src,
+    unlocked: pixelsPlaced >= level.minPixels
+  }));
 }
 
 export function padWithZeros(num, length) {

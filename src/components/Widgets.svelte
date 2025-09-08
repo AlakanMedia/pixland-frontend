@@ -27,7 +27,7 @@
     <input
         id="button-profile"
         type="image"
-        src="/profile_placeholder.png"
+        src={user.profileImage}
         alt="profile_photo"
         onclick={() => {ui.profileModalIsOpen = true;}}
         transition:scale

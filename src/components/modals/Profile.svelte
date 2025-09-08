@@ -1,9 +1,12 @@
 <script>
+    import { fade } from "svelte/transition";
     import { ui, user } from "../../shared.svelte.js";
-    import { showAlert, formatToLocalDate, getUserLevel, MESSAGES_TYPES } from "$lib/utils.js";
-	import { getUserInformation, deleteCookies } from "../../pixlandApi.js";
+    import { showAlert, formatToLocalDate, getUserLevel, MESSAGES_TYPES, getAvailableProfileImages } from "$lib/utils.js";
+	import { getUserInformation, deleteCookies, updateUserConfigurations } from "../../pixlandApi.js";
 
     let userLevel = $state(getUserLevel(user.pixelsPlaced));
+    let userProfileImages = $state(getAvailableProfileImages(user.pixelsPlaced));
+    let showUserImages = $state(false);
 
     function getPercentageOfLimit(limit, current) {
         return ((current / limit) * 100).toFixed(2);
@@ -29,6 +32,7 @@
         user.name = null;
         user.pixelsPlaced = null;
         user.createdAt = null;
+        user.profileImage = null;
         user.isLoggedIn = false;
 
         if (user.websocket) {
@@ -42,9 +46,54 @@
 
         await deleteCookies();
     }
+
+    async function changeUserImage(event, imagePath) {
+        event.stopPropagation();
+        const response = await updateUserConfigurations({ profile_image: imagePath });
+
+        if (response.state === MESSAGES_TYPES.SUCCESS) {
+            user.profileImage = imagePath;
+        }
+        else {
+            showAlert(MESSAGES_TYPES.ERROR, "Profile Picture Update Failed", "An error occurred while updating your profile picture. Please try again.");    
+        }
+
+        showUserImages = false;
+    }
 </script>
 
 <div id="profile-card">
+    {#if showUserImages}
+        <div id="select-image-container" transition:fade>
+            <div id="container-header">
+                <div class="header-icon-text">
+                    <i class="ph ph-user-circle"></i>
+                    <h4>change image</h4>
+                </div>
+                <button
+                    aria-label="Close image window"
+                    onclick={(e) => {
+                        e.stopPropagation();
+                        showUserImages = false;
+                    }}
+                >
+                    <i class="ph-bold ph-x"></i>
+                </button>
+            </div>
+            <hr>
+            <div id="select-image-gallery">
+                {#each userProfileImages as image}
+                    <button 
+                        class="profile-image-selection"
+                        disabled={!image.unlocked}
+                        onclick={async (e) => {changeUserImage(e, image.src);}}
+                    >
+                        <img src={image.src} alt={`Profile picture of ${image.name}`}/>
+                    </button> 
+                {/each}
+            </div>
+        </div>
+    {/if}
     <div id="profile-header">
         <button
             class="profile-button"
@@ -52,10 +101,28 @@
             onclick={async () => {updateUserInfo();}}
         >
             <img
-                id="profile-image"
-                src="/profile_placeholder.png"
+                src={user.profileImage}
                 alt="Update user information"
             />
+            <div
+                id="image-button"
+                role="button"
+                tabindex="0"
+                aria-label="Change profile image"
+                onclick={(e) => {
+                    e.stopPropagation();
+                    showUserImages = true;
+                }}
+                onkeydown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        showUserImages = true;
+                    }
+                }}
+            >
+                <i class="ph-bold ph-pencil-simple"></i>
+            </div>
         </button>
         <h2 class="profile-text">{user.name}</h2>
         <p class="profile-text">{userLevel.message}</p>
@@ -113,6 +180,7 @@
     }
 
     #profile-card {
+        position: relative;
         display: flex;
         justify-content: center;
         align-items: center;
@@ -123,6 +191,80 @@
         border-radius: 6px;
         box-shadow: var(--shadow-colored);
         gap: 12px;
+    }
+
+    #select-image-container {
+        position: absolute;
+        top: 122px;
+        width: calc(100% - 24px);
+        background-color: var(--bg-elevated-1);
+        border: 1px solid var(--border-default);
+        border-radius: 6px;
+        padding: 0.5rem;
+        z-index: 2;
+    }
+
+    #select-image-container > hr {
+        margin: 0.5rem 0;
+    }
+
+    #container-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    #container-header > button {
+        border: none;
+        border-radius: 50%;
+        padding: 0.25rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: var(--action-ghost);
+        color: var(--text-primary);
+        transition: background-color 0.3s ease;
+    }
+
+    #container-header > button:hover {
+        background-color: var(--action-tertiary-hover);
+    }
+
+    .header-icon-text {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--text-primary);
+    }
+
+    .header-icon-text > i {
+        font-size: 1.5rem;
+        color: var(--accent-secondary);
+    }
+
+    #select-image-gallery {
+        display: grid;
+        grid-auto-flow: column; 
+        grid-auto-columns: 100px; 
+        grid-template-rows: repeat(2, 100px);
+        gap: 0.5rem; 
+        overflow-x: auto;
+        overflow-y: hidden;
+    }
+
+    .profile-image-selection {
+        border: none;
+        background: none;
+    }
+
+    .profile-image-selection:disabled {
+        cursor: not-allowed;
+    }
+
+    .profile-image-selection:disabled > img {
+        filter: grayscale(100%);
     }
 
     #profile-header {
@@ -142,8 +284,8 @@
         background: none;
         border: none;
         padding: 0;
-        cursor: pointer;
         border-radius: 50%;
+        position: relative;
     }
 
     .profile-button img {
@@ -158,6 +300,28 @@
 
     .profile-button:active img {
         transform: scale(0.95);
+    }
+
+    #image-button {
+        position: absolute;
+        border-radius: 50%;
+        background-color: var(--action-tertiary);
+        color: var(--action-tertiary-text);
+        bottom: 0px;
+        right: 0px;
+        padding: 0.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background-color 0.3s ease;
+    }
+
+    #image-button:hover {
+        background-color: var(--action-tertiary-hover);
+    }
+
+    #image-button > i {
+        font-size: 1.25rem;
     }
 
     .profile-text {

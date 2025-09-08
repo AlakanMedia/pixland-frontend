@@ -34,6 +34,7 @@ export const user = $state({
     createdAt: null,
     isLoggedIn: false,
     websocket: null,
+    profileImage: null,
 });
 
 // Store para la funcionalidad del Canvas/Matrix

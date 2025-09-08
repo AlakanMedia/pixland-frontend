@@ -181,6 +181,7 @@
                 user.name = userInfo.username;
                 user.pixelsPlaced = userInfo.pixels_placed;
                 user.createdAt = userInfo.created_at;
+                user.profileImage = userInfo.profile_image;
                 user.isLoggedIn = true;
 
                 if (user.websocket) {

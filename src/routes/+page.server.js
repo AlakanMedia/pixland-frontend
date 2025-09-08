@@ -17,6 +17,7 @@ export async function load({ fetch }) {
             pixelsPlaced: userInfo.pixels_placed,
             createdAt: userInfo.created_at,
             isLoggedIn: true,
+            profileImage: userInfo.profile_image,
             settings: userInfo.settings // Pasamos los settings completos
         };
 

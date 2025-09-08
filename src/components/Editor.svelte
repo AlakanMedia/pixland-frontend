@@ -1,17 +1,27 @@
 <svelte:head>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css"/>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 </svelte:head>
 
 <script>
+    import "highlight.js/styles/night-owl.css";
+    import 'quill/dist/quill.snow.css';
     import { onMount, onDestroy } from "svelte";
+    import * as Y from "yjs";
+    import hljs from "highlight.js";
+    import { HocuspocusProvider } from "@hocuspocus/provider";
+    import { QuillBinding } from "y-quill";
+    import { IndexeddbPersistence } from "y-indexeddb";
+    import { user } from "../shared.svelte.js";
 
     let editorContainer;
     let toolbarContainer;
     let quillInstance;
+
+    let ydoc;
+    let provider;
+    let binding;
+    let persistence;
 
     onMount(async () => {
         if (quillInstance) {
@@ -19,22 +29,76 @@
         }
 
         const Quill = (await import("quill")).default;
+        const QuillCursors = (await import("quill-cursors")).default;
+
+        Quill.register('modules/cursors', QuillCursors);
 
         quillInstance = new Quill(editorContainer, {
             modules: {
-                syntax: true,
+                cursors: true,
+                syntax: { hljs },
                 toolbar: toolbarContainer,
+                history: { userOnly: true },
             },
             theme: "snow",
             placeholder: "Compose an epic...",
         });
+
+        const EDITOR_SERVER_WSS = import.meta.env.VITE_EDITOR_SERVER_WSS;
+        const DOC_NAME = "pixland";
+
+        ydoc = new Y.Doc();
+        provider = new HocuspocusProvider({
+            url: EDITOR_SERVER_WSS,
+            name: DOC_NAME,
+            document: ydoc,
+        });
+
+        const userName = user.name || "anon";
+        const userColor = generateColorForUser(userName);
+
+        provider.awareness.setLocalStateField("user", {
+            name: userName,
+            color: userColor,
+        });
+
+        const ytext = ydoc.getText("quill");
+        binding = new QuillBinding(ytext, quillInstance, provider.awareness);
+
+        persistence = new IndexeddbPersistence(DOC_NAME, ydoc);
+        persistence.once('synced', () => { });
     });
 
     onDestroy(() => {
+        provider?.destroy();
+        binding?.destroy();
+        persistence?.destroy();
+
         if (editorContainer) {
             editorContainer.innerHTML = '';
         }
     });
+
+    function generateColorForUser(name) {
+        // 1. Crear un "hash" numérico simple a partir del nombre de usuario.
+        let hash = 0;
+
+        for (let i = 0; i < name.length; i++) {
+            // Formula simple para crear un hash predecible.
+            hash = name.charCodeAt(i) + ((hash << 5) - hash);
+        }
+
+        // 2. Usar el hash para generar un Tono (Hue) entre 0 y 360.
+        // El operador '%' (módulo) asegura que el valor esté en el rango deseado.
+        const hue = hash % 360;
+
+        // 3. Devolver el color en formato HSL.
+        // - Tono (hue): Varía según el usuario, dándonos colores diferentes.
+        // - Saturación: 75% para que el color sea vibrante.
+        // - Luminosidad: 55% es un valor ideal, ni muy oscuro ni muy claro,
+        //   lo que garantiza un excelente contraste con las letras blancas.
+        return `hsl(${hue}, 75%, 55%)`;
+    }
 </script>
 
 <div id="toolbar-container" bind:this={toolbarContainer}>

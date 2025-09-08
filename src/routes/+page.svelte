@@ -66,6 +66,7 @@
             user.name = initialUser.name;
             user.pixelsPlaced = initialUser.pixelsPlaced;
             user.createdAt = initialUser.createdAt;
+            user.profileImage = initialUser.profileImage;
             user.isLoggedIn = true;
         }
 
