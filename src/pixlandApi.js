@@ -154,3 +154,10 @@ export function getImageStatus(taskId) {
         credentials: "include",
     });
 }
+
+export function deleteUser(userId) {
+    return apiClient(`/users/delete/${userId}`, {
+        method: "DELETE",
+        credentials: "include",
+    });
+}

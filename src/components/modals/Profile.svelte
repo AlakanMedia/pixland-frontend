@@ -2,7 +2,7 @@
     import { fade } from "svelte/transition";
     import { ui, user } from "../../shared.svelte.js";
     import { showAlert, formatToLocalDate, getUserLevel, MESSAGES_TYPES, getAvailableProfileImages } from "$lib/utils.js";
-	import { getUserInformation, deleteCookies, updateUserConfigurations } from "../../pixlandApi.js";
+	import { getUserInformation, deleteCookies, updateUserConfigurations, deleteUser } from "../../pixlandApi.js";
 
     let userLevel = $state(getUserLevel(user.pixelsPlaced));
     let userProfileImages = $state(getAvailableProfileImages(user.pixelsPlaced));
@@ -60,6 +60,18 @@
 
         showUserImages = false;
     }
+
+    async function handleDeleteUser() {
+        const response = await deleteUser(user.id);
+
+        if (response.state === MESSAGES_TYPES.SUCCESS) {
+            showAlert(MESSAGES_TYPES.SUCCESS, "User Deleted Successfully", "The user has been removed from the system without issues.");    
+            await logOut();
+        }
+        else {
+            showAlert(MESSAGES_TYPES.ERROR, "Error Deleting User", "There was a problem while trying to remove the user. Please try again.");    
+        }
+    }
 </script>
 
 <div id="profile-card">
@@ -111,13 +123,13 @@
                 aria-label="Change profile image"
                 onclick={(e) => {
                     e.stopPropagation();
-                    showUserImages = true;
+                    showUserImages = !showUserImages;
                 }}
                 onkeydown={(e) => {
                     if (e.key === "Enter" || e.key === " ") {
                         e.preventDefault();
                         e.stopPropagation();
-                        showUserImages = true;
+                        showUserImages = !showUserImages;
                     }
                 }}
             >
@@ -162,11 +174,19 @@
     </div>
     <hr>
     <div id="profile-actions">
-        <button class="btn btn-primary" onclick={async () => {logOut();}}>
+        <button
+            class="btn btn-primary"
+            title="Sign Out"
+            onclick={async () => {await logOut();}}
+        >
           <i class="ph-bold ph-sign-out"></i>
           sign out
         </button>
-        <button class="btn btn-danger" title="Delete Account">
+        <button
+            class="btn btn-danger"
+            title="Delete Account"
+            onclick={async () => {await handleDeleteUser();}}
+        >
           <i class="ph-bold ph-trash"></i>
           delete
         </button>
