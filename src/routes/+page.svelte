@@ -1,5 +1,6 @@
 <script>
     import { onMount, onDestroy } from "svelte";
+    import { page } from "$app/state";
     import { fade } from "svelte/transition";
     import { Spring } from "svelte/motion";
     import { getCellsBox } from "../pixlandApi.js";
@@ -48,6 +49,33 @@
 
     onMount(async () => {
         const { initialUser, initialPalette } = data;
+        const hash = page.url.hash;
+
+        canvasElement.width = window.innerWidth;
+        canvasElement.height = window.innerHeight;
+        contextCanvas = canvasElement.getContext("2d");
+        contextCanvas.imageSmoothingEnabled = false;
+
+        if (hash) {
+            const coordinates = hash.substring(1).split(",").map(coordinate => Number.parseInt(coordinate));
+            const cellX = coordinates[0] || 0;
+            const cellY = coordinates[1] || 0;
+
+            if ((cellX >= 0 && cellY >= 0) && (cellX < maxNumberCells && cellY < maxNumberCells)) {
+                const chunkX =  Math.floor(cellX / chunkSize);
+                const chunkY =  Math.floor(cellY / chunkSize);
+
+                const desiredCameraX = chunkX * chunkSize * effectiveCellSize;
+                const desiredCameraY = chunkY * chunkSize * effectiveCellSize;
+
+                const maxOffsetX = worldPxWidth - canvasElement.width;
+                const maxOffsetY = worldPxHeight - canvasElement.height;
+
+                canvasInfo.cameraOffsetX = Math.max(0, Math.min(desiredCameraX, maxOffsetX));
+                canvasInfo.cameraOffsetY = Math.max(0, Math.min(desiredCameraY, maxOffsetY));
+            }
+        }
+
 
         if (initialUser) {
             if (initialPalette) {
@@ -69,11 +97,6 @@
             user.profileImage = initialUser.profileImage;
             user.isLoggedIn = true;
         }
-
-        canvasElement.width = window.innerWidth;
-        canvasElement.height = window.innerHeight;
-        contextCanvas = canvasElement.getContext("2d");
-        contextCanvas.imageSmoothingEnabled = false;
 
         requestAnimationFrame(renderLoop);
         await fetchChunk();
