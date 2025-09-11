@@ -7,6 +7,9 @@
     let userLevel = $state(getUserLevel(user.pixelsPlaced));
     let userProfileImages = $state(getAvailableProfileImages(user.pixelsPlaced));
     let showUserImages = $state(false);
+    let showConfirmDeletion = $state(false);
+    let verificationText = $state("");
+    let confirmButtonDisabled = $derived(verificationText !== "delete");
 
     function getPercentageOfLimit(limit, current) {
         return ((current / limit) * 100).toFixed(2);
@@ -110,7 +113,7 @@
         <button
             class="profile-button"
             aria-label="Update user information"
-            onclick={async () => {updateUserInfo();}}
+            onclick={async () => {await updateUserInfo();}}
         >
             <img
                 src={user.profileImage}
@@ -179,18 +182,47 @@
             title="Sign Out"
             onclick={async () => {await logOut();}}
         >
-          <i class="ph-bold ph-sign-out"></i>
-          sign out
+            <i class="ph-bold ph-sign-out"></i>
+            sign out
         </button>
         <button
             class="btn btn-danger"
             title="Delete Account"
-            onclick={async () => {await handleDeleteUser();}}
+            onclick={() => {showConfirmDeletion = true;}}
         >
-          <i class="ph-bold ph-trash"></i>
-          delete
+            <i class="ph-bold ph-trash"></i>
+            delete
         </button>
     </div>
+    {#if showConfirmDeletion}
+        <div id="verification-container">
+            <p class="verification-prompt">Type "delete" to confirm:</p>
+            <input
+                class="verification-input"
+                type="text"
+                placeholder="delete"
+                bind:value={verificationText}
+            />
+            <div id="verification-buttons">
+                <button
+                    class="mini-button confirm-mini"
+                    disabled={confirmButtonDisabled}
+                    onclick={async () => {await handleDeleteUser();}}
+                >
+                    confirm
+                </button>
+                <button
+                    class="mini-button cancel-mini"
+                    onclick={() => {
+                        showConfirmDeletion = false;
+                        verificationText = "";
+                    }}
+                >
+                    cancel
+                </button>
+            </div>
+        </div>
+    {/if}
 </div>
 
 <style>
@@ -479,5 +511,81 @@
     @keyframes shimmer {
         0% { transform: translateX(0); }
         100% { transform: translateX(300%); }
+    }
+
+    #verification-container {
+        width: 100%;
+        padding: 0 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .verification-prompt {
+        width: 100%;
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+    }
+
+    .verification-input {
+        width: 100%;
+        padding: 8px 10px;
+        background-color: var(--input-bg);
+        border: 1px solid var(--input-border);
+        border-radius: 4px;
+        color: var(--input-text);
+        font-size: 1rem;
+        transition: border-color 0.2s ease;
+    }
+
+    .verification-input:focus {
+        outline: none;
+        border-color: var(--input-border-focus);
+    }
+
+    .verification-input::placeholder {
+        color: var(--input-placeholder);
+    }
+
+    #verification-buttons {
+        width: 100%;
+    }
+
+    .mini-button {
+        padding: 8px 12px;
+        border: none;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+    }
+
+    .confirm-mini {
+        background-color: var(--state-error);
+        color: white;
+    }
+
+    .confirm-mini:hover:not(:disabled) {
+        background-color: var(--error-600);
+    }
+
+    .confirm-mini:disabled {
+        background-color: var(--action-primary-disabled);
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+
+    .cancel-mini {
+        background-color: transparent;
+        color: var(--text-tertiary);
+        border: 1px solid var(--border-default);
+    }
+
+    .cancel-mini:hover {
+        background-color: var(--action-ghost-hover);
+        color: var(--text-secondary);
     }
 </style>

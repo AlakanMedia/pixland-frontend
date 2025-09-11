@@ -87,6 +87,7 @@
 
         user.websocket.onclose = () => {
             console.log("WebSocket connection closed.");
+            user.websocket = null;
         };
 
         user.websocket.onmessage = (event) => {
@@ -380,7 +381,7 @@
                     ui.loginModalIsOpen = true;
                 }
                 else {
-                    if (canvasInfo.cellScale >= 1 && drawingState.availablePixels > 0) {
+                    if (user.websocket && canvasInfo.cellScale >= 1 && drawingState.availablePixels > 0) {
                         const pixelPlaced = handleSetColor(event);
 
                         if (pixelPlaced) {
