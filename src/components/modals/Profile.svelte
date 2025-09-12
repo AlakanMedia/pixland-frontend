@@ -103,7 +103,7 @@
                         disabled={!image.unlocked}
                         onclick={async (e) => {changeUserImage(e, image.src);}}
                     >
-                        <img src={image.src} alt={`Profile picture of ${image.name}`}/>
+                        <img src={image.src} alt={`Profile picture of ${image.levelName}`}/>
                     </button> 
                 {/each}
             </div>
@@ -299,8 +299,8 @@
     #select-image-gallery {
         display: grid;
         grid-auto-flow: column; 
-        grid-auto-columns: 100px; 
-        grid-template-rows: repeat(2, 100px);
+        grid-auto-columns: 54px; 
+        grid-template-rows: repeat(3, 54px);
         gap: 0.5rem; 
         overflow-x: auto;
         overflow-y: hidden;
@@ -313,6 +313,15 @@
 
     .profile-image-selection:disabled {
         cursor: not-allowed;
+    }
+
+    .profile-image-selection > img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        image-rendering: pixelated;
+        background-color: var(--gray-400);
+        border-radius: 0.25rem;
     }
 
     .profile-image-selection:disabled > img {
@@ -347,6 +356,8 @@
         border-radius: 50%;
         object-fit: cover;
         border: 3px solid var(--border-accent);
+        image-rendering: pixelated;
+        background-color: var(--gray-400);
         transition: transform 0.1s ease;
     }
 

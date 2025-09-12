@@ -50,6 +50,8 @@
         height: 42px;
         border: 2px solid var(--border-accent);
         border-radius: 50%;
+        image-rendering: pixelated;
+        background-color: var(--gray-400);
         transition: transform 0.1s ease;
     }
 
