@@ -1,6 +1,7 @@
 <script>
     import { onMount, onDestroy } from "svelte";
     import { page } from "$app/state";
+    import { replaceState } from "$app/navigation";
     import { fade } from "svelte/transition";
     import { Spring } from "svelte/motion";
     import { getCellsBox } from "../pixlandApi.js";
@@ -43,6 +44,7 @@
     let clickMouseY;
 
     let needsRedraw = true;
+    let hashUpdateTimeout; // Para el debouncing de la actualización de la URL
 
     let isSelecting = false;
     let selectingArea = null;
@@ -57,11 +59,16 @@
         contextCanvas.imageSmoothingEnabled = false;
 
         if (hash) {
-            const coordinates = hash.substring(1).split(",").map(coordinate => Number.parseInt(coordinate));
-            const cellX = coordinates[0] || 0;
-            const cellY = coordinates[1] || 0;
+            const parts = hash.substring(1).split(",").map(part => Number.parseFloat(part));
+            const cellX = parts[0] || 0;
+            const cellY = parts[1] || 0;
+            const zoom = parts[2] || null;
 
             if ((cellX >= 0 && cellY >= 0) && (cellX < maxNumberCells && cellY < maxNumberCells)) {
+                if (zoom) {
+                    canvasInfo.cellScale = Math.max(0.25, Math.min(zoom, 4));
+                }
+
                 const chunkX =  Math.floor(cellX / chunkSize);
                 const chunkY =  Math.floor(cellY / chunkSize);
 
@@ -135,6 +142,8 @@
             user.websocket.close();
             user.websocket = null;
         }
+
+        clearTimeout(hashUpdateTimeout);
     });
 
     function renderLoop() {
@@ -378,6 +387,7 @@
                     canvasInfo.cameraOffsetX = Math.max(0, Math.min(startCameraX - deltaX, worldPxWidth - canvasElement.width));
                     canvasInfo.cameraOffsetY = Math.max(0, Math.min(startCameraY - deltaY, worldPxHeight - canvasElement.height));
 
+                    debounceUpdateUrlHash();
                     await fetchChunk();
                 }
             }
@@ -445,8 +455,39 @@
         // Calculamos el nuevo offset de la cámara para que ese punto quede bajo el ratón
         canvasInfo.cameraOffsetX = Math.max(0, Math.min(newWorldX - event.clientX, worldPxWidth - canvasElement.width));
         canvasInfo.cameraOffsetY = Math.max(0, Math.min(newWorldY - event.clientY, worldPxHeight - canvasElement.height));
-            
+
+        debounceUpdateUrlHash();
         await fetchChunk();
+    }
+
+    function updateUrlHash() {
+        // 1. Obtiene la celda en la esquina superior izquierda de la vista
+        const topCellX = Math.floor(canvasInfo.cameraOffsetX / effectiveCellSize);
+        const topCellY = Math.floor(canvasInfo.cameraOffsetY / effectiveCellSize);
+        
+        // 2. Calcula a qué chunk pertenece esa celda
+        const chunkX = Math.floor(topCellX / chunkSize);
+        const chunkY = Math.floor(topCellY / chunkSize);
+        
+        // 3. Calcula la coordenada de la celda inicial de ese chunk
+        const targetCellX = chunkX * chunkSize;
+        const targetCellY = chunkY * chunkSize;
+
+        // 4. Obtenemos el nivel del zoom
+        const zoomLevel = canvasInfo.cellScale;
+        
+        // 4. Genera el nuevo hash y lo compara con el actual para evitar actualizaciones innecesarias
+        const newHash = `#${targetCellX},${targetCellY},${zoomLevel}`;
+        if (window.location.hash !== newHash) {
+            // Usamos replaceState para no "ensuciar" el historial del navegador
+            replaceState(newHash, {})
+        }
+    }
+    
+    function debounceUpdateUrlHash() {
+        clearTimeout(hashUpdateTimeout); // Cancela el temporizador anterior
+        // Inicia un nuevo temporizador. Si el usuario se sigue moviendo, se cancelará y reiniciará.
+        hashUpdateTimeout = setTimeout(updateUrlHash, 300); // 300ms de espera
     }
 
     $effect(() => {
