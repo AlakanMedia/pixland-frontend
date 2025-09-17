@@ -31,23 +31,17 @@
     }
 
     async function logOut() {
+        await deleteCookies();
+
         user.id = null;
         user.name = null;
         user.pixelsPlaced = null;
         user.createdAt = null;
         user.profileImage = null;
         user.isLoggedIn = false;
-
-        if (user.websocket) {
-            user.websocket.send(JSON.stringify({
-                type: "registered_to_anonymous",
-                data: null,
-            }));
-        }
+        user.disconnect = true;
 
         ui.profileModalIsOpen = false;
-
-        await deleteCookies();
     }
 
     async function changeUserImage(event, imagePath) {

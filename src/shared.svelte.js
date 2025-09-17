@@ -33,7 +33,7 @@ export const user = $state({
     pixelsPlaced: null,
     createdAt: null,
     isLoggedIn: false,
-    websocket: null,
+    disconnect: true,
     profileImage: null,
 });
 

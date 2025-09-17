@@ -183,13 +183,7 @@
                 user.createdAt = userInfo.created_at;
                 user.profileImage = userInfo.profile_image;
                 user.isLoggedIn = true;
-
-                if (user.websocket) {
-                    user.websocket.send(JSON.stringify({
-                        type: "anonymous_to_registered",
-                        data: {user_id: user.id},
-                    }));
-                }
+                user.disconnect = false;
 
                 ui.loginModalIsOpen = false;
             }

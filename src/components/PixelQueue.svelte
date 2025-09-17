@@ -16,7 +16,11 @@
 </script>
 
 <div id="pixel-queue">
-    {#if user.websocket}
+    {#if user.disconnect}
+        <i class="ph ph-plugs"></i>
+        <span>DC</span>
+        <div class="status-indicator"></div>
+    {:else}
         <i class="ph-fill ph-square-logo"></i>
         {#key drawingState.availablePixels}
             <span in:scale>
@@ -24,10 +28,6 @@
             </span> 
         {/key}
         / {padWithZeros(drawingState.pixelLimit, 2)}
-    {:else}
-        <i class="ph ph-plugs"></i>
-        <span>DC</span>
-        <div class="status-indicator"></div>
     {/if}
 </div>
 

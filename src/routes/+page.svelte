@@ -49,6 +49,8 @@
     let isSelecting = false;
     let selectingArea = null;
 
+    let websocket;
+
     onMount(async () => {
         const { initialUser, initialPalette } = data;
         const hash = page.url.hash;
@@ -103,46 +105,14 @@
             user.createdAt = initialUser.createdAt;
             user.profileImage = initialUser.profileImage;
             user.isLoggedIn = true;
+            user.disconnect = false;
         }
 
         requestAnimationFrame(renderLoop);
         await fetchChunk();
-
-        const wsUrl = user.id ? `${API_URL}/ws?user_id=${user.id}` : `${API_URL}/ws`;
-        user.websocket = new WebSocket(wsUrl);
-
-        user.websocket.onopen = () => {
-            console.log("WebSocket connection successfully established.");
-        };
-
-        user.websocket.onclose = () => {
-            console.log("WebSocket connection closed.");
-            user.websocket = null;
-        };
-
-        user.websocket.onmessage = (event) => {
-            const wsData = JSON.parse(event.data);
-
-            if (wsData.type === "update_pixel") {
-                cellCache.set(
-                    generateDynamicKey(wsData.data.x, wsData.data.y, maxNumberCells - 1),
-                    wsData.data.color
-                );
-
-                needsRedraw = true;
-            }
-            else if (wsData.type === "update_active_users") {
-                ui.activeUsers = wsData.data.active_users;
-            }
-        };
     });
 
     onDestroy(() => {
-        if (user.websocket) {
-            user.websocket.close();
-            user.websocket = null;
-        }
-
         clearTimeout(hashUpdateTimeout);
     });
 
@@ -322,7 +292,7 @@
 
         needsRedraw = true;
 
-        user.websocket.send(JSON.stringify({
+        websocket.send(JSON.stringify({
             type: "update_pixel",
             data: {
                 x: coordinateX,
@@ -414,7 +384,7 @@
                     ui.loginModalIsOpen = true;
                 }
                 else {
-                    if (user.websocket && canvasInfo.cellScale >= 1 && drawingState.availablePixels > 0) {
+                    if (websocket && canvasInfo.cellScale >= 1 && drawingState.availablePixels > 0) {
                         const pixelPlaced = handleSetColor(event);
 
                         if (pixelPlaced) {
@@ -490,11 +460,72 @@
         hashUpdateTimeout = setTimeout(updateUrlHash, 300); // 300ms de espera
     }
 
+    function disconnectWebSocket() {
+        if (websocket) {
+            console.log("Closing existing WebSocket connection...");
+
+            websocket.onclose = null; // Evitamos que el evento onclose se dispare al cerrar manualmente
+            websocket.close();
+            websocket = null;
+        }
+    }
+
+    function connectWebSocket() {
+        disconnectWebSocket();
+
+        console.log(`Connecting WebSocket (isLoggedIn: ${user.isLoggedIn})...`);
+        websocket = new WebSocket(`${API_URL}/ws`);
+
+        websocket.onopen = () => {
+            console.log("WebSocket connection successfully established.");
+        };
+
+        websocket.onclose = () => {
+            console.log("WebSocket connection closed by server.");
+            websocket = null;
+
+            if (user.isLoggedIn) {
+                user.disconnect = true;
+            }
+            // Opcional: podrías intentar reconectar aquí si el cierre no fue intencional
+        };
+
+        websocket.onmessage = (event) => {
+            const wsData = JSON.parse(event.data);
+
+            if (wsData.type === "update_pixel") {
+                cellCache.set(
+                    generateDynamicKey(wsData.data.x, wsData.data.y, maxNumberCells - 1),
+                    wsData.data.color
+                );
+                needsRedraw = true;
+            } else if (wsData.type === "update_active_users") {
+                ui.activeUsers = wsData.data.active_users;
+            }
+        };
+    }
+
     $effect(() => {
         if (drawingState.needsUpdate) {
             needsRedraw = true;
             drawingState.needsUpdate = false;
         }
+    });
+
+    $effect(() => {
+        // "Escuchamos" el estado de login del usuario.
+        // Esto se ejecutará la primera vez y cada vez que `user.isLoggedIn` cambie.
+        user.isLoggedIn; // Hacemos que Svelte rastree esta propiedad
+    
+        // Conectamos (esto internamente ya cierra cualquier conexión previa)
+        connectWebSocket();
+
+        // La función de 'cleanup' del $effect es crucial.
+        // Svelte la ejecutará antes de volver a correr el efecto,
+        // o cuando el componente se desmonte.
+        return () => {
+            disconnectWebSocket();
+        };
     });
 </script>
 
