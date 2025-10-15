@@ -11,6 +11,9 @@
     let isLoading = $state(false);
     let imageWasGenerated = $state(false);
 
+    let imageUrl = $state(null);
+    let imageName = $state(null);
+
     async function handleImageGeneration() {
         if (topLeftX >= downRightX || topLeftY >= downRightY) {
             showAlert(MESSAGES_TYPES.ERROR, "Invalid Coordinates", "Please check your input, the coordinates you entered are not valid.");
@@ -39,7 +42,9 @@
 
         imageWasGenerated = true;
         isLoading = false;
-        console.log("La imagen se generó", result);
+
+        imageUrl = result.result.download_url;
+        imageName = result.task_id
     }
 </script>
 
@@ -123,10 +128,14 @@
             {/if}
         </button>
         {#if imageWasGenerated}
-            <button id="download-button">
+            <a
+                id="download-button"
+                href={imageUrl}
+                download={`${imageName}.png`}
+            >
                 <i class="ph-bold ph-download-simple"></i>
                 <p>download</p>
-            </button>
+            </a>
         {/if}
     </div>
 </div>
@@ -241,6 +250,7 @@
         background-color: var(--action-secondary);
         transition: all 0.3s ease;
         font-size: 1rem;
+        text-decoration: none;
     }
 
     #download-button:hover {
