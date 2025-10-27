@@ -49,6 +49,10 @@
     let isSelecting = false;
     let selectingArea = null;
 
+    const evCache = [];
+    let prevDiff = -1;
+    let isPinching = false; // Estado del gesto pinch
+
     let websocket;
 
     onMount(async () => {
@@ -305,11 +309,50 @@
         return true;
     }
 
+    function updatePointerCache(ev) {
+        const index = evCache.findIndex((cachedEv) => cachedEv.pointerId === ev.pointerId);
+        if (index >= 0) {
+            evCache[index] = ev;
+        } else {
+            evCache.push(ev);
+        }
+    }
+
+    function removePointerFromCache(ev) {
+        const index = evCache.findIndex((cachedEv) => cachedEv.pointerId === ev.pointerId);
+        if (index >= 0) {
+            evCache.splice(index, 1);
+        }
+    }
+
+    function twoPointersActive() {
+        return evCache.length === 2;
+    }
+
+    function distanceBetweenPointers() {
+        if (!twoPointersActive()) return -1;
+        const [p1, p2] = evCache;
+        // Usa distancia euclidiana (mejor que solo X)
+        return Math.hypot(p1.clientX - p2.clientX, p1.clientY - p2.clientY);
+    }
+
+    function midpointBetweenPointers() {
+        const [p1, p2] = evCache;
+        return {
+            x: (p1.clientX + p2.clientX) / 2,
+            y: (p1.clientY + p2.clientY) / 2
+        };
+    }
+
     function handleOnMouseDown(event) {
         // Para que no haga nada si presionó algún botón que no sea el izquierdo
-        if (event.button !== 0) {
+        if (event.pointerType === "mouse" && event.button !== 0) {
             return;
         }
+
+        // Evita cualquier comportamiento por defecto táctil extra
+        event.preventDefault();
+        updatePointerCache(event);
 
         clickMouseX = event.clientX;
         clickMouseY = event.clientY;
@@ -325,8 +368,16 @@
             selectingArea.startCellY = Math.floor((canvasInfo.cameraOffsetY + clickMouseY) / effectiveCellSize);
         }
         else {
-            startCameraX = canvasInfo.cameraOffsetX;
-            startCameraY = canvasInfo.cameraOffsetY;
+            // Si hay dos punteros activos, iniciamos pinch
+            if (twoPointersActive()) {
+                isPinching = true;
+                prevDiff = distanceBetweenPointers(); // Distancia inicial
+                document.body.style.cursor = "default"; // No mostrar cursor de 'move' durante pinch
+            } else {
+                // Pan con un dedo/mouse
+                startCameraX = canvasInfo.cameraOffsetX;
+                startCameraY = canvasInfo.cameraOffsetY;
+            }
         }
 
         isMouseDown = true;
@@ -334,8 +385,59 @@
     }
 
     async function handleOnMouseMove(event) {
-        // Verificamos que el usuario tenga el clic izquierdo presionado
-        if (isMouseDown) {
+        // Pointer move activo con puntero presionado
+        if (!isMouseDown) {
+            return;
+        }
+
+        // Actualiza posición en cache para este puntero
+        updatePointerCache(event);
+
+        // Si hay dos punteros, hacemos pinch-to-zoom
+        if (twoPointersActive() && isPinching) {
+            console.log("hola");
+            const curDiff = distanceBetweenPointers();
+
+            if (prevDiff > 0 && curDiff > 0) {
+                const scaleRatio = curDiff / prevDiff; // >1 zoom in, <1 zoom out
+                const oldScale = canvasInfo.cellScale;
+                let newScale = oldScale * scaleRatio;
+
+                // Limita el zoom
+                newScale = Math.max(0.125, Math.min(newScale, 4));
+
+                // Punto de anclaje: el punto medio entre los dos dedos, en coordenadas de pantalla
+                const mid = midpointBetweenPointers();
+
+                // Mapea el punto de anclaje al mundo antes del zoom
+                const worldXBefore = canvasInfo.cameraOffsetX + mid.x;
+                const worldYBefore = canvasInfo.cameraOffsetY + mid.y;
+
+                // Aplica el nuevo zoom
+                canvasInfo.cellScale = newScale;
+
+                // Reubica la cámara para mantener el punto bajo los dedos
+                const newWorldX = worldXBefore * (newScale / oldScale);
+                const newWorldY = worldYBefore * (newScale / oldScale);
+
+                canvasInfo.cameraOffsetX = Math.max(0, Math.min(newWorldX - mid.x, worldPxWidth - canvasElement.width));
+                canvasInfo.cameraOffsetY = Math.max(0, Math.min(newWorldY - mid.y, worldPxHeight - canvasElement.height));
+
+                // Actualiza trackers
+                prevDiff = curDiff;
+                needsRedraw = true;
+
+                // Sin await dentro del move para no bloquear; actualiza URL y pide chunks
+                debounceUpdateUrlHash();
+                fetchChunk();
+            }
+
+            // No hacer nada más (no pan/selección) cuando estamos en pinch
+            return;
+        }
+
+        // Si no hay pinch, mantenemos tu lógica de pan/selección con un puntero
+        if (evCache.length === 1) {
             const deltaX = event.clientX - clickMouseX;
             const deltaY = event.clientY - clickMouseY;
             const dragDistance = Math.hypot(deltaX, deltaY);
@@ -349,10 +451,7 @@
                     selectingArea.endCellY = Math.floor((canvasInfo.cameraOffsetY + event.clientY) / effectiveCellSize);
 
                     needsRedraw = true;
-                }
-                else {
-                    // Solución de los límites del mapa más corta, para la versión más larga
-                    // que hice tengo que ir a ver el pantallazo que tomé
+                } else {
                     document.body.style.cursor = "move";
                     canvasInfo.cameraOffsetX = Math.max(0, Math.min(startCameraX - deltaX, worldPxWidth - canvasElement.width));
                     canvasInfo.cameraOffsetY = Math.max(0, Math.min(startCameraY - deltaY, worldPxHeight - canvasElement.height));
@@ -365,6 +464,25 @@
     }
 
     function handleOnMouseUp(event) {
+        // Remueve el puntero del cache
+        removePointerFromCache(event);
+
+        // Si estamos en pinch y queda menos de 2 punteros, termina el gesto
+        if (isPinching) {
+            if (!twoPointersActive()) {
+                isPinching = false;
+                prevDiff = -1;
+                document.body.style.cursor = "default";
+                // No dispares lógica de clic cuando acaba un pinch
+                isMouseDown = false;
+                size.target = 6;
+                return;
+            }
+            // Si aún quedan 2 punteros (caso raro), seguimos pinch
+            return;
+        }
+
+        // Tu lógica original para pan/selección/clic
         if (isDragging) {
             isDragging = false;
 
@@ -373,17 +491,14 @@
             }
 
             document.body.style.cursor = "default";
-        }
-        else {
+        } else {
             if (selectingArea) {
                 selectingArea = null;
                 needsRedraw = true;
-            }
-            else {
+            } else {
                 if (!user.isLoggedIn) {
                     ui.loginModalIsOpen = true;
-                }
-                else {
+                } else {
                     if (websocket && canvasInfo.cellScale >= 0.75 && drawingState.availablePixels > 0) {
                         const pixelPlaced = handleSetColor(event);
 
