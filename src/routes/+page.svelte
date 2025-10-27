@@ -24,7 +24,7 @@
     // Variables para el manejo del zoom y la configuración del mundo
     const maxNumberCells = 2048;
     const chunkSize = 64;
-    const zoomStep = 0.25;
+    const zoomStep = 0.125;
     let oldCellScale; // Scala antes del haber hecho zoom in o zoom out
     let effectiveCellSize = $derived(getEffectiveCellSize());
     let worldPxWidth = $derived(effectiveCellSize * maxNumberCells);
@@ -68,7 +68,7 @@
 
             if ((cellX >= 0 && cellY >= 0) && (cellX < maxNumberCells && cellY < maxNumberCells)) {
                 if (zoom) {
-                    canvasInfo.cellScale = Math.max(0.25, Math.min(zoom, 4));
+                    canvasInfo.cellScale = Math.max(0.125, Math.min(zoom, 4));
                 }
 
                 const chunkX =  Math.floor(cellX / chunkSize);
@@ -230,7 +230,7 @@
         }
 
         // Dibujamos el Grid si es necesario
-        if (drawingState.showGrid && canvasInfo.cellScale >= 2) {
+        if (drawingState.showGrid && canvasInfo.cellScale >= 1.375) {
             contextCanvas.strokeStyle = "rgba(128, 128, 128, 0.4)";
             contextCanvas.lineWidth = 2;
             contextCanvas.beginPath();
@@ -384,7 +384,7 @@
                     ui.loginModalIsOpen = true;
                 }
                 else {
-                    if (websocket && canvasInfo.cellScale >= 1 && drawingState.availablePixels > 0) {
+                    if (websocket && canvasInfo.cellScale >= 0.75 && drawingState.availablePixels > 0) {
                         const pixelPlaced = handleSetColor(event);
 
                         if (pixelPlaced) {
@@ -416,7 +416,7 @@
         }
 
         // Opcional pero recomendado: poner límites al zoom
-        canvasInfo.cellScale = Math.max(0.25, Math.min(newCellScale, 4)); 
+        canvasInfo.cellScale = Math.max(0.125, Math.min(newCellScale, 4)); 
 
         // La nueva coordenada del punto de anclaje en el mundo re-escalado
         const newWorldX = worldXBeforeZoom * (canvasInfo.cellScale / oldCellScale);
@@ -550,12 +550,13 @@
 <svg
     id="mouse-chaser"
     role="presentation"
-    onmousedown={(e) => {handleOnMouseDown(e);}}
-    onmousemove={async (e) => {handleOnMouseMove(e);}}
-    onmouseup={(e) => {handleOnMouseUp(e);}}
+    onpointerdown={(e) => {handleOnMouseDown(e);}}
+    onpointermove={async (e) => {handleOnMouseMove(e);}}
+    onpointerup={(e) => {handleOnMouseUp(e);}}
+    onpointercancel={(e) => {handleOnMouseUp(e);}}
     onwheel={async (e) => {handleOnWheel(e);}}
 >
-    {#if drawingState.showMouseChaser && canvasInfo.cellScale >= 1}
+    {#if drawingState.showMouseChaser && canvasInfo.cellScale >= 0.75}
 	    <circle
 	        cx={mousePosition.coords.current.x}
 	    	cy={mousePosition.coords.current.y}
@@ -568,15 +569,11 @@
 <Widgets/>
 
 <style>
-    #matrix {
-        position: fixed;
-        width: 100%;
-        height: 100%;
-    }
-
+    #matrix,
     #mouse-chaser {
         position: fixed;
         width: 100%;
         height: 100%;
+        touch-action: none;
     }
 </style>
