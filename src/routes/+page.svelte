@@ -530,7 +530,7 @@
 </script>
 
 <svelte:head>
-	<title>PixLand</title>
+	<title>Pixland</title>
     <meta name="description" content="Free online pixel art game where you can paint and create digital artwork on a shared canvas. Download your pixel creations, customize color palettes, and join a collaborative pixel art community. Create, share, and explore pixel art in real-time." />
 </svelte:head>
 <svelte:window onresize={() => {
