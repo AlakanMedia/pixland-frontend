@@ -16,7 +16,10 @@
     });
 
     function closeModal(event) {
-        function closeActiveModal() {
+        function closeActiveModal(e) {
+            e.stopPropagation();
+            e.preventDefault();
+
             if (ui.generateImageModalIsOpen) {
                 ui.generateImageModalIsOpen = false;
             }
@@ -33,15 +36,11 @@
 
         if (event.type === "pointerup") {
             if (event.target !== containerChild && !containerChild.contains(event.target)) {
-                event.stopPropagation();
-                event.preventDefault();
-                closeActiveModal();
+                closeActiveModal(event);
             }
         }
         else if (event.type === "keydown" && event.key === "Escape") {
-            event.stopPropagation();
-            event.preventDefault();
-            closeActiveModal();
+            closeActiveModal(event);
         }
     }
 </script>
