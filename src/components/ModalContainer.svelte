@@ -34,8 +34,7 @@
             }
         }
 
-        if (event.type === "pointerdown") {
-            try { container.setPointerCapture(event.pointerId); } catch {}
+        if (event.type === "click") {
             if (event.target !== containerChild && !containerChild.contains(event.target)) {
                 closeActiveModal();
             }
@@ -51,8 +50,7 @@
     role="dialog"
     aria-modal="true"
     tabindex="-1"
-    onpointerdown={(e) => {closeModal(e);}}
-    onpointerup={(e) => { try { container.releasePointerCapture(e.pointerId); } catch {} }}
+    onclick={(e) => {closeModal(e);}}
     onkeydown={(e) => {closeModal(e);}}
     bind:this={container}
     transition:fade={{duration: 600}}
