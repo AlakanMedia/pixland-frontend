@@ -31,7 +31,7 @@
             }
         }
 
-        if (event.type === "click") {
+        if (event.type === "pointerdown" || event.type === "click") {
             if (event.target !== containerChild && !containerChild.contains(event.target)) {
                 closeActiveModal();
             }
@@ -49,7 +49,7 @@
     role="dialog"
     aria-modal="true"
     tabindex="-1"
-    onclick={(e) => {closeModal(e);}}
+    onpointerdown={(e) => {closeModal(e);}}
     onkeydown={(e) => {closeModal(e);}}
     bind:this={container}
     transition:fade={{duration: 600}}
@@ -76,5 +76,6 @@
         display: flex;
         justify-content: center;
         align-items: center;
+        touch-action: none;
     }
 </style>
