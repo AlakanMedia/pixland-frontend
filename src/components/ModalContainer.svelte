@@ -17,6 +17,7 @@
 
     function closeModal(event) {
         event.stopPropagation();
+        event.preventDefault();
 
         function closeActiveModal() {
             if (ui.generateImageModalIsOpen) {
@@ -33,15 +34,14 @@
             }
         }
 
-        if (event.type === "pointerdown" || event.type === "click") {
+        if (event.type === "pointerdown") {
+            try { container.setPointerCapture(event.pointerId); } catch {}
             if (event.target !== containerChild && !containerChild.contains(event.target)) {
                 closeActiveModal();
             }
         }
-        else if (event.type === "keydown") {
-            if (event.key === "Escape") {
-                closeActiveModal();
-            }
+        else if (event.type === "keydown" && event.key === "Escape") {
+            closeActiveModal();
         }
     }
 </script>
@@ -52,6 +52,7 @@
     aria-modal="true"
     tabindex="-1"
     onpointerdown={(e) => {closeModal(e);}}
+    onpointerup={(e) => { try { container.releasePointerCapture(e.pointerId); } catch {} }}
     onkeydown={(e) => {closeModal(e);}}
     bind:this={container}
     transition:fade={{duration: 600}}
