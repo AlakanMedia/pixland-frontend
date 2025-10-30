@@ -60,6 +60,7 @@
     let isPinching = false;
     let initialPinchDistance = 0;
     let startPinchCellScale = 0;
+    let justFinishedPinching = false;
 
     onMount(async () => {
         const { initialUser, initialPalette } = data;
@@ -336,11 +337,13 @@
         if (activePointers.size === 2) {
             isPinching = true;
             isDragging = false; // Cancelar cualquier arrastre pendiente
+            justFinishedPinching = false;
             initialPinchDistance = getPinchDistance();
             startPinchCellScale = canvasInfo.cellScale;
             return; // Salir para no procesar como un clic/arrastre normal
         }
         
+        justFinishedPinching = false;
         activePointerType = event.pointerType || 'mouse';
         clickMouseX = event.clientX;
         clickMouseY = event.clientY;
@@ -423,54 +426,47 @@
         }
     }
 
-    function handleOnMouseUp(event) {
-        const wasPinching = isPinching;
+function handleOnMouseUp(event) {
+        // const wasPinching = isPinching; // <-- ELIMINA O IGNORA ESTA LÍNEA
 
         // Eliminar puntero del rastreador
         activePointers.delete(event.pointerId);
 
-        // --- INICIO DE LA MODIFICACIÓN ---
-
         // Comprobar si el "pinch" terminó
         if (isPinching && activePointers.size < 2) {
             isPinching = false;
+            justFinishedPinching = true; // <-- ¡LA CLAVE! Marcamos que el pinch acaba de terminar
             initialPinchDistance = 0;
             startPinchCellScale = 0;
 
-            // *** ¡LA SOLUCIÓN ESTÁ AQUÍ! ***
-            // Si el pinch terminó PERO AÚN QUEDA 1 DEDO,
-            // debemos re-anclar el inicio del arrastre a ese dedo.
+            // --- Inicio: Parche anti-salto (sin cambios) ---
             if (activePointers.size === 1) {
-                // Obtenemos la referencia al dedo que queda
                 const remainingPointer = activePointers.values().next().value;
-                
-                // Actualizamos las coordenadas de "clic" a la posición actual de ese dedo
                 clickMouseX = remainingPointer.clientX;
                 clickMouseY = remainingPointer.clientY;
-                
-                // Actualizamos la posición de la cámara "inicial" a la actual
                 startCameraX = canvasInfo.cameraOffsetX;
                 startCameraY = canvasInfo.cameraOffsetY;
-                
-                // Reseteamos la distancia de arrastre
                 maxDragDistance = 0;
             }
+            // --- Fin: Parche anti-salto ---
         }
 
-        // Comprobar si es el *último* puntero en levantarse
         if (activePointers.size === 0) {
             isMouseDown = false; // Reseteamos la bandera principal
             size.target = 6;     // Reseteamos el "chaser"
 
-            // Solo ejecutar la lógica de "tap" o "drag-end" si NO era un pinch
-            if (!wasPinching) {
+            // --- INICIO: MODIFICACIÓN CRÍTICA ---
+            // Solo ejecutar la lógica de "tap" o "drag-end" si NO acabamos de hacer pinch
+            if (!justFinishedPinching) { 
+                
+                // --- Toda tu lógica anterior de "isClickLike" va aquí dentro ---
                 const finalDeltaX = event.clientX - clickMouseX;
                 const finalDeltaY = event.clientY - clickMouseY;
                 const finalDistance = Math.hypot(finalDeltaX, finalDeltaY);
                 const threshold = getDragThreshold();
                 const isClickLike = finalDistance <= threshold;
 
-                if (!isClickLike) { // Era un arrastre
+                if (!isClickLike) { // Fin de arrastre
                     isDragging = false;
 
                     if (isSelecting) {
@@ -479,7 +475,7 @@
 
                     document.body.style.cursor = "default";
                 }
-                else { // Era un clic (tap)
+                else { // Es un "tap"
                     if (selectingArea) {
                         selectingArea = null;
                         needsRedraw = true;
@@ -500,14 +496,17 @@
                         }
                     }
                 }
+                // --- Fin de la lógica "isClickLike" ---
+
             }
             else{
-                // Si era un pinch, solo nos aseguramos de resetear el estado de arrastre
+                // Si SÍ acabamos de hacer pinch, simplemente reseteamos el estado de arrastre
+                // y NO hacemos nada más (no es un tap).
                 isDragging = false;
                 document.body.style.cursor = "default";
             }
+            // --- FIN: MODIFICACIÓN CRÍTICA ---
         }
-        // --- FIN DE LA MODIFICACIÓN ---
     }
 
     /**
