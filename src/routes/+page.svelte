@@ -23,7 +23,7 @@
 
     // Variables para el manejo del zoom y la configuración del mundo
     const maxNumberCells = 2048;
-    const chunkSize = 64;
+    const chunkSize = 128;
     const zoomStep = 0.125;
     let oldCellScale; // Scala antes del haber hecho zoom in o zoom out
     let effectiveCellSize = $derived(getEffectiveCellSize());
@@ -48,6 +48,10 @@
 
     let isSelecting = false;
     let selectingArea = null;
+
+    // Variables para controlar el puntero activo y el tap
+    let activePointerType = 'mouse';
+    let maxDragDistance = 0;
 
     let websocket;
 
@@ -305,15 +309,25 @@
         return true;
     }
 
+    function getDragThreshold() {
+        switch (activePointerType) {
+            case 'touch': return 14;
+            case 'pen': return 8;
+            default: return 4; // mouse
+        }
+    }
+
     function handleOnMouseDown(event) {
         // Para que no haga nada si presionó algún botón que no sea el izquierdo
         if (event.pointerType === "mouse" && event.button !== 0) {
             return;
         }
-
+        
+        activePointerType = event.pointerType || 'mouse';
         clickMouseX = event.clientX;
         clickMouseY = event.clientY;
-
+        maxDragDistance = 0;
+        
         if (event.ctrlKey) {
             isSelecting = true;
 
@@ -334,38 +348,46 @@
     }
 
     async function handleOnMouseMove(event) {
-        // Verificamos que el usuario tenga el clic izquierdo presionado
-        if (isMouseDown) {
-            const deltaX = event.clientX - clickMouseX;
-            const deltaY = event.clientY - clickMouseY;
-            const dragDistance = Math.hypot(deltaX, deltaY);
+        if (!isMouseDown) {
+            return;
+        }
 
-            if (dragDistance > dragThreshold) {
-                isDragging = true;
+        const deltaX = event.clientX - clickMouseX;
+        const deltaY = event.clientY - clickMouseY;
+        const dragDistance = Math.hypot(deltaX, deltaY);
+        maxDragDistance = Math.max(maxDragDistance, dragDistance);
 
-                if (isSelecting) {
-                    document.body.style.cursor = "crosshair";
-                    selectingArea.endCellX = Math.floor((canvasInfo.cameraOffsetX + event.clientX) / effectiveCellSize);
-                    selectingArea.endCellY = Math.floor((canvasInfo.cameraOffsetY + event.clientY) / effectiveCellSize);
+        const threshold = getDragThreshold();
 
-                    needsRedraw = true;
-                }
-                else {
-                    // Solución de los límites del mapa más corta, para la versión más larga
-                    // que hice tengo que ir a ver el pantallazo que tomé
-                    document.body.style.cursor = "move";
-                    canvasInfo.cameraOffsetX = Math.max(0, Math.min(startCameraX - deltaX, worldPxWidth - canvasElement.width));
-                    canvasInfo.cameraOffsetY = Math.max(0, Math.min(startCameraY - deltaY, worldPxHeight - canvasElement.height));
+        if (dragDistance > threshold) {
+            isDragging = true;
 
-                    debounceUpdateUrlHash();
-                    await fetchChunk();
-                }
+            if (isSelecting) {
+                document.body.style.cursor = "crosshair";
+                selectingArea.endCellX = Math.floor((canvasInfo.cameraOffsetX + event.clientX) / effectiveCellSize);
+                selectingArea.endCellY = Math.floor((canvasInfo.cameraOffsetY + event.clientY) / effectiveCellSize);
+
+                needsRedraw = true;
+            }
+            else {
+                document.body.style.cursor = "move";
+                canvasInfo.cameraOffsetX = Math.max(0, Math.min(startCameraX - deltaX, worldPxWidth - canvasElement.width));
+                canvasInfo.cameraOffsetY = Math.max(0, Math.min(startCameraY - deltaY, worldPxHeight - canvasElement.height));
+
+                debounceUpdateUrlHash();
+                await fetchChunk();
             }
         }
     }
 
     function handleOnMouseUp(event) {
-        if (isDragging) {
+        const finalDeltaX = event.clientX - clickMouseX;
+        const finalDeltaY = event.clientY - clickMouseY;
+        const finalDistance = Math.hypot(finalDeltaX, finalDeltaY);
+        const threshold = getDragThreshold();
+        const isClickLike = finalDistance <= threshold;
+
+        if (!isClickLike) {
             isDragging = false;
 
             if (isSelecting) {
@@ -383,13 +405,11 @@
                 if (!user.isLoggedIn) {
                     ui.loginModalIsOpen = true;
                 }
-                else {
-                    if (websocket && canvasInfo.cellScale >= 0.75 && drawingState.availablePixels > 0) {
-                        const pixelPlaced = handleSetColor(event);
+                else if (websocket && canvasInfo.cellScale >= 0.75 && drawingState.availablePixels > 0) {
+                    const pixelPlaced = handleSetColor(event);
 
-                        if (pixelPlaced) {
-                            drawingState.availablePixels--;
-                        }
+                    if (pixelPlaced) {
+                        drawingState.availablePixels--;
                     }
                 }
             }
@@ -428,6 +448,14 @@
 
         debounceUpdateUrlHash();
         await fetchChunk();
+    }
+
+    function handleOnPointerCancel() {
+        isDragging = false;
+        isMouseDown = false;
+        isSelecting = false;
+        selectingArea = null;
+        document.body.style.cursor = "default";
     }
 
     function updateUrlHash() {
@@ -553,7 +581,7 @@
     onpointerdown={(e) => {handleOnMouseDown(e);}}
     onpointermove={async (e) => {handleOnMouseMove(e);}}
     onpointerup={(e) => {handleOnMouseUp(e);}}
-    onpointercancel={(e) => {handleOnMouseUp(e);}}
+    onpointercancel={(e) => {handleOnPointerCancel(e);}}
     onwheel={async (e) => {handleOnWheel(e);}}
 >
     {#if drawingState.showMouseChaser && canvasInfo.cellScale >= 0.75}
