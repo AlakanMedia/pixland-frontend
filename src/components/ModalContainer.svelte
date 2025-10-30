@@ -16,9 +16,6 @@
     });
 
     function closeModal(event) {
-        event.stopPropagation();
-        event.preventDefault();
-
         function closeActiveModal() {
             if (ui.generateImageModalIsOpen) {
                 ui.generateImageModalIsOpen = false;
@@ -34,12 +31,16 @@
             }
         }
 
-        if (event.type === "click") {
+        if (event.type === "pointerup") {
             if (event.target !== containerChild && !containerChild.contains(event.target)) {
+                event.stopPropagation();
+                event.preventDefault();
                 closeActiveModal();
             }
         }
         else if (event.type === "keydown" && event.key === "Escape") {
+            event.stopPropagation();
+            event.preventDefault();
             closeActiveModal();
         }
     }
@@ -50,7 +51,7 @@
     role="dialog"
     aria-modal="true"
     tabindex="-1"
-    onclick={(e) => {closeModal(e);}}
+    onpointerup={(e) => {closeModal(e);}}
     onkeydown={(e) => {closeModal(e);}}
     bind:this={container}
     transition:fade={{duration: 600}}
