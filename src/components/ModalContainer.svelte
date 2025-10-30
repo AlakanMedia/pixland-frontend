@@ -16,6 +16,8 @@
     });
 
     function closeModal(event) {
+        event.stopPropagation();
+
         function closeActiveModal() {
             if (ui.generateImageModalIsOpen) {
                 ui.generateImageModalIsOpen = false;
