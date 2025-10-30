@@ -55,6 +55,13 @@
 
     let websocket;
 
+    // --- INICIO: NUEVAS variables de estado para Pinch-to-Zoom ---
+    const activePointers = new Map();
+    let isPinching = false;
+    let initialPinchDistance = 0;
+    let startPinchCellScale = 0;
+    // --- FIN: NUEVAS variables ---
+
     onMount(async () => {
         const { initialUser, initialPalette } = data;
         const hash = page.url.hash;
@@ -322,6 +329,18 @@
         if (event.pointerType === "mouse" && event.button !== 0) {
             return;
         }
+
+        // --- Añadido: Rastrear puntero ---
+        activePointers.set(event.pointerId, event);
+
+        // --- Añadido: Comprobar si es un "pinch" ---
+        if (activePointers.size === 2) {
+            isPinching = true;
+            isDragging = false; // Cancelar cualquier arrastre pendiente
+            initialPinchDistance = getPinchDistance();
+            startPinchCellScale = canvasInfo.cellScale;
+            return; // Salir para no procesar como un clic/arrastre normal
+        }
         
         activePointerType = event.pointerType || 'mouse';
         clickMouseX = event.clientX;
@@ -352,84 +371,186 @@
             return;
         }
 
-        const deltaX = event.clientX - clickMouseX;
-        const deltaY = event.clientY - clickMouseY;
-        const dragDistance = Math.hypot(deltaX, deltaY);
-        maxDragDistance = Math.max(maxDragDistance, dragDistance);
+        // --- Añadido: Actualizar la posición del puntero en el mapa ---
+        if (activePointers.has(event.pointerId)) {
+            activePointers.set(event.pointerId, event);
+        }
 
-        const threshold = getDragThreshold();
+        // --- Añadido: Lógica de Pinch-Zoom ---
+        if (isPinching && activePointers.size === 2) {
+            const currentDistance = getPinchDistance();
+            const center = getPinchCenter();
 
-        if (dragDistance > threshold) {
-            isDragging = true;
+            // 1. Calcular la escala objetivo basada en la proporción del gesto
+            const scaleRatio = currentDistance / initialPinchDistance;
+            let targetScale = startPinchCellScale * scaleRatio;
 
-            if (isSelecting) {
-                document.body.style.cursor = "crosshair";
-                selectingArea.endCellX = Math.floor((canvasInfo.cameraOffsetX + event.clientX) / effectiveCellSize);
-                selectingArea.endCellY = Math.floor((canvasInfo.cameraOffsetY + event.clientY) / effectiveCellSize);
+            // 2. Cuantizar la escala a los pasos permitidos (múltiplos de 0.125)
+            //    Esto cumple tu restricción de que (16 * 0.125 * N) siempre sea un entero.
+            let newQuantizedScale = Math.round(targetScale / zoomStep) * zoomStep;
 
-                needsRedraw = true;
-            }
-            else {
-                document.body.style.cursor = "move";
-                canvasInfo.cameraOffsetX = Math.max(0, Math.min(startCameraX - deltaX, worldPxWidth - canvasElement.width));
-                canvasInfo.cameraOffsetY = Math.max(0, Math.min(startCameraY - deltaY, worldPxHeight - canvasElement.height));
+            // 3. Limitar (clamp) la escala a los valores min/max
+            let newCellScale = Math.max(0.125, Math.min(newQuantizedScale, 4));
 
-                debounceUpdateUrlHash();
-                await fetchChunk();
+            // 4. Aplicar el zoom
+            await applyZoom(newCellScale, center.x, center.y);
+        
+        }
+        else if (!isPinching) { // Solo procesar arrastre si NO estamos pellizcando
+            const deltaX = event.clientX - clickMouseX;
+            const deltaY = event.clientY - clickMouseY;
+            const dragDistance = Math.hypot(deltaX, deltaY);
+            maxDragDistance = Math.max(maxDragDistance, dragDistance);
+
+            const threshold = getDragThreshold();
+
+            if (dragDistance > threshold) {
+                isDragging = true;
+
+                if (isSelecting) {
+                    document.body.style.cursor = "crosshair";
+                    selectingArea.endCellX = Math.floor((canvasInfo.cameraOffsetX + event.clientX) / effectiveCellSize);
+                    selectingArea.endCellY = Math.floor((canvasInfo.cameraOffsetY + event.clientY) / effectiveCellSize);
+
+                    needsRedraw = true;
+                }
+                else {
+                    document.body.style.cursor = "move";
+                    canvasInfo.cameraOffsetX = Math.max(0, Math.min(startCameraX - deltaX, worldPxWidth - canvasElement.width));
+                    canvasInfo.cameraOffsetY = Math.max(0, Math.min(startCameraY - deltaY, worldPxHeight - canvasElement.height));
+
+                    debounceUpdateUrlHash();
+                    await fetchChunk();
+                }
             }
         }
     }
 
     function handleOnMouseUp(event) {
-        const finalDeltaX = event.clientX - clickMouseX;
-        const finalDeltaY = event.clientY - clickMouseY;
-        const finalDistance = Math.hypot(finalDeltaX, finalDeltaY);
-        const threshold = getDragThreshold();
-        const isClickLike = finalDistance <= threshold;
+        const wasPinching = isPinching; // Guardar el estado antes de limpiar
 
-        if (!isClickLike) {
-            isDragging = false;
+        // Eliminar puntero del rastreador
+        activePointers.delete(event.pointerId);
 
-            if (isSelecting) {
-                isSelecting = false;
-            }
-
-            document.body.style.cursor = "default";
+        // Comprobar si el "pinch" terminó
+        if (isPinching && activePointers.size < 2) {
+            isPinching = false;
+            initialPinchDistance = 0;
+            startPinchCellScale = 0;
         }
-        else {
-            if (selectingArea) {
-                selectingArea = null;
-                needsRedraw = true;
-            }
-            else {
-                if (!user.isLoggedIn) {
-                    // Evita que el click "fantasma" cierre el modal
-                    event.preventDefault();
-                    event.stopPropagation();
 
-                    ui.loginModalIsOpen = true;
+        if (activePointers.size === 0) {
+            isMouseDown = false; // Reseteamos la bandera principal
+            size.target = 6;     // Reseteamos el "chaser"
+
+            // Solo ejecutar la lógica de "tap" o "drag-end" si NO era un pinch
+            if (!wasPinching) {
+                const finalDeltaX = event.clientX - clickMouseX;
+                const finalDeltaY = event.clientY - clickMouseY;
+                const finalDistance = Math.hypot(finalDeltaX, finalDeltaY);
+                const threshold = getDragThreshold();
+                const isClickLike = finalDistance <= threshold;
+
+                if (!isClickLike) {
+                    isDragging = false;
+
+                    if (isSelecting) {
+                        isSelecting = false;
+                    }
+
+                    document.body.style.cursor = "default";
                 }
-                else if (websocket && canvasInfo.cellScale >= 0.75 && drawingState.availablePixels > 0) {
-                    const pixelPlaced = handleSetColor(event);
-                    if (pixelPlaced) {
-                        drawingState.availablePixels--;
+                else {
+                    if (selectingArea) {
+                        selectingArea = null;
+                        needsRedraw = true;
+                    }
+                    else {
+                        if (!user.isLoggedIn) {
+                            // Evita que el click "fantasma" cierre el modal
+                            event.preventDefault();
+                            event.stopPropagation();
+
+                            ui.loginModalIsOpen = true;
+                        }
+                        else if (websocket && canvasInfo.cellScale >= 0.75 && drawingState.availablePixels > 0) {
+                            const pixelPlaced = handleSetColor(event);
+                            if (pixelPlaced) {
+                                drawingState.availablePixels--;
+                            }
+                        }
                     }
                 }
             }
+            else{
+                isMouseDown = false;
+                size.target = 6;
+            }
+        }
+    }
+
+    // --- INICIO: NUEVAS funciones auxiliares para Pinch-to-Zoom ---
+
+    /**
+     * Calcula la distancia (hipotenusa) entre dos punteros.
+     */
+    function getPinchDistance() {
+        const pointers = Array.from(activePointers.values());
+        const dx = pointers[0].clientX - pointers[1].clientX;
+        const dy = pointers[0].clientY - pointers[1].clientY;
+        return Math.hypot(dx, dy);
+    }
+
+    /**
+     * Calcula el punto central entre dos punteros.
+     */
+    function getPinchCenter() {
+        const pointers = Array.from(activePointers.values());
+        const x = (pointers[0].clientX + pointers[1].clientX) / 2;
+        const y = (pointers[0].clientY + pointers[1].clientY) / 2;
+        return { x, y };
+    }
+
+    /**
+     * Función refactorizada para aplicar el zoom y recalcular la vista.
+     * @param {number} newScale - El nuevo nivel de escala (ya validado y cuantizado)
+     * @param {number} anchorX - El punto X en la pantalla sobre el que se hace zoom
+     * @param {number} anchorY - El punto Y en la pantalla sobre el que se hace zoom
+     */
+    async function applyZoom(newScale, anchorX, anchorY) {
+        // 1. Validar que la escala haya cambiado
+        if (newScale === canvasInfo.cellScale) {
+            return;
         }
 
-        isMouseDown = false;
-        size.target = 6;
+        // 2. Guardar escala anterior y calcular punto en el "mundo"
+        oldCellScale = canvasInfo.cellScale;
+        const worldXBeforeZoom = canvasInfo.cameraOffsetX + anchorX;
+        const worldYBeforeZoom = canvasInfo.cameraOffsetY + anchorY;
+
+        // 3. Asignar la nueva escala
+        canvasInfo.cellScale = newScale; 
+
+        // 4. Calcular la nueva posición "mundo" del punto de anclaje
+        const newWorldX = worldXBeforeZoom * (canvasInfo.cellScale / oldCellScale);
+        const newWorldY = worldYBeforeZoom * (canvasInfo.cellScale / oldCellScale);
+
+        // 5. Calcular el nuevo offset de la cámara
+        canvasInfo.cameraOffsetX = Math.max(0, Math.min(newWorldX - anchorX, worldPxWidth - canvasElement.width));
+        canvasInfo.cameraOffsetY = Math.max(0, Math.min(newWorldY - anchorY, worldPxHeight - canvasElement.height));
+
+        // 6. Pedir redibujado y actualizar URL
+        debounceUpdateUrlHash();
+        await fetchChunk();
     }
+    // --- FIN: NUEVAS funciones auxiliares ---
 
     async function handleOnWheel(event) {
         event.preventDefault();
 
-        oldCellScale = canvasInfo.cellScale;
-
         let newCellScale;
-        const worldXBeforeZoom = canvasInfo.cameraOffsetX + event.clientX;
-        const worldYBeforeZoom = canvasInfo.cameraOffsetY + event.clientY;
+        const anchorX = event.clientX;
+        const anchorY = event.clientY;
 
         if (event.deltaY < 0) { // Zoom In
             newCellScale = canvasInfo.cellScale + zoomStep;
@@ -438,24 +559,32 @@
             newCellScale = canvasInfo.cellScale - zoomStep;
         }
 
-        // Opcional pero recomendado: poner límites al zoom
-        canvasInfo.cellScale = Math.max(0.125, Math.min(newCellScale, 4)); 
+        // Limitar (clamp) la escala
+        const clampedScale = Math.max(0.125, Math.min(newCellScale, 4)); 
 
-        // La nueva coordenada del punto de anclaje en el mundo re-escalado
-        const newWorldX = worldXBeforeZoom * (canvasInfo.cellScale / oldCellScale);
-        const newWorldY = worldYBeforeZoom * (canvasInfo.cellScale / oldCellScale);
-
-        // Calculamos el nuevo offset de la cámara para que ese punto quede bajo el ratón
-        canvasInfo.cameraOffsetX = Math.max(0, Math.min(newWorldX - event.clientX, worldPxWidth - canvasElement.width));
-        canvasInfo.cameraOffsetY = Math.max(0, Math.min(newWorldY - event.clientY, worldPxHeight - canvasElement.height));
-
-        debounceUpdateUrlHash();
-        await fetchChunk();
+        // Llamar a la función refactorizada
+        await applyZoom(clampedScale, anchorX, anchorY);
     }
 
-    function handleOnPointerCancel() {
+    function handleOnPointerCancel(event) { // Añadido 'event'
+        // Eliminar puntero del rastreador
+        activePointers.delete(event.pointerId);
+
+        // Comprobar si el "pinch" terminó
+        if (isPinching && activePointers.size < 2) {
+            isPinching = false;
+            initialPinchDistance = 0;
+            startPinchCellScale = 0;
+        }
+
+        // Comprobar si es el *último* puntero en levantarse
+        if (activePointers.size === 0) {
+            isMouseDown = false; // Reseteamos la bandera principal
+            size.target = 6;     // Reseteamos el "chaser"
+        }
+
+        // Lógica de reseteo original del usuario
         isDragging = false;
-        isMouseDown = false;
         isSelecting = false;
         selectingArea = null;
         document.body.style.cursor = "default";
