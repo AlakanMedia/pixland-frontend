@@ -407,8 +407,7 @@
                     event.preventDefault();
                     event.stopPropagation();
 
-                    // Difiriendo al siguiente frame nos aseguramos que el click ocurra antes de mostrar el modal
-                    requestAnimationFrame(() => { ui.loginModalIsOpen = true; });
+                    ui.loginModalIsOpen = true;
                 }
                 else if (websocket && canvasInfo.cellScale >= 0.75 && drawingState.availablePixels > 0) {
                     const pixelPlaced = handleSetColor(event);
