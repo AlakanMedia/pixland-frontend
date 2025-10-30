@@ -55,12 +55,11 @@
 
     let websocket;
 
-    // --- INICIO: NUEVAS variables de estado para Pinch-to-Zoom ---
+    // Variables de estado para Pinch-to-Zoom
     const activePointers = new Map();
     let isPinching = false;
     let initialPinchDistance = 0;
     let startPinchCellScale = 0;
-    // --- FIN: NUEVAS variables ---
 
     onMount(async () => {
         const { initialUser, initialPalette } = data;
@@ -330,10 +329,10 @@
             return;
         }
 
-        // --- Añadido: Rastrear puntero ---
+        // Se usa para rastrear el puntero
         activePointers.set(event.pointerId, event);
 
-        // --- Añadido: Comprobar si es un "pinch" ---
+        // Comprobamos si es un "pinch"
         if (activePointers.size === 2) {
             isPinching = true;
             isDragging = false; // Cancelar cualquier arrastre pendiente
@@ -371,12 +370,11 @@
             return;
         }
 
-        // --- Añadido: Actualizar la posición del puntero en el mapa ---
+        // Actualizar la posición del puntero en el mapa
         if (activePointers.has(event.pointerId)) {
             activePointers.set(event.pointerId, event);
         }
 
-        // --- Añadido: Lógica de Pinch-Zoom ---
         if (isPinching && activePointers.size === 2) {
             const currentDistance = getPinchDistance();
             const center = getPinchCenter();
@@ -394,7 +392,6 @@
 
             // 4. Aplicar el zoom
             await applyZoom(newCellScale, center.x, center.y);
-        
         }
         else if (!isPinching) { // Solo procesar arrastre si NO estamos pellizcando
             const deltaX = event.clientX - clickMouseX;
@@ -427,18 +424,40 @@
     }
 
     function handleOnMouseUp(event) {
-        const wasPinching = isPinching; // Guardar el estado antes de limpiar
+        const wasPinching = isPinching;
 
         // Eliminar puntero del rastreador
         activePointers.delete(event.pointerId);
+
+        // --- INICIO DE LA MODIFICACIÓN ---
 
         // Comprobar si el "pinch" terminó
         if (isPinching && activePointers.size < 2) {
             isPinching = false;
             initialPinchDistance = 0;
             startPinchCellScale = 0;
+
+            // *** ¡LA SOLUCIÓN ESTÁ AQUÍ! ***
+            // Si el pinch terminó PERO AÚN QUEDA 1 DEDO,
+            // debemos re-anclar el inicio del arrastre a ese dedo.
+            if (activePointers.size === 1) {
+                // Obtenemos la referencia al dedo que queda
+                const remainingPointer = activePointers.values().next().value;
+                
+                // Actualizamos las coordenadas de "clic" a la posición actual de ese dedo
+                clickMouseX = remainingPointer.clientX;
+                clickMouseY = remainingPointer.clientY;
+                
+                // Actualizamos la posición de la cámara "inicial" a la actual
+                startCameraX = canvasInfo.cameraOffsetX;
+                startCameraY = canvasInfo.cameraOffsetY;
+                
+                // Reseteamos la distancia de arrastre
+                maxDragDistance = 0;
+            }
         }
 
+        // Comprobar si es el *último* puntero en levantarse
         if (activePointers.size === 0) {
             isMouseDown = false; // Reseteamos la bandera principal
             size.target = 6;     // Reseteamos el "chaser"
@@ -451,7 +470,7 @@
                 const threshold = getDragThreshold();
                 const isClickLike = finalDistance <= threshold;
 
-                if (!isClickLike) {
+                if (!isClickLike) { // Era un arrastre
                     isDragging = false;
 
                     if (isSelecting) {
@@ -460,7 +479,7 @@
 
                     document.body.style.cursor = "default";
                 }
-                else {
+                else { // Era un clic (tap)
                     if (selectingArea) {
                         selectingArea = null;
                         needsRedraw = true;
@@ -483,13 +502,13 @@
                 }
             }
             else{
-                isMouseDown = false;
-                size.target = 6;
+                // Si era un pinch, solo nos aseguramos de resetear el estado de arrastre
+                isDragging = false;
+                document.body.style.cursor = "default";
             }
         }
+        // --- FIN DE LA MODIFICACIÓN ---
     }
-
-    // --- INICIO: NUEVAS funciones auxiliares para Pinch-to-Zoom ---
 
     /**
      * Calcula la distancia (hipotenusa) entre dos punteros.
@@ -543,7 +562,6 @@
         debounceUpdateUrlHash();
         await fetchChunk();
     }
-    // --- FIN: NUEVAS funciones auxiliares ---
 
     async function handleOnWheel(event) {
         event.preventDefault();
@@ -566,7 +584,7 @@
         await applyZoom(clampedScale, anchorX, anchorY);
     }
 
-    function handleOnPointerCancel(event) { // Añadido 'event'
+    function handleOnPointerCancel(event) {
         // Eliminar puntero del rastreador
         activePointers.delete(event.pointerId);
 
