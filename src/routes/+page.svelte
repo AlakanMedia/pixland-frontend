@@ -62,7 +62,17 @@
     let startPinchCellScale = 0;
     let justFinishedPinching = false;
 
+    // Para detectar si el usuario está en móvil por el tipo de puntero
+    let isCoarsePointer = $state(false); // Por defecto, asumimos un puntero "fino" (ratón)
+    let mql; // Para guardar la referencia a la Media Query
+
     onMount(async () => {
+        if (window.matchMedia) {
+            mql = window.matchMedia("(pointer: coarse)");
+            isCoarsePointer = mql.matches; // Comprueba el valor inicial
+            mql.addEventListener('change', handlePointerChange); // Añade un listener
+        }
+
         const { initialUser, initialPalette } = data;
         const hash = page.url.hash;
 
@@ -125,7 +135,15 @@
 
     onDestroy(() => {
         clearTimeout(hashUpdateTimeout);
+
+        if (mql) {
+            mql.removeEventListener('change', handlePointerChange);
+        }
     });
+
+    function handlePointerChange(e) {
+        isCoarsePointer = e.matches;
+    }
 
     function renderLoop() {
         if (needsRedraw) {
@@ -427,19 +445,16 @@
     }
 
 function handleOnMouseUp(event) {
-        // const wasPinching = isPinching; // <-- ELIMINA O IGNORA ESTA LÍNEA
-
         // Eliminar puntero del rastreador
         activePointers.delete(event.pointerId);
 
         // Comprobar si el "pinch" terminó
         if (isPinching && activePointers.size < 2) {
             isPinching = false;
-            justFinishedPinching = true; // <-- ¡LA CLAVE! Marcamos que el pinch acaba de terminar
+            justFinishedPinching = true;
             initialPinchDistance = 0;
             startPinchCellScale = 0;
 
-            // --- Inicio: Parche anti-salto (sin cambios) ---
             if (activePointers.size === 1) {
                 const remainingPointer = activePointers.values().next().value;
                 clickMouseX = remainingPointer.clientX;
@@ -448,18 +463,14 @@ function handleOnMouseUp(event) {
                 startCameraY = canvasInfo.cameraOffsetY;
                 maxDragDistance = 0;
             }
-            // --- Fin: Parche anti-salto ---
         }
 
         if (activePointers.size === 0) {
             isMouseDown = false; // Reseteamos la bandera principal
             size.target = 6;     // Reseteamos el "chaser"
 
-            // --- INICIO: MODIFICACIÓN CRÍTICA ---
             // Solo ejecutar la lógica de "tap" o "drag-end" si NO acabamos de hacer pinch
             if (!justFinishedPinching) { 
-                
-                // --- Toda tu lógica anterior de "isClickLike" va aquí dentro ---
                 const finalDeltaX = event.clientX - clickMouseX;
                 const finalDeltaY = event.clientY - clickMouseY;
                 const finalDistance = Math.hypot(finalDeltaX, finalDeltaY);
@@ -496,16 +507,11 @@ function handleOnMouseUp(event) {
                         }
                     }
                 }
-                // --- Fin de la lógica "isClickLike" ---
-
             }
             else{
-                // Si SÍ acabamos de hacer pinch, simplemente reseteamos el estado de arrastre
-                // y NO hacemos nada más (no es un tap).
                 isDragging = false;
                 document.body.style.cursor = "default";
             }
-            // --- FIN: MODIFICACIÓN CRÍTICA ---
         }
     }
 
@@ -664,7 +670,7 @@ function handleOnMouseUp(event) {
             if (user.isLoggedIn) {
                 user.disconnect = true;
             }
-            // Opcional: podrías intentar reconectar aquí si el cierre no fue intencional
+            // Opcional: Aquí se podría intentar reconectar si el cierre no fue intencional
         };
 
         websocket.onmessage = (event) => {
@@ -733,7 +739,7 @@ function handleOnMouseUp(event) {
     onpointercancel={(e) => {handleOnPointerCancel(e);}}
     onwheel={async (e) => {handleOnWheel(e);}}
 >
-    {#if drawingState.showMouseChaser && canvasInfo.cellScale >= 0.75}
+    {#if drawingState.showMouseChaser && canvasInfo.cellScale >= 0.75 && !isCoarsePointer}
 	    <circle
 	        cx={mousePosition.coords.current.x}
 	    	cy={mousePosition.coords.current.y}

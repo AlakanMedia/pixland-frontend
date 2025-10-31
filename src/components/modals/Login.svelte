@@ -72,8 +72,8 @@
         }
 
         const response = await registerNewUser({
-            username: username,
-            email: email,
+            username: username.trim(),
+            email: email.trim(),
             password: password,
         });
 
@@ -110,7 +110,7 @@
             return false;
         }
 
-        const response = await loginUser(username, password);
+        const response = await loginUser(username.trim(), password);
 
         if (response.state !== MESSAGES_TYPES.SUCCESS) {
             const data = response.data;
