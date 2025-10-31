@@ -63,7 +63,7 @@
     let justFinishedPinching = false;
 
     // Para detectar si el usuario está en móvil por el tipo de puntero
-    let isCoarsePointer = $state(false); // Por defecto, asumimos un puntero "fino" (ratón)
+    let isCoarsePointer = $state(true);
     let mql; // Para guardar la referencia a la Media Query
 
     onMount(async () => {

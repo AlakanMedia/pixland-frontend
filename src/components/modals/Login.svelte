@@ -39,7 +39,7 @@
             return false;
         }
 
-        if (!isValidEmail(email)) {
+        if (!isValidEmail(email.trim())) {
             const inputEmail = document.body.querySelector("#input-email");
             inputEmail.classList.add("error");
 
@@ -47,7 +47,7 @@
             return false;
         }
 
-        if (password.trim().length < 4) {
+        if (password.length < 4) {
             const inputPassword = document.body.querySelector("#input-password");
             inputPassword.classList.add("error");
 
