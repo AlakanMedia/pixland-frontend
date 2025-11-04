@@ -14,6 +14,7 @@
     /** @type {import('./$types').PageProps} */
     let { data } = $props(); // Recibimos la información de +page.server.js
 
+    let pixelPaintingSound; // Referencia del sonido de pintar un pixel
     let canvasElement; // Referencia al canvas
     let contextCanvas; // Contexto del canvas
 
@@ -72,6 +73,9 @@
             isCoarsePointer = mql.matches; // Comprueba el valor inicial
             mql.addEventListener('change', handlePointerChange); // Añade un listener
         }
+
+        pixelPaintingSound = new Audio();
+        pixelPaintingSound.src = "sounds/pixel_painting.mp3";
 
         const { initialUser, initialPalette } = data;
         const hash = page.url.hash;
@@ -501,8 +505,16 @@ function handleOnMouseUp(event) {
                         }
                         else if (websocket && canvasInfo.cellScale >= 0.75 && drawingState.availablePixels > 0) {
                             const pixelPlaced = handleSetColor(event);
+
                             if (pixelPlaced) {
                                 drawingState.availablePixels--;
+
+                                if (drawingState.playSound) {
+                                    pixelPaintingSound.currentTime = 0; // Reiniciamos el sonido
+                                    pixelPaintingSound.play().catch(error => {
+                                        console.error("Error playing sound:", error); // Reproducimos el sonido
+                                    });
+                                }
                             }
                         }
                     }

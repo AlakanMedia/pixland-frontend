@@ -44,6 +44,7 @@ export const drawingState = $state({
     pixelLimit: null,
     needsUpdate: false,
     showGrid: true,
+    playSound: true,
     showMouseChaser: true,
     palette: "default",
 });
