@@ -121,6 +121,7 @@
             drawingState.availablePixels = 0;
             drawingState.pixelLimit = userLevel.pixelsLimit;
             drawingState.showGrid = initialUser.settings.show_grid;
+            drawingState.playSound = initialUser.settings.play_sound;
             drawingState.palette = initialUser.settings.palette;
             drawingState.showMouseChaser = initialUser.settings.show_mouse_chaser;
 
