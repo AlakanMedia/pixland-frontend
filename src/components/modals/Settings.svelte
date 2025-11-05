@@ -73,7 +73,16 @@
                 <span class="slider"></span>
             </label>
         </div>
-
+        <div class="display-option">
+            <div class="settings-icon-text">
+                <i class="ph ph-cursor"></i>
+                <h4>show chaser</h4>
+            </div>
+            <label class="switch">
+                <input type="checkbox" bind:checked={showMouseChaser}>
+                <span class="slider"></span>
+            </label>
+        </div>
         {#if user.isLoggedIn}
             <div class="display-option">
                 <div class="settings-icon-text">
@@ -99,17 +108,6 @@
                 </select>
             </div>
         {/if}
-
-        <div class="display-option">
-            <div class="settings-icon-text">
-                <i class="ph ph-cursor"></i>
-                <h4>show chaser</h4>
-            </div>
-            <label class="switch">
-                <input type="checkbox" bind:checked={showMouseChaser}>
-                <span class="slider"></span>
-            </label>
-        </div>
     </div>
     <hr>
     <div id="settings-buttons">

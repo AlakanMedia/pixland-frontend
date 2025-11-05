@@ -237,6 +237,7 @@
         border-radius: 6px;
         box-shadow: var(--shadow-colored);
         gap: 12px;
+        width: 302px;
     }
 
     #select-image-container {
@@ -384,6 +385,7 @@
     .profile-text {
         overflow: hidden;
         text-overflow: ellipsis;
+        margin-bottom: 6px;
     }
 
     #profile-stats {
@@ -423,7 +425,7 @@
 
     .stat-label {
         color: var(--text-tertiary);
-        font-size: 0.85rem;
+        font-size: 0.75rem;
         margin-left: auto;
     }
 
