@@ -52,18 +52,18 @@ async function apiClient(endpoint, options = {}, customFetch = fetch) {
     }
 }
 
-export function getUserInformation(customFetch = null) {
+export function getUserInformation(customFetch = null, extraHeaders = null) {
+    const options = {
+        method: "GET",
+        credentials: "include",
+        headers: extraHeaders || undefined
+    };
+
     if (customFetch) {
-        return apiClient("/users/me", {
-            method: "GET",
-            credentials: "include",
-        }, customFetch);
+        return apiClient("/users/me", options, customFetch);
     }
     else {
-        return apiClient("/users/me", {
-            method: "GET",
-            credentials: "include",
-        });
+        return apiClient("/users/me", options);
     }
 }
 
@@ -110,10 +110,18 @@ export function getCellsBox(upperLeftLimit, lowerRightLimit) {
     });
 }
 
-export function getPalette(name) {
-    return apiClient(`/palettes/${name}`, {
+export function getPalette(name, customFetch = null, extraHeaders = null) {
+    const options = {
         method: "GET",
-    });
+        headers: extraHeaders || undefined
+    };
+
+    if (customFetch) {
+        return apiClient(`/palettes/${name}`, options, customFetch);
+    }
+    else {
+        return apiClient(`/palettes/${name}`, options);
+    }
 }
 
 export function updateUserConfigurations(config) {

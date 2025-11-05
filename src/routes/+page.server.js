@@ -2,10 +2,15 @@ import { getUserInformation, getPalette } from "../pixlandApi.js";
 import { MESSAGES_TYPES } from "$lib/utils.js";
 
 /** @type {import('./$types').PageServerLoad} */
-export async function load({ fetch }) {
-    // La función `load` se ejecuta en el servidor.
-    // El `fetch` de SvelteKit aquí reenvía automáticamente las cookies (como tu token).
-    const userResponse = await getUserInformation(fetch); // Asumiendo que tu apiClient puede aceptar un `fetch` personalizado.
+export async function load({ fetch, cookies }) {
+    const token = cookies.get('access_token');
+    const headers = new Headers();
+
+    if (token) {
+        headers.append('Cookie', `access_token=${token}`);
+    }
+
+    const userResponse = await getUserInformation(fetch, headers);
     let initialUser = null;
     let initialPalette = null;
 
@@ -18,19 +23,17 @@ export async function load({ fetch }) {
             createdAt: userInfo.created_at,
             isLoggedIn: true,
             profileImage: userInfo.profile_image,
-            settings: userInfo.settings // Pasamos los settings completos
+            settings: userInfo.settings
         };
 
-        // Si el usuario tiene una paleta personalizada, la cargamos también
         if (userInfo.settings.palette !== "default") {
-            const paletteResponse = await getPalette(userInfo.settings.palette, fetch);
+            const paletteResponse = await getPalette(userInfo.settings.palette, fetch, headers);
             if (paletteResponse.state === MESSAGES_TYPES.SUCCESS) {
                 initialPalette = paletteResponse.data.info.colors;
             }
         }
     }
 
-    // Los datos que retornes aquí estarán disponibles en tu componente +page.svelte
     return {
         initialUser,
         initialPalette
