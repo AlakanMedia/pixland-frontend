@@ -7,10 +7,10 @@
 	<header class="header">
 		<div class="header-content">
 			<a href="/" class="logo">
-                <i class="ph ph-file-text logo-icon"></i>
+                <img class="pixland-logo" src="favicon.png" alt="Pixland logo" />
 				<div class="logo-text">
-					<h1>PixLand Editor</h1>
-					<p>A collaborative editor where anyone can freely write and edit in real time, sharing ideas without limits.</p>
+					<h1>Pixland</h1>
+					<p>Collaborative Pixel Art Canvas</p>
 				</div>
 			</a>
 		</div>
@@ -59,9 +59,11 @@
         color: var(--text-primary);
     }
 
-    .logo-icon {
-        font-size: 2rem;
-        color: var(--accent-primary);
+    .pixland-logo {
+        width: 60px;
+        height: 60px;
+        object-fit: contain;
+        image-rendering: pixelated;
     }
 
     .logo-text h1 {
@@ -116,6 +118,10 @@
     @media (max-width: 768px) {
         .container {
             padding: 1rem;
+        }
+
+        .header-content {
+            padding: 0 1rem;
         }
 
         .home-button {

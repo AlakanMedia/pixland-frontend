@@ -6,9 +6,9 @@
 	<header class="header">
 		<div class="header-content">
 			<a href="/" class="logo">
-				<i class="ph ph-palette logo-icon"></i>
+                <img class="pixland-logo" src="favicon.png" alt="Pixland logo" />
 				<div class="logo-text">
-					<h1>PixLand</h1>
+					<h1>Pixland</h1>
 					<p>Collaborative Pixel Art Canvas</p>
 				</div>
 			</a>
@@ -20,17 +20,17 @@
             <div class="card">
                 <h2>
                     <i class="ph ph-paint-brush"></i>
-                    What is PixLand?
+                    What is Pixland?
                 </h2>
                 <p>
-                    PixLand is a collaborative, online pixel art game where you can leave your mark on a
+                    Pixland is a collaborative, online pixel art game where you can leave your mark on a
                     massive, shared canvas. Place pixels one by one, team up with friends, or just relax and
                     watch the digital world evolve in real-time.
                 </p>
                 <p>
-                    As you contribute to the canvas, you'll gain experience and level up, unlocking new
-                    rewards and colors to expand your artistic toolkit. It's a simple concept with endless
-                    possibilities, built for anyone who loves to create.
+                    As you contribute to the canvas, you'll gain experience and level up, unlocking profile images,
+                    increasing your pixel buffer size, and many more features yet to come. It's a simple concept
+                    with endless possibilities, built for anyone who loves to create.
                 </p>
             </div>
 
@@ -43,7 +43,7 @@
                     <div class="feature-item">
                         <i class="ph ph-users-three"></i>
                         <h3>Real-time Canvas</h3>
-                        <p>Paint alongside other artists on our shared canvas and see your art come to life instantly.</p>
+                        <p>Paint alongside other players on our shared canvas and see your art come to life instantly.</p>
                     </div>
                     <div class="feature-item">
                         <i class="ph ph-trophy"></i>
@@ -69,15 +69,51 @@
                     Getting Started
                 </h2>
                 <p>It couldn't be easier. Jump right in—no account required, no downloads necessary. Just head to the canvas, pick a color, and place your first pixel.</p>
-                <p>Whether you want to add a single dot or craft an elaborate scene, every contribution makes PixLand a more interesting place. Go on, give it a try!</p>
+                <p>Whether you want to add a single dot or craft an elaborate scene, every contribution makes Pixland a more interesting place. Go on, give it a try!</p>
             </div>
             <div class="card">
                 <h2>
-            	    <i class="ph ph-binoculars"></i>
-            	    An Ode to Our Inspiration
+            	    <i class="ph ph-star"></i>
+                    Acknowledgments
                 </h2>
-                <p>If you're looking at our layout and thinking, "Hey, this feels... familiar," you've got a good eye! PixLand's design is heavily inspired by (okay, fine, lovingly copied from) the awesome <a href="https://pixelzone.io" target="_blank" rel="noopener noreferrer">pixelzone.io</a>.</p>
-                <p>They built something amazing, and this project is, in many ways, a tribute to their great work. We're just standing on the shoulders of giants... and maybe borrowing their fashion sense.</p>
+                <p>I want to thank and acknowledge all the people who, in one way or another, have inspired or helped me to carry out this web project:</p>
+                <div class="acknowledgments-list">
+                    <div class="acknowledgment-item">
+                        <div class="acknowledgment-content">
+                            <div class="acknowledgment-text">
+                                <span class="acknowledgment-label">Sound Design:</span>
+                                Thanks to <a href="https://pixabay.com/es/users/floraphonic-38928062/?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=188105" target="_blank">Floraphonic</a>, who created and freely published on <a href="https://pixabay.com//?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=188105" target="_blank">Pixabay</a> the sound I use for when a pixel is painted.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="acknowledgment-item">
+                        <div class="acknowledgment-content">
+                            <div class="acknowledgment-text">
+                                <span class="acknowledgment-label">Pixel Art:</span>
+                                Thanks to <a href="https://deepdivegamestudio.itch.io/" target="_blank">DeepDiveGameStudio</a> for creating and publishing on <a href="https://itch.io/" target="_blank">itch.io</a> the pixel art images I use as profile pictures for the users.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="acknowledgment-item">
+                        <div class="acknowledgment-content">
+                            <div class="acknowledgment-text">
+                                <span class="acknowledgment-label">Inspiration:</span>
+                                I want to thank and acknowledge the website <a href="https://pixelzone.io/" target="_blank">pixelzone.io</a> for being the inspiration to create this project, and I also want to admit that I copied a bit of their user interface, hehe.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="acknowledgment-item">
+                        <div class="acknowledgment-content">
+                            <div class="acknowledgment-text">
+                                <span class="acknowledgment-label">Community:</span>
+                                Lastly, I want to thank all the people who have tested the game in its early stages and have helped me find bugs, as well as given me recommendations and suggestions.
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </main>
 
@@ -93,7 +129,7 @@
         </div>
 
         <div class="creator-note">
-            <p>PixLand is a one-person passion project, built in my spare time for the love of pixel art and online communities. It's made by a creator, for creators, with no corporate agenda—just a fun place to draw.</p>
+            <p>Pixland is a one-person passion project, built in my free time for the love of pixel art and online communities. It's made by a creator, for creators, with no corporate agenda—just a fun place to draw.</p>
         </div>
     </div>
 
@@ -142,9 +178,11 @@
         color: var(--text-primary);
     }
 
-    .logo-icon {
-        font-size: 2rem;
-        color: var(--accent-primary);
+    .pixland-logo {
+        width: 60px;
+        height: 60px;
+        object-fit: contain;
+        image-rendering: pixelated;
     }
 
     .logo-text h1 {
@@ -321,9 +359,81 @@
         margin-bottom: 0;
     }
 
+    .acknowledgments-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .acknowledgment-item {
+        background: var(--bg-elevated-2);
+        border: 1px solid var(--border-subtle);
+        border-radius: 8px;
+        padding: 1.25rem;
+        transition: all 0.2s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .acknowledgment-item::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        background: linear-gradient(180deg, var(--accent-primary), var(--accent-secondary));
+        opacity: 0;
+        transition: opacity 0.2s ease;
+    }
+
+    .acknowledgment-item:hover {
+        border-color: var(--accent-primary);
+        transform: translateX(4px);
+    }
+
+    .acknowledgment-item:hover::before {
+        opacity: 1;
+    }
+
+    .acknowledgment-content {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .acknowledgment-text {
+        flex: 1;
+        color: var(--text-secondary);
+        line-height: 1.6;
+    }
+
+    .acknowledgment-text a {
+        color: var(--accent-primary);
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.2s ease;
+    }
+
+    .acknowledgment-text a:hover {
+        color: var(--accent-secondary);
+        text-decoration: underline;
+    }
+
+    .acknowledgment-label {
+        display: inline-block;
+        color: var(--text-primary);
+        font-weight: 600;
+        margin-right: 0.25rem;
+    }
+
     @media (max-width: 768px) {
         .container {
             padding: 1rem;
+        }
+
+        .header-content {
+            padding: 0 1rem;
         }
 
         .logo {
@@ -342,6 +452,10 @@
         .home-button {
             bottom: 1rem;
             right: 1rem;
+        }
+
+        .acknowledgment-content {
+            gap: 0.75rem;
         }
     }
 </style>

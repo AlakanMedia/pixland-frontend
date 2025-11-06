@@ -10,13 +10,6 @@
         { id: "content", label: "Content Policy", icon: "ph-image" }
     ];
 
-	// Variable para la fecha de actualización.
-    const lastUpdatedDate = new Date().toLocaleDateString('en-US', {
-        year: "numeric",
-        month: "long",
-        day: "numeric"
-    });
-
 	// La navegación con teclado también es un caso de uso avanzado del DOM.
 	// Esta función ahora es mucho más simple y no necesita consultar el DOM.
 	function handleKeydown(e, currentIndex) {
@@ -59,9 +52,9 @@
 	<header class="header">
 		<div class="header-content">
 			<a href="/" class="logo">
-				<i class="ph ph-palette logo-icon"></i>
+                <img class="pixland-logo" src="favicon.png" alt="Pixland logo" />
 				<div class="logo-text">
-					<h1>PixLand</h1>
+					<h1>Pixland</h1>
 					<p>Collaborative Pixel Art Canvas</p>
 				</div>
 			</a>
@@ -74,7 +67,7 @@
                 <i class="ph ph-scroll icon"></i>
                 Legal & Privacy Stuff
             </h1>
-            <p>Here's the simple, no-fluff breakdown of how things work at PixLand. By using theplatform, you agree to these terms.</p>
+            <p>Here's the simple, no-fluff breakdown of how things work at Pixland. By using theplatform, you agree to these terms.</p>
         </div>
 
         <div class="nav-tabs" role="tablist">
@@ -103,7 +96,7 @@
                     <div class="subsection">
                         <h3><i class="ph ph-info icon"></i>1. The Basics</h3>
                         <p>
-                            Welcome to PixLand. This is a collaborative art project. By placing a pixel, you're
+                            Welcome to Pixland. This is a collaborative art project. By placing a pixel, you're
                             part of it. We expect you to be at least 13 years old to participate. These terms
                             might change, and if you keep using the site, it means you're cool with the new ones.
                         </p>
@@ -112,14 +105,14 @@
                         <h3><i class="ph ph-user-circle icon"></i>2. Your Responsibilities</h3>
                         <p>We trust you to be responsible. Your main obligations are simple:</p>
                         <ul>
-                            <li>Don't try to break the site, overload our servers, or mess with the experience for others.</li>
-                            <li><strong>Do not use bots, scripts, or any automated tools to place pixels.</strong> This is a human-only project.</li>
+                            <li>Don't try to break the site or overload our servers — creative chaos is fine, server destruction is not.</li>
+                            <li><strong>Do not use bots, scripts, or any automated tools to place pixels.</strong> Only real, genuine humans clicking one pixel at a time... probably.</li>
                         </ul>
                         <p>Regarding content, this canvas is a space for free expression. <strong>Pretty much anything goes.</strong> We don't police art, ideas, or messages. Your creations are your own responsibility.</p>
                     </div>
                     <div class="subsection">
                         <h3><i class="ph ph-copyright icon"></i>3. Intellectual Property (or lack thereof)</h3>
-                        <p>This is simple: <strong>there is none.</strong> Everything created on the PixLand canvas is dedicated to the <strong>public domain</strong>.</p>
+                        <p>This is simple: <strong>there is none.</strong> Everything created on the Pixland canvas is dedicated to the <strong>public domain</strong>.</p>
                         <p>That means any art you create here is free for anyone—including yourself—to use for any purpose, personal or commercial, without any credit or attribution required. By placing a pixel, you agree to waive all rights to your contribution. Go wild with it.</p>
                     </div>
                     <div class="highlight-box warning">
@@ -141,13 +134,13 @@
                             <li>Your <strong>username</strong> (which is public).</li>
                             <li>Your <strong>email address</strong> (kept private).</li>
                             <li>Your <strong>password</strong> (which is hashed, meaning even we can't see it).</li>
-                            <li>Your saved <strong>platform settings</strong> (like custom color palettes).</li>
+                            <li>Your saved <strong>platform settings</strong> (like selected palette, show grid and other options).</li>
                         </ul>
                     </div>
                     <div class="subsection">
                         <h3><i class="ph ph-cookie icon"></i>2. Cookies</h3>
                         <p>We use a single, essential cookie. Its only job is to store your access token.</p>
-                        <p>This token proves that you're logged in, so you don't have to enter your password on every page. That's it. We don't use cookies for tracking, advertising, or anything else.</p>
+                        <p>This token proves that you're logged in, so you don't have to log in again every time the page loads. That's it. We don't use cookies for tracking, advertising, or anything else.</p>
                     </div>
                     <div class="highlight-box info">
                         <h4><i class="ph ph-info"></i>Our Promise</h4>
@@ -190,7 +183,7 @@
                     <h2 class="section-title"><i class="ph ph-image icon"></i> Content Policy</h2>
                     <div class="subsection">
                         <h3><i class="ph ph-scales icon"></i>1. Our Stance on Content</h3>
-                        <p>PixLand is a platform for free expression. We do not moderate artwork, political statements, offensive content, or anything else you choose to create. The canvas reflects the raw creativity (and chaos) of the internet.</p>
+                        <p>Pixland is a platform for free expression. We do not moderate artwork, political statements, offensive content, or anything else you choose to create. The canvas reflects the raw creativity (and chaos) of the internet.</p>
                         <p>However, there are two hard lines we draw to protect individuals and comply with the law.</p>
                     </div>
                     <div class="subsection">
@@ -211,9 +204,8 @@
 
     <footer class="footer">
         <div class="footer-content">
-            <p><strong>PixLand</strong> - A Public Domain Art Experiment</p>
-            <p>Last updated: {lastUpdatedDate}</p>
-            <p>Questions? <a href="mailto:contact@pixland.com" class="contact-link">Contact us</a></p>
+            <p>Last updated: 11/06/2025</p>
+            <p>Questions? <a href="mailto:alakan439@gmail.com" class="contact-link">Contact us</a></p>
         </div>
     </footer>
 
@@ -282,9 +274,11 @@
         color: var(--text-primary);
     }
 
-    .logo-icon {
-        font-size: 2rem;
-        color: var(--accent-primary);
+    .pixland-logo {
+        width: 60px;
+        height: 60px;
+        object-fit: contain;
+        image-rendering: pixelated;
     }
 
     .logo-text h1 {
@@ -391,7 +385,6 @@
         border: 1px solid var(--border-default);
         border-radius: 12px;
         padding: 2rem;
-        margin-bottom: 2rem;
         box-shadow: var(--shadow-sm);
     }
 
@@ -505,8 +498,7 @@
     .footer {
         background-color: var(--bg-elevated-1);
         border-top: 1px solid var(--border-default);
-        padding: 2rem 0;
-        margin-top: 4rem;
+        padding: 1.5rem 0;
     }
 
     .footer-content {
@@ -515,10 +507,6 @@
         padding: 0 2rem;
         text-align: center;
         color: var(--text-secondary);
-    }
-
-    .footer-content p {
-        margin-bottom: 0.5rem;
     }
 
     .contact-link {
