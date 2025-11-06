@@ -14,7 +14,7 @@
     .header {
         background-color: var(--bg-elevated-1);
         border-bottom: 1px solid var(--border-default);
-        padding: 1.5rem 0;
+        padding: 1.25rem 0;
         position: sticky;
         top: 0;
         z-index: 100;
@@ -39,8 +39,8 @@
     }
 
     .pixland-logo {
-        width: 60px;
-        height: 60px;
+        width: 64px;
+        height: 64px;
         object-fit: contain;
         image-rendering: pixelated;
     }
