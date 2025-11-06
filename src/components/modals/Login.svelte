@@ -129,6 +129,8 @@
     }
 
     async function handleSignButton() {
+        let updateCanvas = false;
+
         pressed = true;
         await sleep(300);
         pressed = false;
@@ -162,7 +164,7 @@
                     if (response.state === MESSAGES_TYPES.SUCCESS) {
                         const newPalette = response.data.info.colors;
                         changeColorSchema(newPalette);
-                        drawingState.needsUpdate = true;
+                        updateCanvas = true;
                     }
                     else {
                         console.log("Error loading palette, default palette is being used");
@@ -174,7 +176,13 @@
 
                 drawingState.availablePixels = 0;
                 drawingState.pixelLimit = userLevel.pixelsLimit;
-                drawingState.showGrid = userInfo.settings.show_grid;
+
+                if (drawingState.showGrid !== userInfo.settings.show_grid) {
+                    drawingState.showGrid = userInfo.settings.show_grid;
+                    updateCanvas = true;
+                }
+
+                drawingState.playSound = userInfo.settings.play_sound;
                 drawingState.palette = userInfo.settings.palette
 
                 user.id = userInfo.id;
@@ -187,6 +195,10 @@
 
                 ui.loginModalIsOpen = false;
             }
+        }
+
+        if (updateCanvas) {
+            drawingState.needsUpdate = true;
         }
     }
 
