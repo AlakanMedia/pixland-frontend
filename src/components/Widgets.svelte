@@ -14,13 +14,15 @@
 </script>
 
 <ColorPalette/>
-<div id="current-users">
-    <i class="ph-bold ph-users-three"></i>
-    {padWithZeros(ui.activeUsers, 2)}
-</div>
-<div id="mouse-position">
-    <p>x: {padWithZeros(xCellMouse, 4)}</p>
-    <p>y: {padWithZeros(yCellMouse, 4)}</p>
+<div id="info-widgets">
+    <div id="current-users">
+        <i class="ph-bold ph-users-three"></i>
+        {padWithZeros(ui.activeUsers, 2)}
+    </div>
+    <div id="mouse-position">
+        <p>x: {padWithZeros(xCellMouse, 4)}</p>
+        <p>y: {padWithZeros(yCellMouse, 4)}</p>
+    </div>
 </div>
 <Options/>
 {#if user.isLoggedIn}
@@ -59,10 +61,18 @@
         transform: scale(0.96);
     }
 
-    #current-users {
+    #info-widgets {
         position: fixed;
-        bottom: calc(62px + 1rem);
+        bottom: 0.5rem;
         left: 0.5rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    #current-users {
         height: 42px;
         border-radius: 6px;
         background-color: var(--overlay-bg);
@@ -79,9 +89,6 @@
     }
 
     #mouse-position {
-        position: fixed;
-        bottom: 0.5rem;
-        left: 0.5rem;
         border-radius: 6px;
         background-color: var(--overlay-bg);
         padding: 0.5rem;

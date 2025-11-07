@@ -119,7 +119,7 @@
         </div>
 
         <div class="creator-note">
-            <p>Pixland is a one-person passion project, built in my free time for the love of pixel art and online communities. It's made by a creator, for creators, with no corporate agenda—just a fun place to draw.</p>
+            <p>Pixland is a one-person passion project, built in my free time for the love of pixel art and online communities. It's made by me, for anyone who enjoys creating, exploring, or just having fun placing pixels.</p>
         </div>
     </div>
 
