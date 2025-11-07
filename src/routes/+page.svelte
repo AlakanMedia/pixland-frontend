@@ -161,6 +161,55 @@
         requestAnimationFrame(renderLoop);
     }
 
+    /**
+     * Vuelve a dibujar todos los canvases de chunks cacheados
+     * usando la paleta de colores actualizada.
+     */
+    function regenerateChunkCache() {
+        // Itera sobre todos los chunks que ya han sido cargados
+        for (const chunkString of loadedChunks) {
+            const chunkImage = chunkCanvasCache.get(chunkString);
+
+            // Si por alguna razón no existe el canvas, sáltalo
+            if (!chunkImage) continue;
+
+            const [chunkX, chunkY] = chunkString.split(',').map(Number);
+            const chunkCtx = chunkImage.getContext('2d');
+
+            // 1. Limpia el canvas del chunk con el NUEVO color de fondo
+            chunkCtx.fillStyle = colorPalette.c01;
+            chunkCtx.fillRect(0, 0, chunkSize, chunkSize);
+
+            // 2. Calcula el rango de celdas para este chunk
+            const startX = chunkX * chunkSize;
+            const startY = chunkY * chunkSize;
+            const endX = startX + chunkSize - 1;
+            const endY = startY + chunkSize - 1;
+
+            // 3. Itera sobre cada celda que PERTENECE a este chunk
+            for (let x = startX; x <= endX; x++) {
+                for (let y = startY; y <= endY; y++) {
+                    
+                    // 4. Obtiene la clave de color (ej: "c05") del caché de datos
+                    const mapKey = generateDynamicKey(x, y, maxNumberCells - 1);
+                    const cellColorKey = cellCache.get(mapKey);
+
+                    // 5. Si la celda tiene un color (y no es el de fondo)...
+                    if (cellColorKey && cellColorKey !== "c01") {
+                        // ... obtén el NUEVO valor HEX de la paleta...
+                        const newHexColor = colorPalette[cellColorKey];
+                        
+                        // ... y píntalo en el canvas del chunk
+                        if (newHexColor) {
+                            chunkCtx.fillStyle = newHexColor;
+                            chunkCtx.fillRect(x % chunkSize, y % chunkSize, 1, 1);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     async function fetchChunk() {
         const xCellUpperLeft = Math.floor(canvasInfo.cameraOffsetX / effectiveCellSize);
         const yCellUpperLeft = Math.floor(canvasInfo.cameraOffsetY / effectiveCellSize);
@@ -773,6 +822,8 @@ function handleOnMouseUp(event) {
 
     $effect(() => {
         if (drawingState.needsUpdate) {
+            regenerateChunkCache();
+
             needsRedraw = true;
             drawingState.needsUpdate = false;
         }
