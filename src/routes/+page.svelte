@@ -249,57 +249,57 @@
         contextCanvas.fillStyle = colorPalette["c01"];
         contextCanvas.fillRect(0, 0, canvasElement.width, canvasElement.height);
 
-        // 1. Calcula los chunks visibles (lógica similar a fetchChunk)
-        const xCellUpperLeft = Math.floor(canvasInfo.cameraOffsetX / effectiveCellSize);
-        const yCellUpperLeft = Math.floor(canvasInfo.cameraOffsetY / effectiveCellSize);
-        const xCellBottomRight = Math.floor((canvasInfo.cameraOffsetX + canvasElement.width) / effectiveCellSize);
-        const yCellBottomRight = Math.floor((canvasInfo.cameraOffsetY + canvasElement.height) / effectiveCellSize);
-    
-        const xChunkUpperLeft = Math.floor(xCellUpperLeft / chunkSize);
-        const yChunkUpperLeft = Math.floor(yCellUpperLeft / chunkSize);
-        const xChunkBottomRight = Math.floor(xCellBottomRight / chunkSize);
-        const yChunkBottomRight = Math.floor(yCellBottomRight / chunkSize);
+        // 1. Calcula las celdas visibles (igual que hacías antes)
+        //    Usamos los nombres de variable originales: startCellX, endCellX, etc.
+        const startCellX = Math.floor(canvasInfo.cameraOffsetX / effectiveCellSize);
+        const startCellY = Math.floor(canvasInfo.cameraOffsetY / effectiveCellSize);
+        const endCellX = Math.min(Math.floor((canvasInfo.cameraOffsetX + canvasElement.width) / effectiveCellSize), maxNumberCells - 1);
+        const endCellY = Math.min(Math.floor((canvasInfo.cameraOffsetY + canvasElement.height) / effectiveCellSize), maxNumberCells - 1);
 
-        // 2. Itera sobre los CHUNKS visibles, no las celdas
+        // 2. Calcula los chunks visibles (basado en las celdas de arriba)
+        const xChunkUpperLeft = Math.floor(startCellX / chunkSize);
+        const yChunkUpperLeft = Math.floor(startCellY / chunkSize);
+        const xChunkBottomRight = Math.floor(endCellX / chunkSize);
+        const yChunkBottomRight = Math.floor(endCellY / chunkSize);
+
+        // 3. Itera sobre los CHUNKS visibles (tu nueva lógica)
         for (let i = xChunkUpperLeft; i <= xChunkBottomRight; i++) {
             for (let j = yChunkUpperLeft; j <= yChunkBottomRight; j++) {
 
                 const chunkString = `${i},${j}`;
 
-                // 3. Calcula la posición y tamaño del chunk en la pantalla
+                // Calcula la posición y tamaño del chunk en la pantalla
                 const chunkWorldX = i * chunkSize * effectiveCellSize;
                 const chunkWorldY = j * chunkSize * effectiveCellSize;
 
                 const chunkScreenX = Math.round(chunkWorldX - canvasInfo.cameraOffsetX);
                 const chunkScreenY = Math.round(chunkWorldY - canvasInfo.cameraOffsetY);
 
-                // El tamaño del chunk en pantalla (escalado)
                 const chunkScreenSize = Math.ceil(chunkSize * effectiveCellSize);
 
-                // 4. Dibuja el estado del chunk
+                // Dibuja el estado del chunk
                 if (loadingChunks.has(chunkString)) {
-                    // Estado "Cargando" (cuadrado negro)
                     contextCanvas.fillStyle = colorPalette["c02"];
                     contextCanvas.fillRect(chunkScreenX, chunkScreenY, chunkScreenSize, chunkScreenSize);
                 } 
                 else if (loadedChunks.has(chunkString)) {
-                    // Estado "Cargado" -> Dibuja la IMAGEN pre-renderizada
                     const chunkImage = chunkCanvasCache.get(chunkString);
                     if (chunkImage) {
                         contextCanvas.drawImage(
-                            chunkImage,     // La imagen de 128x128 que guardamos
-                            chunkScreenX,   // Dónde dibujarla (X en pantalla)
-                            chunkScreenY,   // Dónde dibujarla (Y en pantalla)
+                            chunkImage,     // La imagen de 128x128
+                            chunkScreenX,   // Dónde dibujarla (X)
+                            chunkScreenY,   // Dónde dibujarla (Y)
                             chunkScreenSize, // Ancho escalado
                             chunkScreenSize  // Alto escalado
                         );
                     }
                 }
-                // Si no está en loading ni loaded, no se dibuja nada (fondo)
             }
         }
 
-        // Dibujamos el Grid si es necesario
+        // 4. Dibujamos el Grid (¡Ahora SÍ funciona!)
+        //    Este código ya no dará error porque 'startCellX', 'endCellX', etc.
+        //    fueron definidos al principio de la función.
         if (drawingState.showGrid && canvasInfo.cellScale >= 1.375) {
             contextCanvas.strokeStyle = "rgba(128, 128, 128, 0.4)";
             contextCanvas.lineWidth = 2;
@@ -741,23 +741,26 @@ function handleOnMouseUp(event) {
             const wsData = JSON.parse(event.data);
 
             if (wsData.type === "update_pixel") {
+                // Saca las variables de wsData.data para usarlas en todo este bloque
+                const { x, y, color } = wsData.data;
+                
                 cellCache.set(
-                    generateDynamicKey(wsData.data.x, wsData.data.y, maxNumberCells - 1),
-                    wsData.data.color
+                    generateDynamicKey(x, y, maxNumberCells - 1),
+                    color // Usar la variable 'color'
                 );
 
                 // Actualiza el canvas del chunk también
-                const chunkX = Math.floor(x / chunkSize);
-                const chunkY = Math.floor(y / chunkSize);
+                const chunkX = Math.floor(x / chunkSize); // Usar la variable 'x'
+                const chunkY = Math.floor(y / chunkSize); // Usar la variable 'y'
                 const chunkString = `${chunkX},${chunkY}`;
                 const chunkImage = chunkCanvasCache.get(chunkString);
 
                 if (chunkImage) {
                     const chunkCtx = chunkImage.getContext('2d');
-                    const localX = x % chunkSize;
-                    const localY = y % chunkSize;
+                    const localX = x % chunkSize; // Usar la variable 'x'
+                    const localY = y % chunkSize; // Usar la variable 'y'
                     
-                    chunkCtx.fillStyle = colorPalette[color];
+                    chunkCtx.fillStyle = colorPalette[color]; // Usar la variable 'color'
                     chunkCtx.fillRect(localX, localY, 1, 1);
                 }
 
@@ -799,6 +802,8 @@ function handleOnMouseUp(event) {
 <svelte:window onresize={() => {
         canvasElement.width = window.innerWidth;
         canvasElement.height = window.innerHeight;
+
+        contextCanvas.imageSmoothingEnabled = false;
 
         needsRedraw = true;
     }}
