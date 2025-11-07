@@ -21,6 +21,7 @@
     const cellCache = new Map(); // Para guardar el valor de las celdas cacheadas
     const loadedChunks = new Set(); // Para saber si un chunk ya fue cargado
     const loadingChunks = new Set(); // Para los chunks que ya han sido guardados
+    const chunkCanvasCache = new Map(); // Para guardar los chunks pre-renderizados
 
     // Variables para el manejo del zoom y la configuración del mundo
     const maxNumberCells = 2048;
@@ -173,25 +174,32 @@
 
         const promises = [];
 
-        // 1. Identifica todos los chunks que necesitan ser cargados
         for (let i = xChunkUpperLeft; i <= xChunkBottomRight; i++) {
             for (let j = yChunkUpperLeft; j <= yChunkBottomRight; j++) {
                 const chunkString = `${i},${j}`;
 
-                // Si ya está cargado o se está cargando, sáltalo.
                 if (loadedChunks.has(chunkString) || loadingChunks.has(chunkString)) {
                     continue;
                 }
 
-                // 2. Marca el chunk como "cargando"
                 loadingChunks.add(chunkString);
 
-                // 3. Prepara la promesa para obtener los datos del chunk
                 const promise = (async () => {
                     const topLeft = { x: i * chunkSize, y: j * chunkSize };
                     const bottomRight = { x: topLeft.x + chunkSize - 1, y: topLeft.y + chunkSize - 1 };
 
                     const cellBox = await getCellsBox([topLeft.x, topLeft.y], [bottomRight.x, bottomRight.y]);
+
+                    // 1. Crear el canvas para este chunk
+                    const chunkCanvas = document.createElement("canvas");
+                    chunkCanvas.width = chunkSize;  // 128px
+                    chunkCanvas.height = chunkSize; // 128px
+                    const chunkCtx = chunkCanvas.getContext("2d");
+                    chunkCtx.imageSmoothingEnabled = false;
+
+                    // Opcional: Rellenar con color de fondo por si faltan celdas
+                    chunkCtx.fillStyle = colorPalette["c01"]; 
+                    chunkCtx.fillRect(0, 0, chunkSize, chunkSize);
 
                     if (cellBox.state === MESSAGES_TYPES.SUCCESS) {
                         const cells = cellBox.data.info;
@@ -203,12 +211,21 @@
                                 maxNumberCells - 1
                             );
                             cellCache.set(mapKey, cellInfo.color);
+
+                            // Dibujar en el canvas del chunk
+                            const localX = cellInfo.location.x % chunkSize;
+                            const localY = cellInfo.location.y % chunkSize;
+                            chunkCtx.fillStyle = colorPalette[cellInfo.color];
+                            chunkCtx.fillRect(localX, localY, 1, 1);
                         }
                     }
 
-                    // 4. Una vez terminada la petición, actualiza los sets
+                    // 2. Guardar el CANVAS pre-renderizado en el nuevo caché
+                    chunkCanvasCache.set(chunkString, chunkCanvas);
+
+                    // 3. Actualizar los sets
                     loadingChunks.delete(chunkString);
-                    loadedChunks.add(chunkString); // Ahora sí se marca como cargado
+                    loadedChunks.add(chunkString);
                 })();
 
                 promises.push(promise);
@@ -232,34 +249,53 @@
         contextCanvas.fillStyle = colorPalette["c01"];
         contextCanvas.fillRect(0, 0, canvasElement.width, canvasElement.height);
 
-        const startCellX = Math.floor(canvasInfo.cameraOffsetX / effectiveCellSize);
-        const startCellY = Math.floor(canvasInfo.cameraOffsetY / effectiveCellSize);
-        const endCellX = Math.min(Math.floor((canvasInfo.cameraOffsetX + canvasElement.width) / effectiveCellSize), maxNumberCells - 1);
-        const endCellY = Math.min(Math.floor((canvasInfo.cameraOffsetY + canvasElement.height) / effectiveCellSize), maxNumberCells - 1);
+        // 1. Calcula los chunks visibles (lógica similar a fetchChunk)
+        const xCellUpperLeft = Math.floor(canvasInfo.cameraOffsetX / effectiveCellSize);
+        const yCellUpperLeft = Math.floor(canvasInfo.cameraOffsetY / effectiveCellSize);
+        const xCellBottomRight = Math.floor((canvasInfo.cameraOffsetX + canvasElement.width) / effectiveCellSize);
+        const yCellBottomRight = Math.floor((canvasInfo.cameraOffsetY + canvasElement.height) / effectiveCellSize);
+    
+        const xChunkUpperLeft = Math.floor(xCellUpperLeft / chunkSize);
+        const yChunkUpperLeft = Math.floor(yCellUpperLeft / chunkSize);
+        const xChunkBottomRight = Math.floor(xCellBottomRight / chunkSize);
+        const yChunkBottomRight = Math.floor(yCellBottomRight / chunkSize);
 
-        for (let i = startCellX; i <= endCellX; i++) {
-            for (let j = startCellY; j <= endCellY; j++) {
-                const worldX = i * effectiveCellSize;
-                const worldY = j * effectiveCellSize;
-                const screenX = Math.round(worldX - canvasInfo.cameraOffsetX);
-                const screenY = Math.round(worldY - canvasInfo.cameraOffsetY);
+        // 2. Itera sobre los CHUNKS visibles, no las celdas
+        for (let i = xChunkUpperLeft; i <= xChunkBottomRight; i++) {
+            for (let j = yChunkUpperLeft; j <= yChunkBottomRight; j++) {
 
-                // Determinar a qué chunk pertenece la celda actual
-                const chunkX = Math.floor(i / chunkSize);
-                const chunkY = Math.floor(j / chunkSize);
-                const chunkString = `${chunkX},${chunkY}`;
+                const chunkString = `${i},${j}`;
 
+                // 3. Calcula la posición y tamaño del chunk en la pantalla
+                const chunkWorldX = i * chunkSize * effectiveCellSize;
+                const chunkWorldY = j * chunkSize * effectiveCellSize;
+
+                const chunkScreenX = Math.round(chunkWorldX - canvasInfo.cameraOffsetX);
+                const chunkScreenY = Math.round(chunkWorldY - canvasInfo.cameraOffsetY);
+
+                // El tamaño del chunk en pantalla (escalado)
+                const chunkScreenSize = Math.ceil(chunkSize * effectiveCellSize);
+
+                // 4. Dibuja el estado del chunk
                 if (loadingChunks.has(chunkString)) {
-                    contextCanvas.fillStyle = colorPalette["c02"]
-                    contextCanvas.fillRect(screenX, screenY, effectiveCellSize, effectiveCellSize);
-                } else {
-                    const cellColor = cellCache.get(generateDynamicKey(i, j, maxNumberCells - 1));
-
-                    if (cellColor) {
-                        contextCanvas.fillStyle = colorPalette[cellColor]
-                        contextCanvas.fillRect(screenX, screenY, effectiveCellSize, effectiveCellSize);
+                    // Estado "Cargando" (cuadrado negro)
+                    contextCanvas.fillStyle = colorPalette["c02"];
+                    contextCanvas.fillRect(chunkScreenX, chunkScreenY, chunkScreenSize, chunkScreenSize);
+                } 
+                else if (loadedChunks.has(chunkString)) {
+                    // Estado "Cargado" -> Dibuja la IMAGEN pre-renderizada
+                    const chunkImage = chunkCanvasCache.get(chunkString);
+                    if (chunkImage) {
+                        contextCanvas.drawImage(
+                            chunkImage,     // La imagen de 128x128 que guardamos
+                            chunkScreenX,   // Dónde dibujarla (X en pantalla)
+                            chunkScreenY,   // Dónde dibujarla (Y en pantalla)
+                            chunkScreenSize, // Ancho escalado
+                            chunkScreenSize  // Alto escalado
+                        );
                     }
                 }
+                // Si no está en loading ni loaded, no se dibuja nada (fondo)
             }
         }
 
@@ -323,6 +359,21 @@
         }
 
         cellCache.set(dynamicKey, drawingState.selectedColor);
+
+        // Actualiza el canvas del chunk también
+        const chunkX = Math.floor(coordinateX / chunkSize);
+        const chunkY = Math.floor(coordinateY / chunkSize);
+        const chunkString = `${chunkX},${chunkY}`;
+        const chunkImage = chunkCanvasCache.get(chunkString);
+
+        if (chunkImage) {
+            const chunkCtx = chunkImage.getContext('2d');
+            const localX = coordinateX % chunkSize;
+            const localY = coordinateY % chunkSize;
+
+            chunkCtx.fillStyle = colorPalette[drawingState.selectedColor];
+            chunkCtx.fillRect(localX, localY, 1, 1);
+        }
 
         needsRedraw = true;
 
@@ -694,6 +745,22 @@ function handleOnMouseUp(event) {
                     generateDynamicKey(wsData.data.x, wsData.data.y, maxNumberCells - 1),
                     wsData.data.color
                 );
+
+                // Actualiza el canvas del chunk también
+                const chunkX = Math.floor(x / chunkSize);
+                const chunkY = Math.floor(y / chunkSize);
+                const chunkString = `${chunkX},${chunkY}`;
+                const chunkImage = chunkCanvasCache.get(chunkString);
+
+                if (chunkImage) {
+                    const chunkCtx = chunkImage.getContext('2d');
+                    const localX = x % chunkSize;
+                    const localY = y % chunkSize;
+                    
+                    chunkCtx.fillStyle = colorPalette[color];
+                    chunkCtx.fillRect(localX, localY, 1, 1);
+                }
+
                 needsRedraw = true;
             } else if (wsData.type === "update_active_users") {
                 ui.activeUsers = wsData.data.active_users;
