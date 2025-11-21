@@ -47,7 +47,6 @@ export function generateDynamicKey(x, y, maxValue) {
 
   // 3. Validar que x e y están dentro del rango.
   if (x < 0 || x > maxValue || y < 0 || y > maxValue) {
-    console.log(x, y);
     throw new Error(`Both numbers must be in the range of 0 to ${maxValue}.`);
   }
 

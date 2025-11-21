@@ -167,7 +167,6 @@
                         updateCanvas = true;
                     }
                     else {
-                        console.log("Error loading palette, default palette is being used");
                         userInfo.settings.palette = "default";
                     }
                 }

@@ -1,55 +1,59 @@
 <script>
     import { ui, drawingState, user } from "../../shared.svelte.js";
-	import { getPalette, updateUserConfigurations } from "../../pixlandApi.js";
-    import { changeColorSchema, showAlert, MESSAGES_TYPES } from "$lib/utils.js";
+	import { updateUserConfigurations } from "../../pixlandApi.js";
+    import { showAlert, MESSAGES_TYPES } from "$lib/utils.js";
 
-    let palette = $state(drawingState.palette);
     let showGrid = $state(drawingState.showGrid);
     let playSound = $state(drawingState.playSound);
     let showMouseChaser = $state(drawingState.showMouseChaser);
-    let PALETTES = $state(["default", "reversed", "solarized", "dracula", "gruvbox"]);
 
     async function saveConfiguration() {
+        // Detectar qué configuraciones han cambiado
+        const changes = {
+            showGrid: showGrid !== drawingState.showGrid,
+            playSound: playSound !== drawingState.playSound,
+            showMouseChaser: showMouseChaser !== drawingState.showMouseChaser
+        };
+
+        // Si no hay cambios, solo cerrar el modal
+        const hasChanges = Object.values(changes).some(changed => changed);
+        if (!hasChanges) {
+            ui.settingsModalIsOpen = false;
+            return;
+        }
+
+        // Si el usuario está logueado, guardar en el servidor
         if (user.isLoggedIn) {
-            if (showGrid !== drawingState.showGrid || playSound !== drawingState.playSound || showMouseChaser !== drawingState.showMouseChaser || palette !== drawingState.palette) {
-                let response = await updateUserConfigurations({
-                    settings: {
-                        show_grid: showGrid,
-                        play_sound: playSound,
-                        palette: palette,
-                        show_mouse_chaser: showMouseChaser,
-                    }
-                });
-
-                if (response.state !== MESSAGES_TYPES.SUCCESS) {
-                    showAlert(MESSAGES_TYPES.ERROR, "Error Updating Settings", "An unexpected error occurred while saving your changes. Please try again later.");
-                    return;
+            const response = await updateUserConfigurations({
+                settings: {
+                    show_grid: showGrid,
+                    play_sound: playSound,
+                    show_mouse_chaser: showMouseChaser,
                 }
+            });
 
-                if (palette !== drawingState.palette) {
-                    response = await getPalette(palette);
-
-                    if (response.state !== MESSAGES_TYPES.SUCCESS) {
-                        showAlert(MESSAGES_TYPES.ERROR, "Error Updating Color Palette", "An unexpected error occurred while trying to update the color palette. Please try again later.");
-                        return;
-                    }
-
-                    changeColorSchema(response.data.info.colors);
-                }
-
-                drawingState.showGrid = showGrid;
-                drawingState.playSound = playSound;
-                drawingState.palette = palette;
-                drawingState.showMouseChaser = showMouseChaser;
-                drawingState.needsUpdate = true;
+            if (response.state !== MESSAGES_TYPES.SUCCESS) {
+                showAlert(
+                    MESSAGES_TYPES.ERROR, 
+                    "Error Updating Settings", 
+                    "An unexpected error occurred while saving your changes. Please try again later."
+                );
+                return;
             }
         }
-        else {
-            if (showGrid !== drawingState.showGrid || showMouseChaser !== drawingState.showMouseChaser) {
-                drawingState.showGrid = showGrid;
-                drawingState.showMouseChaser = showMouseChaser;
-                drawingState.needsUpdate = true;
-            }
+
+        // Actualizar el estado local (tanto para usuarios logueados como no logueados)
+        drawingState.showGrid = showGrid;
+        drawingState.showMouseChaser = showMouseChaser;
+
+        // Solo actualizar playSound si el usuario está logueado
+        if (user.isLoggedIn) {
+            drawingState.playSound = playSound;
+        }
+
+        // needsUpdate solo si cambió showGrid
+        if (changes.showGrid) {
+            drawingState.needsUpdate = true;
         }
 
         ui.settingsModalIsOpen = false;
@@ -93,19 +97,6 @@
                     <input type="checkbox" bind:checked={playSound}>
                     <span class="slider"></span>
                 </label>
-            </div>
-            <div class="display-option">
-                <div class="settings-icon-text">
-                    <i class="ph ph-palette"></i>
-                    <h4>change palette</h4>
-                </div>
-                <select id="select-theme" bind:value={palette}>
-                 	{#each PALETTES as plt}
-                 		<option value={plt}>
-                 			{plt}
-                 		</option>
-                    {/each}
-                </select>
             </div>
         {/if}
     </div>
@@ -218,10 +209,6 @@
     #restore-button:hover {
         background-color: var(--action-secondary-hover);
         box-shadow: var(--shadow-md);
-    }
-
-    #select-theme {
-        cursor: pointer;
     }
 
     /* ========== Switch Button - From Uiverse.io by namecho ========== */
