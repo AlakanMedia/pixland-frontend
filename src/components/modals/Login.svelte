@@ -158,7 +158,7 @@
 
                 const userInfo = response.data.info;
 
-                if (userInfo.settings.palette !== "default") {
+                if (userInfo.settings.palette) {
                     response = await getPalette(userInfo.settings.palette);
 
                     if (response.state === MESSAGES_TYPES.SUCCESS) {
@@ -167,7 +167,7 @@
                         updateCanvas = true;
                     }
                     else {
-                        userInfo.settings.palette = "default";
+                        userInfo.settings.palette = null;
                     }
                 }
 
@@ -182,7 +182,7 @@
                 }
 
                 drawingState.playSound = userInfo.settings.play_sound;
-                drawingState.palette = userInfo.settings.palette
+                drawingState.palette = userInfo.settings.palette;
 
                 user.id = userInfo.id;
                 user.name = userInfo.username;

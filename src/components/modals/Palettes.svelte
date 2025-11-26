@@ -1,11 +1,12 @@
 <script>
     import { onMount } from "svelte";
+    import { fade } from "svelte/transition";
     import { getPalettesByType, savePalette } from "../../pixlandApi.js";
     import { MESSAGES_TYPES, showAlert } from "$lib/utils.js";
-    import { user } from "../../shared.svelte.js";
+    import { user, drawingState } from "../../shared.svelte.js";
     import PaletteCard from "../PaletteCard.svelte";
 
-    // Constantes de configuración
+    // --- CONFIGURACIÓN Y ESTADO ---
     const STEP = 6;
     const OPTIONS_CONFIG = [
         { id: "mine", label: "Mine" },
@@ -13,64 +14,38 @@
         { id: "default", label: "Default" },
     ];
 
-    // Estado Reactivo (Svelte 5 Runes)
     let optionSelected = $state("mine");
     let fetchingPalettes = $state(true);
     let palettes = $state([]);
     let hasMorePages = $state(false);
     let showAddPaletteSection = $state(false);
+    
+    // Estado del Creador
     let isSavingPalette = $state(false);
     let paletteNameInput = $state("");
     
-    // Estado de paginación independiente por pestaña
-    let paginationState = $state({
-        mine: 0,
-        explore: 0,
-        default: 0
-    });
+    // Estado de Paginación
+    let paginationState = $state({ mine: 0, explore: 0, default: 0 });
 
-    let COLORS = $state([
-        { varName: "c01", varHex: "#000000" },
-        { varName: "c02", varHex: "#111111" },
-        { varName: "c03", varHex: "#222222" },
-        { varName: "c04", varHex: "#333333" },
-        { varName: "c05", varHex: "#444444" },
-        { varName: "c06", varHex: "#555555" },
-        { varName: "c07", varHex: "#666666" },
-        { varName: "c08", varHex: "#777777" },
-        { varName: "c09", varHex: "#888888" },
-        { varName: "c10", varHex: "#999999" },
-        { varName: "c11", varHex: "#AAAAAA" },
-        { varName: "c12", varHex: "#BBBBBB" },
-        { varName: "c13", varHex: "#CCCCCC" },
-        { varName: "c14", varHex: "#DDDDDD" },
-        { varName: "c15", varHex: "#EEEEEE" },
-        { varName: "c16", varHex: "#FFFFFF" },
-    ]);
+    // Colores Iniciales
+    let COLORS = $state(Array.from({ length: 16 }, (_, i) => {
+        const val = Math.floor(i * (255/15)).toString(16).padStart(2, '0');
+        return { varName: `c${(i+1).toString().padStart(2,'0')}`, varHex: `#${val}${val}${val}` };
+    }));
 
-    onMount(async () => {
-        await loadPalettes();
-    });
+    // --- LÓGICA ---
+    onMount(async () => await loadPalettes());
 
     async function loadPalettes(showLoader = true) {
-        if (showLoader) fetchingPalettes = true; // Solo mostramos spinner si se pide
-
+        if (showLoader) fetchingPalettes = true;
         const currentPage = paginationState[optionSelected];
-        const skip = STEP * currentPage;
-
+        
         try {
-            const data = await getPalettesByType(optionSelected, skip);
-
-            if (data && data.data && data.data.info) {
-                hasMorePages = data.data.info.has_more;
-                palettes = data.data.info.palettes || [];
-            } else {
-                palettes = [];
-                hasMorePages = false;
-            }
+            const data = await getPalettesByType(optionSelected, STEP * currentPage);
+            hasMorePages = data?.data?.info?.has_more ?? false;
+            palettes = data?.data?.info?.palettes ?? [];
         } catch (error) {
-            console.error("Error fetching palettes:", error);
-            // Solo mostramos alerta si era una carga explicita, para no molestar en recargas silenciosas
+            console.error(error);
             if (showLoader) showAlert(MESSAGES_TYPES.ERROR, "Error", "Failed to load palettes.");
             palettes = [];
         } finally {
@@ -79,286 +54,230 @@
     }
 
     async function changeTab(id) {
-        if (optionSelected === id) return; // Evitar recarga si es la misma pestaña
+        if (optionSelected === id) return;
         optionSelected = id;
         await loadPalettes();
     }
 
     async function changePage(direction) {
-        const currentPage = paginationState[optionSelected];
-        
-        // Validaciones de seguridad
-        if (direction === -1 && currentPage <= 0) return;
-        if (direction === 1 && !hasMorePages) return;
-
-        // Actualizar el estado de paginación
+        const current = paginationState[optionSelected];
+        if ((direction === -1 && current <= 0) || (direction === 1 && !hasMorePages)) return;
         paginationState[optionSelected] += direction;
-        
         await loadPalettes();
     }
 
-    function getContrastColor(hex) {
-        const r = parseInt(hex.substr(1, 2), 16);
-        const g = parseInt(hex.substr(3, 2), 16);
-        const b = parseInt(hex.substr(5, 2), 16);
-
-        return (((r * 299) + (g * 587) + (b * 114)) / 1000) >= 128 ? "#000000" : "#FFFFFF";
-    }
+    // Utilidades de color
+    const getContrast = (hex) => {
+        const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+        return ((r * 299) + (g * 587) + (b * 114)) / 1000 >= 128 ? "#000" : "#FFF";
+    };
 
     function generateRandomPalette() {
-        function getRandomHex() {
-            return '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
-        }
-
-        for (let i = 0; i < COLORS.length; i++) {
-            COLORS[i].varHex = getRandomHex();
-        }
+        COLORS.forEach(c => c.varHex = '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0'));
     }
 
     async function handleSave() {
-        const paletteNameToSend = paletteNameInput.trim();
+        const name = paletteNameInput.trim();
+        if (!name) return;
 
-        if (!paletteNameToSend) return;
+        const res = await savePalette({ name, colors: COLORS.map(p => p.varHex), creator: user.name });
 
-        const response = await savePalette({
-            name: paletteNameToSend,
-            colors: COLORS.map(palette => palette.varHex),
-            creator: user.name,
-        })
-
-        if (response.state !== MESSAGES_TYPES.SUCCESS) {
-            const data = response.data;
-
-            if (data && data.code === 409) {
-                showAlert(MESSAGES_TYPES.ERROR, "Palette Name Already Exists", `A palette with name '${paletteNameToSend}' is already saved. Please choose a different name and try again.`);
-            }
-            else {
-                showAlert(MESSAGES_TYPES.ERROR, "Failed to Save Color Palette", "Something went wrong while saving your color palette. Please try again or check your connection.");
-            }
-
+        if (res.state !== MESSAGES_TYPES.SUCCESS) {
+            const isConflict = res.data?.code === 409;
+            showAlert(MESSAGES_TYPES.ERROR, isConflict ? "Name Exists" : "Error", isConflict ? "Choose another name." : "Failed to save.");
             return;
         }
 
-        const paletteInfo = response.data.info.palette;
-
-        // Optimización: Solo agregamos a la lista si estamos en la pestaña "mine" y en la página 0
-        // para que el usuario vea su creación inmediatamente.
-        if (optionSelected === 'mine' && paginationState.mine === 0) {
-            palettes.push(paletteInfo);
-        }
-
+        if (optionSelected === 'mine' && paginationState.mine === 0) palettes.push(res.data.info.palette);
+        
         isSavingPalette = false;
         paletteNameInput = "";
-
-        showAlert(MESSAGES_TYPES.SUCCESS, "Color Palette Saved", "Your color palette has been successfully saved and is now ready to use.");
+        showAlert(MESSAGES_TYPES.SUCCESS, "Saved", "Palette saved successfully.");
     }
 
-    async function removePaletteFromList(idToDelete) {
-        // 1. Optimistic UI: Borrado visual inmediato
-        if (palettes) {
-            palettes = palettes.filter(p => p.id !== idToDelete);
-        }
+    async function removePaletteFromList(id) {
+        palettes = palettes.filter(p => p.id !== id);
+        if (palettes.length === 0 && paginationState[optionSelected] > 0) changePage(-1);
+        else if (palettes.length < STEP) await loadPalettes(false); // Rellenar hueco
+    }
 
-        // 2. Lógica de Paginación Post-Borrado
-        if (palettes.length === 0 && paginationState[optionSelected] > 0) {
-            // CASO A: Si borré el último elemento de la página y no es la página 0,
-            // retrocedemos automáticamente a la página anterior.
-            changePage(-1);
-        } else {
-            // CASO B: Quedó un hueco (ej: hay 5 items en vez de 6).
-            // Hacemos una recarga silenciosa (showLoader = false) para traer
-            // el elemento que se "corrió" desde la siguiente página.
-            await loadPalettes(false);
-        }
+    function toggleSaveMode() {
+        isSavingPalette = !isSavingPalette;
     }
 </script>
 
-<div id="palettes">
-    <div id="palettes-header">
-        <i class="ph ph-palette"></i>
-        <h2>Palettes</h2>
+{#snippet loader()}
+    <div class="center-content full-height">
+        <span class="loader"></span>
     </div>
+{/snippet}
 
-    <nav id="options-container">
-        {#each OPTIONS_CONFIG as { id, label }}
-            <button
-                class={["option-button", optionSelected === id ? "option-selected" : ""]}
-                onclick={(e) => {
-                    e.stopPropagation();
-                    changeTab(id);
-                }}
-            >
-                {label}
-            </button>
-        {/each}
-    </nav>
-
-    {#if fetchingPalettes}
-        <div id="loader-container">
-            <span class="loader"></span>
-        </div>
-    {:else if showAddPaletteSection}
-        <div id="palette-creator">
-            <aside class="creator-sidebar">
-                <button
-                    class="action-button"
-                    title="Mix palette"
-                    aria-label="Mix palette"
-                    onclick={(e) => {
-                        e.stopPropagation();
-                        generateRandomPalette();
-                    }}
-                >
-                    <i class="ph-bold ph-shuffle-simple"></i>
-                </button>
-                <div class="save-action-wrapper">
-                    <button
-                        class="action-button {isSavingPalette ? 'active' : ''}"
-                        title="Save palette"
-                        aria-label="Save palette"
-                        onclick={(e) => {
-                            e.stopPropagation();
-                            isSavingPalette = !isSavingPalette;
-                            if(isSavingPalette) setTimeout(() => document.getElementById('name-input')?.focus(), 50);
-                        }}
-                    >
-                        <i class="ph-bold ph-floppy-disk"></i>
-                    </button>
-                
-                    {#if isSavingPalette}
-                        <div class="floating-input-container">
-                            <input 
-                                id="name-input"
-                                type="text" 
-                                placeholder="Name..." 
-                                bind:value={paletteNameInput}
-                                onkeydown={async(e) => {
-                                    if (e.key !== "Enter") return;
-                                    await handleSave();
-                                }}
-                                onclick={(e) => e.stopPropagation()} 
-                            />
-                            <button 
-                                class="confirm-save-btn" 
-                                title="Confirm saved"
-                                aria-label="Confirm saved"
-                                onclick={async (e) => {
-                                    e.stopPropagation();
-                                    await handleSave();
-                                }}
-                            >
-                                <i class="ph-bold ph-check"></i>
-                            </button>
-                        </div>
-                    {/if}
-                </div>
-                <button
-                    class="action-button"
-                    title="Copy CSS"
-                    aria-label="Copy CSS"
-                >
-                    <i class="ph-bold ph-file-css"></i>
-                </button>
-                <button
-                    class="action-button"
-                    title="Copy JSON"
-                    aria-label="Copy JSON"
-                >
-                    <i class="ph-bold ph-brackets-curly"></i>
-                </button>
-                <button
-                    class="action-button"
-                    title="Close"
-                    aria-label="Close the menu to create a palette"
-                    onclick={(e) => {
-                        e.stopPropagation();
-                        showAddPaletteSection = false;
-                    }}
-                >
-                    <i class="ph-bold ph-x"></i>
-                </button>
-            </aside>
-
-            <div id="separator"></div>
-
-            <main class="creator-main-content">
-                <div class="creator-palette-grid" id="paletteGrid">
-                    {#each COLORS as color}
-                        <div class="color-slot" style="background-color: {color.varHex};">
-                            <span
-                                class="hex-code"
-                                style="color: {getContrastColor(color.varHex)};"
-                            >
-                                {color.varHex}
-                            </span>
-                            <input
-                                class="color-input"
-                                type="color"
-                                bind:value={color.varHex}
-                            />
-                        </div> 
-                    {/each}
-                </div>
-            </main>
-        </div>
-    {:else}
-        {#if Array.isArray(palettes) && palettes.length > 0}
+{#snippet navControls()}
+    {#if !fetchingPalettes && !showAddPaletteSection}
+        <div id="nav-buttons">
             <div id="pagination">
                 <button
-                    class="pagination-button"
-                    aria-label="Previous"
+                    class="icon-btn page-btn"
                     disabled={paginationState[optionSelected] === 0}
                     onclick={() => changePage(-1)}
+                    title="Previous page"
+                    aria-label="Previous page"
                 >
                     <i class="ph-bold ph-caret-left"></i>
                 </button>
-                
                 <button
-                    class="pagination-button"
-                    aria-label="Next"
+                    class="icon-btn page-btn"
                     disabled={!hasMorePages}
                     onclick={() => changePage(1)}
+                    title="Next page"
+                    aria-label="Next page"
                 >
                     <i class="ph-bold ph-caret-right"></i>
                 </button>
             </div>
-            <div id="palette-card-container">
-                {#each palettes as {id, creator, name, likes, colors}}
-                    <PaletteCard
-                        paletteId={id}
-                        creatorName={creator}
-                        paletteName={name}
-                        numLikes={likes}
-                        paletteColors={colors}
-                        paletteType={optionSelected}
-                        onDelete={removePaletteFromList}
-                    />
-                {/each}
-            </div>
-        {:else}
-            <div style="text-align:center; padding: 20px; opacity: 0.7;">
-                <p>No palettes found.</p>
-            </div>
-        {/if}
-    {/if}
 
-    {#if optionSelected === "mine" && !showAddPaletteSection && !fetchingPalettes}
-        <button
-            id="add-palette-button"
-            class="action-button"
-            aria-label="Add new palette"
-            onclick={(e) => {
-                e.preventDefault();
-                showAddPaletteSection = true;
-            }}
-        >
-            <i class="ph-bold ph-plus"></i>
-        </button>
+            {#if optionSelected === "mine"}
+                <button 
+                    class="icon-btn add-btn" 
+                    onclick={() => showAddPaletteSection = true}
+                    aria-label="Add new palette"
+                >
+                    <i class="ph-bold ph-plus"></i>
+                </button>
+            {/if}
+        </div>
     {/if}
+{/snippet}
+
+{#snippet paletteList()}
+    {#if palettes.length > 0}
+        <div class="grid-layout">
+            {#each palettes as p (p.id)}
+                <PaletteCard 
+                    paletteId={p.id} 
+                    creatorName={p.creator} 
+                    paletteName={p.name} 
+                    numLikes={p.likes} 
+                    paletteColors={p.colors} 
+                    paletteType={optionSelected} 
+                    onDelete={removePaletteFromList} 
+                />
+            {/each}
+        </div>
+    {:else}
+        <div class="center-content full-height opacity-70">
+            <p>No palettes found.</p>
+        </div>
+    {/if}
+{/snippet}
+
+{#snippet creator()}
+    <div id="palette-creator">
+        <aside class="creator-sidebar">
+            <button
+                class="icon-btn"
+                title="Random palette"
+                aria-label="Random palette"
+                onclick={generateRandomPalette}
+            >
+                <i class="ph ph-shuffle-simple"></i>
+            </button>
+            
+            <div class="save-wrapper">
+                <button
+                    class="icon-btn {isSavingPalette ? 'active' : ''}"
+                    title="Save palette"
+                    aria-label="Save palette"
+                    onclick={toggleSaveMode}
+                >
+                    <i class="ph ph-floppy-disk"></i>
+                </button>
+            
+                {#if isSavingPalette}
+                    <div class="floating-input" transition:fade={{ duration: 100 }}>
+                        <input 
+                            type="text" 
+                            placeholder="Name..." 
+                            bind:value={paletteNameInput}
+                            onkeydown={(e) => e.key === "Enter" && handleSave()}
+                        />
+                        <button
+                            class="mini-btn"
+                            aria-label="Send palette"
+                            onclick={handleSave}
+                        >
+                            <i class="ph-bold ph-check"></i>
+                        </button>
+                    </div>
+                {/if}
+            </div>
+
+            <button
+                class="icon-btn close-btn"
+                title="Close"
+                aria-label="Close"
+                onclick={() => showAddPaletteSection = false}
+            >
+                <i class="ph ph-x"></i>
+            </button>
+        </aside>
+
+        <div class="vertical-sep"></div>
+
+        <main class="creator-grid">
+            {#each COLORS as color}
+                <div class="color-slot" style:background-color={color.varHex}>
+                    <span class="hex-code" style:color={getContrast(color.varHex)}>
+                        {color.varHex}
+                    </span>
+                    <input class="color-input" type="color" bind:value={color.varHex} />
+                </div> 
+            {/each}
+        </main>
+    </div>
+{/snippet}
+
+<div id="palettes-container">
+    <div class="badge">
+        <span class="dot"></span> {drawingState.palette}
+    </div>
+
+    <header class="header">
+        <i class="ph ph-palette"></i>
+        <h2>Palettes</h2>
+    </header>
+
+    <nav class="tabs">
+        {#each OPTIONS_CONFIG as opt}
+            <button 
+                class="tab-btn {optionSelected === opt.id ? 'selected' : ''}" 
+                onclick={() => changeTab(opt.id)}
+            >
+                {opt.label}
+            </button>
+        {/each}
+    </nav>
+
+    {@render navControls()}
+
+    <div class="content-area">
+        {#if fetchingPalettes}
+            {@render loader()}
+        {:else if showAddPaletteSection}
+            {@render creator()}
+        {:else}
+            {@render paletteList()}
+        {/if}
+    </div>
 </div>
 
 <style>
-    #palettes {
+    /* Variables locales para facilitar cambios */
+    #palettes-container {
+        --p-width: 830px;
+        --p-height: 518px;
+        --btn-size: 30px;
+        
         position: relative;
         padding: 12px;
         background-color: var(--bg-elevated-1);
@@ -366,254 +285,129 @@
         border: 1px solid var(--border-default);
         border-radius: 6px;
         color: var(--text-primary);
-        width: 974px;
-        height: 536px;
+        width: var(--p-width);
+        height: var(--p-height);
         display: flex;
         flex-direction: column;
         gap: 12px;
     }
 
-    .action-button {
-        width: 30px;
-        height: 30px;
+    /* --- Elementos Comunes --- */
+    .center-content { display: flex; justify-content: center; align-items: center; }
+    .full-height { height: 100%; width: 100%; }
+    .opacity-70 { opacity: 0.7; }
+    
+    /* Botones Icono Genéricos */
+    .icon-btn {
+        width: var(--btn-size);
+        height: var(--btn-size);
         border-radius: 50%;
         border: none;
         padding: 0.25rem;
-    }
-
-    #add-palette-button {
-        position: absolute;
-        bottom: 0.5rem;
-        left: 0.5rem;
-    }
-
-    #palettes-header {
+        cursor: pointer;
         display: flex;
         justify-content: center;
         align-items: center;
-        gap: 0.5rem;
+        background: transparent;
+        color: var(--text-secondary);
+        transition: background 0.2s;
+    }
+    .icon-btn:hover { background-color: var(--hover-overlay); color: var(--text-primary); }
+    .icon-btn.active { background-color: var(--action-primary); color: white; }
+    
+    /* --- Header & Badge --- */
+    .badge {
+        position: absolute;
+        top: 16px; left: 12px;
+        display: flex; align-items: center; gap: 6px;
+        font-size: 0.8rem; font-weight: 600;
+        background-color: var(--bg-elevated-2, rgba(255,255,255,0.05));
+        padding: 4px 10px; border-radius: 20px;
+        border: 1px solid var(--border-default);
+        z-index: 10;
+    }
+    .badge .dot {
+        width: 6px; height: 6px; border-radius: 50%;
+        background-color: var(--accent-primary, #4caf50);
+        box-shadow: 0 0 4px var(--accent-primary);
     }
 
-    #palettes-header > i {
-        font-size: 2rem;
-        color: var(--accent-primary);
-    }
+    .header { display: flex; justify-content: center; align-items: center; gap: 0.5rem; }
+    .header i { font-size: 2rem; color: var(--accent-primary); }
 
-    #options-container {
-        display: flex;
-        justify-content: center;
-        gap: 0.5rem;
-    }
-
-    .option-button {
+    /* --- Tabs --- */
+    .tabs { display: flex; justify-content: center; gap: 0.5rem; }
+    .tab-btn {
         padding: 0.75rem 1.5rem;
         border-radius: 8px;
         background: transparent;
         border: none;
         color: var(--text-secondary);
         cursor: pointer;
-        transition: all 0.2s ease;
-        font-size: 0.875rem;
         font-weight: 500;
-        white-space: nowrap;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 0.5rem;
         flex: 1;
+        transition: all 0.2s;
     }
+    .tab-btn:hover:not(.selected) { background-color: var(--hover-overlay); color: var(--text-primary); }
+    .tab-btn.selected { background-color: var(--action-primary); color: var(--action-primary-text); }
 
-    .option-button:hover:not(.option-selected) {
-        background-color: var(--hover-overlay);
-        color: var(--text-primary);
-    }
+    /* --- Navegación & Paginación --- */
+    #nav-buttons { position: relative; height: 30px; }
+    #pagination { position: absolute; left: 0; display: flex; gap: 2px; }
+    
+    .page-btn { border-radius: 0; background-color: var(--bg-elevated-2); }
+    .page-btn:first-child { border-radius: 50% 0 0 50%; }
+    .page-btn:last-child { border-radius: 0 50% 50% 0; }
+    .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    .option-selected {
-        background-color: var(--action-primary);
-        color: var(--action-primary-text);
-    }
+    .add-btn { position: absolute; right: 0; background-color: var(--bg-elevated-2); }
 
-    #pagination {
-        display: flex;
-        gap: 2px;
-    }
+    /* --- Area de Contenido --- */
+    .content-area { flex: 1; overflow: hidden; position: relative; }
+    .grid-layout { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; }
 
-    #pagination .pagination-button:first-child {
-        border-top-left-radius: 50%;
-        border-bottom-left-radius: 50%;
-    }
-
-    #pagination .pagination-button:last-child {
-        border-top-right-radius: 50%;
-        border-bottom-right-radius: 50%;
-    }
-
-    .pagination-button {
-        padding: 4px;
-        font-size: 1rem;
-        border: none;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-
-    .pagination-button:disabled {
-        cursor: not-allowed;
-        background-color: aqua;
-    }
-
-    #palette-card-container {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr); 
-        gap: 0.75rem;
-    }
-
-    #loader-container {
-        width: 100%;
-        height: 100%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-
-    #palette-creator {
-        width: 100%;
-        height: 100%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 12px;
-    }
-
-    .creator-sidebar {
-        width: var(--sidebar-width);
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        gap: 8px;
-        flex-shrink: 0;
-    }
-
-    .creator-main-content {
-        flex: 1;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .creator-palette-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        grid-template-rows: repeat(4, 1fr);
-        gap: 8px;
-        height: 100%;
-        width: 100%;
+    /* --- Creador --- */
+    #palette-creator { display: flex; width: 100%; height: 100%; gap: 12px; }
+    .creator-sidebar { display: flex; flex-direction: column; justify-content: center; gap: 8px; }
+    .vertical-sep { width: 1px; height: 92%; background-color: var(--border-default, #ccc); margin: auto 0; }
+    
+    .creator-grid { 
+        flex: 1; 
+        display: grid; 
+        grid-template-columns: repeat(4, 1fr); 
+        grid-template-rows: repeat(4, 1fr); 
+        gap: 8px; 
     }
 
     .color-slot {
-        position: relative;
-        border-radius: 8px;
+        position: relative; border-radius: 8px; overflow: hidden;
+        display: flex; justify-content: center; align-items: center;
         cursor: pointer;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        overflow: hidden;
-        min-height: 0; /* Importante para Grid + Flex */
     }
-
-    .color-input {
-        position: absolute;
-        top: 0; left: 0; width: 100%; height: 100%;
-        opacity: 0; cursor: pointer;
-    }
-
+    .color-input { position: absolute; inset: 0; opacity: 0; cursor: pointer; height: 100%; width: 100%; }
     .hex-code {
-        font-family: monospace;
-        font-size: 0.75rem; /* Texto más pequeño */
-        font-weight: bold;
-        text-transform: uppercase;
-        pointer-events: none;
-        background: rgba(255,255,255,0.2);
-        padding: 2px 6px;
-        border-radius: 4px;
-        backdrop-filter: blur(1px);
-        opacity: 0.9;
+        font-family: monospace; font-size: 0.75rem; font-weight: bold;
+        background: rgba(255,255,255,0.2); backdrop-filter: blur(2px);
+        padding: 2px 6px; border-radius: 4px; pointer-events: none;
     }
 
-    #separator {
-        width: 1px;
-        height: 92%;
-        background-color: #FFFFFF;
-    }
-
-    .save-action-wrapper {
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    
-    /* Estilo para cuando el botón está activo */
-    .action-button.active {
-        background-color: var(--action-primary, #007bff); /* O tu color de acento */
-        color: white;
-    }
-    
-    .floating-input-container {
-        position: absolute;
-        /* Posicionamiento clave: */
-        left: 100%; /* Empieza justo donde termina el botón */
-        top: 50%; /* Centrado verticalmente respecto al botón */
-        transform: translateY(-50%); /* Ajuste fino del centro vertical */
-        
-        margin-left: 12px; /* Un pequeño espacio entre el botón y el input */
-        display: flex;
-        gap: 4px;
-        background-color: var(--bg-elevated-1);
-        border: 1px solid var(--border-default);
-        padding: 4px;
-        border-radius: 6px;
+    /* --- Save Input Flotante --- */
+    .save-wrapper { position: relative; }
+    .floating-input {
+        position: absolute; left: 100%; top: 50%; transform: translateY(-50%);
+        margin-left: 12px; padding: 4px; gap: 4px;
+        display: flex; background: var(--bg-elevated-1);
+        border: 1px solid var(--border-default); border-radius: 6px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        z-index: 100; /* Asegura que flote sobre los colores */
-        
-        /* Animación opcional de entrada */
-        animation: popIn 0.2s ease-out forwards;
+        z-index: 20;
     }
-    
-    .floating-input-container input {
-        background: transparent;
-        border: 1px solid var(--border-default);
-        color: var(--text-primary);
-        padding: 4px 8px;
-        border-radius: 4px;
-        font-size: 0.875rem;
-        width: 140px;
-        outline: none;
+    .floating-input input {
+        background: transparent; border: 1px solid var(--border-default);
+        color: var(--text-primary); padding: 4px 8px; border-radius: 4px;
+        width: 140px; outline: none;
     }
-    
-    .floating-input-container input:focus {
-        border-color: var(--accent-primary, #888);
-    }
-    
-    .confirm-save-btn {
-        background: var(--action-primary, #333);
-        color: white;
-        border: none;
-        border-radius: 4px;
-        width: 28px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    
-    .confirm-save-btn:hover {
-        opacity: 0.9;
-    }
-    
-    @keyframes popIn {
-        from { opacity: 0; transform: translate(-10px, -50%); }
-        to { opacity: 1; transform: translate(0, -50%); }
+    .mini-btn {
+        background: var(--action-primary); color: white;
+        border: none; border-radius: 4px; width: 28px; cursor: pointer;
     }
 </style>

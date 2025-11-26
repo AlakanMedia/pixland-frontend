@@ -26,7 +26,7 @@ export async function load({ fetch, cookies }) {
             settings: userInfo.settings
         };
 
-        if (userInfo.settings.palette !== "default") {
+        if (userInfo.settings.palette) {
             const paletteResponse = await getPalette(userInfo.settings.palette, fetch, headers);
             if (paletteResponse.state === MESSAGES_TYPES.SUCCESS) {
                 initialPalette = paletteResponse.data.info.colors;

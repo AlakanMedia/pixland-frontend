@@ -1,6 +1,7 @@
 <script>
-    import { deletePalette } from "../pixlandApi.js";
-    import { MESSAGES_TYPES, showAlert } from "$lib/utils.js";
+    import { deletePalette, getPalette, updateUserConfigurations } from "../pixlandApi.js";
+    import { MESSAGES_TYPES, showAlert, changeColorSchema } from "$lib/utils.js";
+    import { drawingState } from "../shared.svelte.js";
 
     let {
         paletteId,
@@ -23,10 +24,33 @@
             showAlert(MESSAGES_TYPES.ERROR, "Failed to Delete Color Palette", "omething went wrong while trying to delete your color palette. Please try again.");    
         }
     }
+
+    async function handleChangePalette() {
+        const paletteResponse = await getPalette(paletteId);
+
+        if (paletteResponse.state !== MESSAGES_TYPES.SUCCESS) {
+            showAlert(MESSAGES_TYPES.ERROR, "Error Updating Color Palette", "An unexpected error occurred while trying to update the color palette. Please try again later.");
+            return;
+        }
+
+        const userResponse = await updateUserConfigurations({
+            settings: { palette: paletteId }
+        });
+
+        if (userResponse.state !== MESSAGES_TYPES.SUCCESS) {
+            showAlert(MESSAGES_TYPES.ERROR, "Error Updating Settings", "An unexpected error occurred while saving your changes. Please try again later.");
+            return;
+        }
+
+        changeColorSchema(paletteResponse.data.info.colors);
+
+        drawingState.palette = paletteId;
+        drawingState.needsUpdate = true;
+    }
 </script>
 
 <div class="palette-card">
-    <div class="color-grid" id="colorGrid">
+    <div class="color-grid">
         {#each Object.entries(paletteColors) as [key, color] (key)}
             <button
                 class="color-box"
@@ -49,13 +73,12 @@
             <div class="palette-actions">
                 <div class="like-count" aria-live="polite" aria-atomic="true" title="Number of likes">
                     <i class="ph-fill ph-heart" aria-hidden="true"></i>
-                    <span id="likeCount">{paletteType === "default" ? "∞" : numLikes}</span>
+                    <span>{paletteType === "default" ? "∞" : numLikes}</span>
                 </div>
                 <div class="action-buttons">
                     {#if paletteType === "mine"}
                         <button
-                            id="detailsBtn"
-                            class="btn-icon btn-details"
+                            class="btn-icon btn-danger"
                             aria-label="Delete palette"
                             onclick={async (e) => {
                                 e.stopPropagation();
@@ -65,14 +88,19 @@
                             <i class="ph ph-trash"></i>
                         </button>
                     {:else}
-                        <button class="btn-icon btn-like" id="likeBtn" aria-label="Like">
-                            <i class="ph ph-hand-heart" id="heartIcon"></i>
+                        <button class="btn-icon btn-like" aria-label="Like">
+                            <i class="ph ph-hand-heart"></i>
                         </button>
                     {/if}
-                    <button class="btn-icon btn-apply" id="applyBtn" aria-label="Select palette">
-                        <i class="ph ph-palette" id="applyIcon"></i>
+                    <button
+                        class="btn-icon btn-apply"
+                        aria-label="Select palette"
+                        onclick={async (e) => { await handleChangePalette(); }}
+                        disabled={paletteId === drawingState.palette}
+                    >
+                        <i class="ph ph-palette"></i>
                     </button>
-                    <button class="btn-icon btn-details" id="detailsBtn" aria-label="View details">
+                    <button class="btn-icon btn-details" aria-label="View details">
                         <i class="ph ph-eye"></i>
                     </button>
                 </div>
@@ -85,7 +113,8 @@
     .palette-card {
         background: white;
         box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-        max-width: 308px;
+        max-width: 260px;
+        height: fit-content;
         border-radius: 14px;
     }
 
@@ -98,8 +127,8 @@
     }
 
     .color-box {
-        width: 36px;
-        height: 36px;
+        width: 30px;
+        height: 30px;
         border: none;
         cursor: pointer;
         transition: transform 0.2s ease;
@@ -182,8 +211,8 @@
         gap: 8px;
     }
     .btn-icon {
-        width: 40px;
-        height: 40px;
+        width: 30px;
+        height: 30px;
         border: 2px solid #e2e8f0;
         background: white;
         border-radius: 50%;
@@ -199,14 +228,28 @@
         transform: scale(1.1);
         border-color: #cbd5e0;
     }
+
+    .btn-apply:hover,
+    .btn-apply:disabled {
+        border-color: var(--orange-500);
+        color: var(--orange-500);
+    }
+
     .btn-like:hover {
-        border-color: #ff6b6b;
-        color: #ff6b6b;
+        border-color: var(--emerald-500);
+        color: var(--emerald-500);
     }
+
     .btn-details:hover {
-        border-color: #667eea;
-        color: #667eea;
+        border-color: var(--info-500);
+        color: var(--info-500);
     }
+
+    .btn-danger:hover {
+        border-color: var(--error-500);
+        color: var(--error-500);
+    }
+
     .btn-icon i {
         transition: all 0.3s ease;
     }
