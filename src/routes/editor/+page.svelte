@@ -4,6 +4,10 @@
     import PageHeader from "../../components/PageHeader.svelte";
 </script>
 
+<svelte:head>
+    <meta name="robots" content="noindex, nofollow" />
+</svelte:head>
+
 <div id="principal">
     <PageHeader />
     <div class="container">
