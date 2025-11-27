@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /$
+Disallow: /editor
+Disallow: /legals
+Disallow: /about
+Disallow: /editor/*
+Disallow: /legals/*
+Disallow: /about/*
+
+Sitemap: https://pixland.io/sitemap.xml
