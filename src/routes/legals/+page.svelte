@@ -49,6 +49,12 @@
     }
 </script>
 
+<svelte:head>
+    <meta name="robots" content="noindex, nofollow" />
+</svelte:head>
+
+<!-- El resto de tu componente... -->
+
 <div id="principal">
     <PageHeader />
     <main class="container">
