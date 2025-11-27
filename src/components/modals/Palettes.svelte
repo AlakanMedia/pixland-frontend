@@ -19,7 +19,11 @@
     let palettes = $state([]);
     let hasMorePages = $state(false);
     let showAddPaletteSection = $state(false);
-    
+
+    // Estados para la búsqueda de paletas
+    let showSearchInput = $state(false);
+    let searchTerm = $state(""); 
+
     // Estado del Creador
     let isSavingPalette = $state(false);
     let paletteNameInput = $state("");
@@ -36,12 +40,21 @@
     // --- LÓGICA ---
     onMount(async () => await loadPalettes());
 
+    const debounce = (fn, delay) => {
+        let timeoutId;
+        return (...args) => {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => fn(...args), delay);
+        };
+    };
+
     async function loadPalettes(showLoader = true) {
         if (showLoader) fetchingPalettes = true;
         const currentPage = paginationState[optionSelected];
         
         try {
-            const data = await getPalettesByType(optionSelected, STEP * currentPage);
+            const data = await getPalettesByType(optionSelected, STEP * currentPage, searchTerm);
+            
             hasMorePages = data?.data?.info?.has_more ?? false;
             palettes = data?.data?.info?.palettes ?? [];
         } catch (error) {
@@ -50,6 +63,24 @@
             palettes = [];
         } finally {
             if (showLoader) fetchingPalettes = false;
+        }
+    }
+
+    const handleSearchInput = debounce(async () => {
+        paginationState[optionSelected] = 0; // Se reinicia la paginación al buscar
+        await loadPalettes(false);
+    }, 500);
+
+    function toggleSearch() {
+        showSearchInput = !showSearchInput;
+        if (!showSearchInput) {
+            if (searchTerm) {
+                searchTerm = "";
+                paginationState[optionSelected] = 0;
+                loadPalettes();
+            }
+        } else {
+            setTimeout(() => document.getElementById('search-input-field')?.focus(), 50);
         }
     }
 
@@ -138,12 +169,38 @@
 
             {#if optionSelected === "mine"}
                 <button 
-                    class="icon-btn add-btn" 
+                    class="icon-btn btn-palette-action" 
                     onclick={() => showAddPaletteSection = true}
                     aria-label="Add new palette"
                 >
                     <i class="ph-bold ph-plus"></i>
                 </button>
+            {:else}
+               <div class="search-wrapper">
+                    <button 
+                        class="icon-btn btn-palette-action {showSearchInput ? 'active' : ''}" 
+                        aria-label="Search palette"
+                        onclick={toggleSearch}
+                    >
+                        {#if showSearchInput}
+                            <i class="ph-bold ph-x"></i>
+                        {:else}
+                            <i class="ph-bold ph-magnifying-glass"></i>
+                        {/if}
+                    </button>
+
+                    {#if showSearchInput}
+                        <div class="floating-search" transition:fade={{ duration: 150 }}>
+                            <input 
+                                id="search-input-field"
+                                type="text" 
+                                placeholder="Find by name..." 
+                                bind:value={searchTerm}
+                                oninput={handleSearchInput}
+                            />
+                        </div>
+                    {/if}
+                </div>
             {/if}
         </div>
     {/if}
@@ -272,9 +329,8 @@
 </div>
 
 <style>
-    /* Variables locales para facilitar cambios */
     #palettes-container {
-        --p-width: 830px;
+        --p-width: 828px;
         --p-height: 518px;
         --btn-size: 30px;
         
@@ -286,7 +342,11 @@
         border-radius: 6px;
         color: var(--text-primary);
         width: var(--p-width);
+        
+        /* Altura: Fija en 518px, pero no excede el alto de la ventana */
         height: var(--p-height);
+        max-height: 100vh;
+        
         display: flex;
         flex-direction: column;
         gap: 12px;
@@ -311,6 +371,7 @@
         background: transparent;
         color: var(--text-secondary);
         transition: background 0.2s;
+        flex-shrink: 0; /* Evita que los botones se aplasten */
     }
     .icon-btn:hover { background-color: var(--hover-overlay); color: var(--text-primary); }
     .icon-btn.active { background-color: var(--action-primary); color: white; }
@@ -332,6 +393,11 @@
         box-shadow: 0 0 4px var(--accent-primary);
     }
 
+    /* En móviles ocultamos el badge si estorba, o lo movemos */
+    @media (max-width: 480px) {
+        .badge { display: none; }
+    }
+
     .header { display: flex; justify-content: center; align-items: center; gap: 0.5rem; }
     .header i { font-size: 2rem; color: var(--accent-primary); }
 
@@ -347,12 +413,13 @@
         font-weight: 500;
         flex: 1;
         transition: all 0.2s;
+        white-space: nowrap; /* Evita que el texto se rompa */
     }
     .tab-btn:hover:not(.selected) { background-color: var(--hover-overlay); color: var(--text-primary); }
     .tab-btn.selected { background-color: var(--action-primary); color: var(--action-primary-text); }
 
     /* --- Navegación & Paginación --- */
-    #nav-buttons { position: relative; height: 30px; }
+    #nav-buttons { position: relative; height: 30px; flex-shrink: 0; }
     #pagination { position: absolute; left: 0; display: flex; gap: 2px; }
     
     .page-btn { border-radius: 0; background-color: var(--bg-elevated-2); }
@@ -360,16 +427,68 @@
     .page-btn:last-child { border-radius: 0 50% 50% 0; }
     .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    .add-btn { position: absolute; right: 0; background-color: var(--bg-elevated-2); }
+    .btn-palette-action { position: absolute; right: 0; background-color: var(--bg-elevated-2); }
 
     /* --- Area de Contenido --- */
-    .content-area { flex: 1; overflow: hidden; position: relative; }
-    .grid-layout { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; }
+    .content-area { 
+        flex: 1; 
+        position: relative; 
+        /* --- CAMBIO SCROLL --- */
+        overflow-y: auto; /* Permite scroll vertical si el contenido es alto */
+        overflow-x: hidden;
+        min-height: 0; /* Importante para que el scroll funcione dentro de flex */
+    }
+
+    /* --- Grid Layout de Paletas --- */
+    .grid-layout { 
+        display: grid; 
+        /* Por defecto 3 columnas */
+        grid-template-columns: repeat(3, 1fr); 
+        gap: 0.75rem; 
+    }
+
+    /* Media Queries para reducir columnas */
+    @media (max-width: 860px) {
+        #palettes-container {
+            width: 558px;
+        }
+
+        .content-area {
+            scrollbar-width: none; /* Firefox */
+            scrollbar-color: transparent transparent; /* Firefox */
+        }
+
+        .content-area::-webkit-scrollbar {
+            display: none; /* Chrome, Safari y Edge */
+        }
+
+        .grid-layout {
+            grid-template-columns: repeat(2, 1fr); /* 2 Columnas en tablets/pantallas medianas */
+        }
+    }
+
+    @media (max-width: 580px) {
+        #palettes-container {
+            width: 284px;
+        }
+
+        .tabs {
+            gap: 0.25rem;
+        }
+
+        .tabs > button {
+           padding: 0.75rem 1.25rem; 
+        }
+
+        .grid-layout {
+            grid-template-columns: 1fr; /* 1 Columna en móviles */
+        }
+    }
 
     /* --- Creador --- */
     #palette-creator { display: flex; width: 100%; height: 100%; gap: 12px; }
     .creator-sidebar { display: flex; flex-direction: column; justify-content: center; gap: 8px; }
-    .vertical-sep { width: 1px; height: 92%; background-color: var(--border-default, #ccc); margin: auto 0; }
+    .vertical-sep { width: 1px; height: 92%; background-color: var(--border-default, #ccc); margin: auto 0; flex-shrink: 0; }
     
     .creator-grid { 
         flex: 1; 
@@ -377,6 +496,15 @@
         grid-template-columns: repeat(4, 1fr); 
         grid-template-rows: repeat(4, 1fr); 
         gap: 8px; 
+        overflow-y: auto; /* Scroll interno para el creador si es necesario */
+    }
+
+    @media (max-width: 580px) {
+        #palette-creator { flex-direction: column; }
+        .creator-sidebar { flex-direction: row; justify-content: space-between; padding: 0 10px; }
+        .vertical-sep { width: 100%; height: 1px; margin: 0; }
+        /* Si la pantalla es muy pequeña, forzamos altura mínima para ver colores */
+        .creator-grid { min-height: 300px; } 
     }
 
     .color-slot {
@@ -401,6 +529,18 @@
         box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         z-index: 20;
     }
+
+    @media (max-width: 580px) {
+        .floating-input {
+            left: auto; right: 0; top: 110%; transform: none;
+            margin-left: 0;
+        }
+
+        .hex-code {
+            font-size: 0.5rem;
+        }
+    }
+
     .floating-input input {
         background: transparent; border: 1px solid var(--border-default);
         color: var(--text-primary); padding: 4px 8px; border-radius: 4px;
@@ -409,5 +549,51 @@
     .mini-btn {
         background: var(--action-primary); color: white;
         border: none; border-radius: 4px; width: 28px; cursor: pointer;
+    }
+
+    /* --- Búsqueda Flotante --- */
+    .search-wrapper {
+        position: absolute;
+        right: 0;
+        top: 0;
+        height: 30px;
+    }
+
+    .floating-search {
+        position: absolute;
+        top: 100%; /* Justo debajo del botón */
+        right: 0;
+        margin-top: 8px; /* Un poco de espacio */
+        padding: 6px;
+        background: var(--bg-elevated-1);
+        border: 1px solid var(--border-default);
+        border-radius: 6px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        z-index: 30; /* Encima de las paletas */
+        min-width: 200px;
+        display: flex;
+    }
+
+    .floating-search input {
+        background: transparent;
+        border: 1px solid var(--border-default);
+        color: var(--text-primary);
+        padding: 6px 10px;
+        border-radius: 4px;
+        width: 100%;
+        outline: none;
+        font-size: 0.9rem;
+    }
+    
+    .floating-search input:focus {
+        border-color: var(--action-primary);
+    }
+    
+    /* Ajuste para móviles */
+    @media (max-width: 580px) {
+        .floating-search {
+            right: -10px; /* Ajuste fino si se sale de pantalla */
+            min-width: 160px;
+        }
     }
 </style>

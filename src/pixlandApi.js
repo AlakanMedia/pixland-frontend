@@ -172,10 +172,14 @@ export function deleteUser(userId) {
     });
 }
 
-export function getPalettesByType(type, skip = 0) {
-    const queryParams = new URLSearchParams()
+export function getPalettesByType(type, skip = 0, search = "") {
+    const queryParams = new URLSearchParams();
     queryParams.append("palette_type", type);
     queryParams.append("skip", skip);
+    
+    if (search && search.trim().length > 0) {
+        queryParams.append("search", search.trim());
+    }
 
     return apiClient(`/palettes/search?${queryParams.toString()}`, {
         method: "GET",
