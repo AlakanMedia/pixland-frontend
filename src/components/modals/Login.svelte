@@ -162,6 +162,7 @@
                     response = await getPalette(userInfo.settings.palette);
 
                     if (response.state === MESSAGES_TYPES.SUCCESS) {
+                        drawingState.name = response.data.info.name;
                         const newPalette = response.data.info.colors;
                         changeColorSchema(newPalette);
                         updateCanvas = true;

@@ -1,5 +1,5 @@
 <script>
-    import { deletePalette, getPalette, updateUserConfigurations } from "../pixlandApi.js";
+    import { deletePalette, updateUserConfigurations } from "../pixlandApi.js";
     import { MESSAGES_TYPES, showAlert, changeColorSchema } from "$lib/utils.js";
     import { drawingState } from "../shared.svelte.js";
 
@@ -26,13 +26,6 @@
     }
 
     async function handleChangePalette() {
-        const paletteResponse = await getPalette(paletteId);
-
-        if (paletteResponse.state !== MESSAGES_TYPES.SUCCESS) {
-            showAlert(MESSAGES_TYPES.ERROR, "Error Updating Color Palette", "An unexpected error occurred while trying to update the color palette. Please try again later.");
-            return;
-        }
-
         const userResponse = await updateUserConfigurations({
             settings: { palette: paletteId }
         });
@@ -42,8 +35,9 @@
             return;
         }
 
-        changeColorSchema(paletteResponse.data.info.colors);
+        changeColorSchema(paletteColors);
 
+        drawingState.name = paletteName;
         drawingState.palette = paletteId;
         drawingState.needsUpdate = true;
     }

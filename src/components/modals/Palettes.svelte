@@ -296,7 +296,7 @@
 
 <div id="palettes-container">
     <div class="badge">
-        <span class="dot"></span> {drawingState.palette}
+        <span class="dot"></span> {drawingState.name || "default"}
     </div>
 
     <header class="header">

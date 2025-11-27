@@ -13,6 +13,7 @@ export async function load({ fetch, cookies }) {
     const userResponse = await getUserInformation(fetch, headers);
     let initialUser = null;
     let initialPalette = null;
+    let initialPaletteName = null;
 
     if (userResponse.state === MESSAGES_TYPES.SUCCESS) {
         const userInfo = userResponse.data.info;
@@ -30,12 +31,14 @@ export async function load({ fetch, cookies }) {
             const paletteResponse = await getPalette(userInfo.settings.palette, fetch, headers);
             if (paletteResponse.state === MESSAGES_TYPES.SUCCESS) {
                 initialPalette = paletteResponse.data.info.colors;
+                initialPaletteName = paletteResponse.data.info.name;
             }
         }
     }
 
     return {
         initialUser,
-        initialPalette
+        initialPalette,
+        initialPaletteName
     };
 }
