@@ -47,7 +47,8 @@ export const drawingState = $state({
     showGrid: true,
     playSound: true,
     showMouseChaser: true,
-    palette: "default",
+    palette: null,
+    name: null,
 });
 
 export const colorPalette = $state({

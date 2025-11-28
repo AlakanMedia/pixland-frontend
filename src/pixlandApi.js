@@ -110,17 +110,19 @@ export function getCellsBox(upperLeftLimit, lowerRightLimit) {
     });
 }
 
-export function getPalette(name, customFetch = null, extraHeaders = null) {
+export function getPalette(paletteId, customFetch = null, extraHeaders = null) {
     const options = {
         method: "GET",
         headers: extraHeaders || undefined
     };
 
+    const url = `/palettes/get/${paletteId}`;
+
     if (customFetch) {
-        return apiClient(`/palettes/get/${name}`, options, customFetch);
+        return apiClient(url, options, customFetch);
     }
     else {
-        return apiClient(`/palettes/get/${name}`, options);
+        return apiClient(url, options);
     }
 }
 
@@ -143,7 +145,7 @@ export function generateImage(palette, upperLeftLimit, lowerRightLimit) {
     }
 
     const queryParams = new URLSearchParams();
-    queryParams.append("palette", palette);
+    queryParams.append("palette_id", palette);
 
     return apiClient(`/cells/image?${queryParams.toString()}`, {
         method: "POST",
@@ -170,10 +172,14 @@ export function deleteUser(userId) {
     });
 }
 
-export function getPalettesByType(type, skip = 0) {
-    const queryParams = new URLSearchParams()
+export function getPalettesByType(type, skip = 0, search = "") {
+    const queryParams = new URLSearchParams();
     queryParams.append("palette_type", type);
     queryParams.append("skip", skip);
+    
+    if (search && search.trim().length > 0) {
+        queryParams.append("search", search.trim());
+    }
 
     return apiClient(`/palettes/search?${queryParams.toString()}`, {
         method: "GET",

@@ -78,7 +78,7 @@
         pixelPaintingSound = new Audio();
         pixelPaintingSound.src = "sounds/pixel_painting.mp3";
 
-        const { initialUser, initialPalette } = data;
+        const { initialUser, initialPalette, initialPaletteName } = data;
         const hash = page.url.hash;
 
         canvasElement.width = window.innerWidth;
@@ -114,6 +114,7 @@
 
         if (initialUser) {
             if (initialPalette) {
+                drawingState.name = initialPaletteName;
                 changeColorSchema(initialPalette);
             }
 
