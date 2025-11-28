@@ -411,11 +411,6 @@
         text-overflow: ellipsis;
     }
 
-    /* En móviles ocultamos el badge si estorba, o lo movemos */
-    @media (max-width: 480px) {
-        .badge { display: none; }
-    }
-
     .header { display: flex; justify-content: center; align-items: center; gap: 0.5rem; }
     .header i { font-size: 2rem; color: var(--accent-primary); }
 
