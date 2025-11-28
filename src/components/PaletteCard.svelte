@@ -41,6 +41,16 @@
         drawingState.palette = paletteId;
         drawingState.needsUpdate = true;
     }
+
+    async function handleCopyPalette() {
+        try {
+            await navigator.clipboard.writeText(JSON.stringify(paletteColors, null, 2));
+            showAlert(MESSAGES_TYPES.SUCCESS, "Palette Copied", "The color palette has been successfully copied to your clipboard.");
+        } catch (error) {
+          console.error("Clipboard error:", error);
+          showAlert(MESSAGES_TYPES.ERROR, "Copy Failed", "There was an issue copying the palette. Please try again.");
+        }
+    }
 </script>
 
 <div class="palette-card">
@@ -60,44 +70,38 @@
         <div class="card-header">
             <div class="author-info">
                 <div class="author-top-row">
-                    <div class="author-name">{paletteType === "default" ? "Pixland" : creatorName}</div>
+                    <div class="author-name" title={paletteName}>{paletteName}</div>
                 </div>
-                <div class="palette-name">{paletteName}</div>
+                <div class="palette-name">{paletteType === "default" ? "Pixland" : creatorName}</div>
             </div>
-            <div class="palette-actions">
-                <div class="like-count" aria-live="polite" aria-atomic="true" title="Number of likes">
-                    <i class="ph-fill ph-heart" aria-hidden="true"></i>
-                    <span>{paletteType === "default" ? "∞" : numLikes}</span>
-                </div>
-                <div class="action-buttons">
-                    {#if paletteType === "mine"}
-                        <button
-                            class="btn-icon btn-danger"
-                            aria-label="Delete palette"
-                            onclick={async (e) => {
-                                e.stopPropagation();
-                                await handleDeletePalette();
-                            }}
-                        >
-                            <i class="ph ph-trash"></i>
-                        </button>
-                    {:else}
-                        <button class="btn-icon btn-like" aria-label="Like">
-                            <i class="ph ph-hand-heart"></i>
-                        </button>
-                    {/if}
+            <div class="action-buttons">
+                {#if paletteType === "mine"}
                     <button
-                        class="btn-icon btn-apply"
-                        aria-label="Select palette"
-                        onclick={async (e) => { await handleChangePalette(); }}
-                        disabled={paletteId === drawingState.palette}
+                        class="btn-icon btn-danger"
+                        aria-label="Delete palette"
+                        onclick={async (e) => {
+                            e.stopPropagation();
+                            await handleDeletePalette();
+                        }}
                     >
-                        <i class="ph ph-palette"></i>
+                        <i class="ph ph-trash"></i>
                     </button>
-                    <button class="btn-icon btn-details" aria-label="View details">
-                        <i class="ph ph-eye"></i>
-                    </button>
-                </div>
+                {/if}
+                <button
+                    class="btn-icon btn-apply"
+                    aria-label="Select palette"
+                    onclick={async (e) => { await handleChangePalette(); }}
+                    disabled={paletteId === drawingState.palette}
+                >
+                    <i class="ph ph-palette"></i>
+                </button>
+                <button
+                    class="btn-icon btn-copy"
+                    aria-label="Copy palette"
+                    onclick={async (e) => { await handleCopyPalette(); }}
+                >
+                    <i class="ph ph-copy"></i>
+                </button>
             </div>
         </div>
     </div>
@@ -154,7 +158,6 @@
     }
     .card-header {
         display: flex;
-        flex-direction: column;
         justify-content: space-between;
         gap: 8px;
       }
@@ -175,28 +178,13 @@
         font-weight: 600;
         font-size: 16px;
         color: #2d3748;
+        max-width: 126px;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
     .palette-name {
         font-size: 13px;
         color: #718096;
-    }
-
-    /* Like count integrado como “píldora” */
-    .like-count {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 13px;
-        color: #4a5568;
-        font-weight: 600;
-        background: #fff5f5;
-        border: 1px solid #fed7d7;
-        padding: 4px 10px;
-        border-radius: 20px;
-    }
-    .like-count i {
-        font-size: 16px;
-        color: #ff6b6b;
     }
 
     .action-buttons {
@@ -229,12 +217,7 @@
         color: var(--orange-500);
     }
 
-    .btn-like:hover {
-        border-color: var(--emerald-500);
-        color: var(--emerald-500);
-    }
-
-    .btn-details:hover {
+    .btn-copy:hover {
         border-color: var(--info-500);
         color: var(--info-500);
     }
@@ -246,12 +229,6 @@
 
     .btn-icon i {
         transition: all 0.3s ease;
-    }
-
-    .palette-actions {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
     }
 
     @keyframes heartBeat {

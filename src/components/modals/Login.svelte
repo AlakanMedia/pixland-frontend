@@ -209,10 +209,20 @@
 
 <div id="login">
     <div id="login-buttons-container">
-        <button class="login-button" aria-label="Google">
+        <button
+            class="login-button"
+            title="Google login is temporarily disabled"
+            aria-label="Login with Google"
+            disabled
+        >
             <i class="ph-bold ph-google-logo"></i>
         </button>
-        <button class="login-button" aria-label="Discord">
+        <button
+            class="login-button"
+            title="Discord login is temporarily disabled"
+            aria-label="Login with Discord"
+            disabled
+        >
             <i class="ph-bold ph-discord-logo"></i>
         </button>
     </div>
@@ -322,7 +332,12 @@
         transition: all 0.3s ease;
     }
 
-    .login-button:hover {
+    .login-button:disabled {
+        background-color: var(--action-primary-disabled);
+        cursor: not-allowed;
+    }
+
+    .login-button:not(:disabled):hover {
         background-color: var(--action-secondary-hover);
         box-shadow: var(--shadow-md);
     }

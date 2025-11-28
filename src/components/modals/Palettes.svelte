@@ -19,6 +19,7 @@
     let palettes = $state([]);
     let hasMorePages = $state(false);
     let showAddPaletteSection = $state(false);
+    let newPalettesAdded = $state(false);
 
     // Estados para la búsqueda de paletas
     let showSearchInput = $state(false);
@@ -119,8 +120,7 @@
             return;
         }
 
-        if (optionSelected === 'mine' && paginationState.mine === 0) palettes.push(res.data.info.palette);
-        
+        newPalettesAdded = true; 
         isSavingPalette = false;
         paletteNameInput = "";
         showAlert(MESSAGES_TYPES.SUCCESS, "Saved", "Palette saved successfully.");
@@ -134,6 +134,20 @@
 
     function toggleSaveMode() {
         isSavingPalette = !isSavingPalette;
+    }
+
+    async function closeCreator() {
+        showAddPaletteSection = false;
+
+        if (newPalettesAdded) {
+            newPalettesAdded = false;
+
+            // Opcional: Volver a la página 0 para ver las nuevas paletas creadas
+            // asumiendo que el backend las devuelve ordenadas por fecha descendente.
+            // paginationState.mine = 0; 
+
+            await loadPalettes();
+        }
     }
 </script>
 
@@ -273,7 +287,7 @@
                 class="icon-btn close-btn"
                 title="Close"
                 aria-label="Close"
-                onclick={() => showAddPaletteSection = false}
+                onclick={async () => { await closeCreator(); }}
             >
                 <i class="ph ph-x"></i>
             </button>
@@ -295,10 +309,6 @@
 {/snippet}
 
 <div id="palettes-container">
-    <div class="badge">
-        <span class="dot"></span> {drawingState.name || "default"}
-    </div>
-
     <header class="header">
         <i class="ph ph-palette"></i>
         <h2>Palettes</h2>
@@ -326,12 +336,17 @@
             {@render paletteList()}
         {/if}
     </div>
+
+    <div class="badge">
+        <span class="dot"></span>
+        <p>{drawingState.name || "default"}</p>
+    </div>
 </div>
 
 <style>
     #palettes-container {
-        --p-width: 828px;
-        --p-height: 518px;
+        --p-width: 830px;
+        --p-height: 478px;
         --btn-size: 30px;
         
         position: relative;
@@ -378,19 +393,22 @@
     
     /* --- Header & Badge --- */
     .badge {
-        position: absolute;
-        top: 16px; left: 12px;
         display: flex; align-items: center; gap: 6px;
-        font-size: 0.8rem; font-weight: 600;
+        font-size: 0.75rem; font-weight: 600;
         background-color: var(--bg-elevated-2, rgba(255,255,255,0.05));
         padding: 4px 10px; border-radius: 20px;
         border: 1px solid var(--border-default);
-        z-index: 10;
+        width: fit-content;
     }
     .badge .dot {
         width: 6px; height: 6px; border-radius: 50%;
         background-color: var(--accent-primary, #4caf50);
         box-shadow: 0 0 4px var(--accent-primary);
+    }
+    .badge > p {
+        max-width: 224px;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     /* En móviles ocultamos el badge si estorba, o lo movemos */
