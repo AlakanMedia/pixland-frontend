@@ -25,13 +25,13 @@
     {#each COLORS as color}
        <button
             class={["palette-button", drawingState.selectedColor === color.varName ? "selected" : ""]}
-            style={`background-color: ${colorPalette[color.varName]};`}
+            style="background-color: {colorPalette[color.varName]};"
             onclick={(e) => {
                 e.stopPropagation();
                 drawingState.selectedColor = color.varName;
             }}
-            aria-label={color.varText}
-            title={color.varText}
+            aria-label={colorPalette[color.varName]}
+            title={colorPalette[color.varName].toUpperCase()}
         >
         </button> 
     {/each}

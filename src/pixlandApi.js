@@ -117,10 +117,10 @@ export function getPalette(name, customFetch = null, extraHeaders = null) {
     };
 
     if (customFetch) {
-        return apiClient(`/palettes/${name}`, options, customFetch);
+        return apiClient(`/palettes/get/${name}`, options, customFetch);
     }
     else {
-        return apiClient(`/palettes/${name}`, options);
+        return apiClient(`/palettes/get/${name}`, options);
     }
 }
 
@@ -165,6 +165,33 @@ export function getImageStatus(taskId) {
 
 export function deleteUser(userId) {
     return apiClient(`/users/delete/${userId}`, {
+        method: "DELETE",
+        credentials: "include",
+    });
+}
+
+export function getPalettesByType(type, skip = 0) {
+    const queryParams = new URLSearchParams()
+    queryParams.append("palette_type", type);
+    queryParams.append("skip", skip);
+
+    return apiClient(`/palettes/search?${queryParams.toString()}`, {
+        method: "GET",
+        credentials: "include",
+    });
+}
+
+export function savePalette(paletteInfo) {
+    return apiClient("/palettes/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(paletteInfo),
+    });
+}
+
+export function deletePalette(paletteId) {
+    return apiClient(`/palettes/delete/${paletteId}`, {
         method: "DELETE",
         credentials: "include",
     });

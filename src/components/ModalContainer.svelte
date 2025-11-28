@@ -6,6 +6,7 @@
     import Login from "./modals/Login.svelte";
     import Profile from "./modals/Profile.svelte";
 	import Settings from "./modals/Settings.svelte";
+    import Palettes from "./modals/Palettes.svelte";
 
     let container;
     let containerChild;
@@ -22,6 +23,9 @@
 
             if (ui.generateImageModalIsOpen) {
                 ui.generateImageModalIsOpen = false;
+            }
+            else if (ui.palettesModalIsOpen) {
+                ui.palettesModalIsOpen = false;
             }
             else if (ui.loginModalIsOpen) {
                 ui.loginModalIsOpen = false;
@@ -58,6 +62,8 @@
     <div bind:this={containerChild} in:scale={{duration: 900}}>
         {#if ui.generateImageModalIsOpen}
             <GenerateImage/>
+        {:else if ui.palettesModalIsOpen}
+            <Palettes/>
         {:else if ui.loginModalIsOpen}
             <Login/>
         {:else if ui.profileModalIsOpen}

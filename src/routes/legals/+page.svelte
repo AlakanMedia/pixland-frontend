@@ -61,7 +61,7 @@
                 <i class="ph ph-scroll icon"></i>
                 Legal & Privacy Stuff
             </h1>
-            <p>Here's the simple, no-fluff breakdown of how things work at Pixland. By using theplatform, you agree to these terms.</p>
+            <p>Here's the simple, no-fluff breakdown of how things work at Pixland. By using the platform, you agree to these terms.</p>
         </div>
 
         <div class="nav-tabs" role="tablist">
@@ -91,8 +91,8 @@
                         <h3><i class="ph ph-info icon"></i>1. The Basics</h3>
                         <p>
                             Welcome to Pixland. This is a collaborative art project. By placing a pixel, you're
-                            part of it. We expect you to be at least 13 years old to participate. These terms
-                            might change, and if you keep using the site, it means you're cool with the new ones.
+                            part of it. Pixland is intended for users aged 13 and up, whether or not you create an account.
+                            These terms might change, and if you keep using the site, it means you're cool with the new ones.
                         </p>
                     </div>
                     <div class="subsection">
@@ -102,12 +102,13 @@
                             <li>Don't try to break the site or overload our servers — creative chaos is fine, server destruction is not.</li>
                             <li><strong>Do not use bots, scripts, or any automated tools to place pixels.</strong> Only real, genuine humans clicking one pixel at a time... probably.</li>
                         </ul>
-                        <p>Regarding content, this canvas is a space for free expression. <strong>Pretty much anything goes.</strong> We don't police art, ideas, or messages. Your creations are your own responsibility.</p>
+                        <p>Regarding content, this canvas is a space for free expression. <strong>Pretty much anything goes.</strong> We don't police art, ideas, or messages, with one limited exception noted in our Content Policy (doxxing).</p>
                     </div>
                     <div class="subsection">
                         <h3><i class="ph ph-copyright icon"></i>3. Intellectual Property (or lack thereof)</h3>
-                        <p>This is simple: <strong>there is none.</strong> Everything created on the Pixland canvas is dedicated to the <strong>public domain</strong>.</p>
-                        <p>That means any art you create here is free for anyone—including yourself—to use for any purpose, personal or commercial, without any credit or attribution required. By placing a pixel, you agree to waive all rights to your contribution. Go wild with it.</p>
+                        <p><strong>All canvas contributions are dedicated to the public domain.</strong></p>
+                        <p>That means any art you create on the Pixland canvas is free for anyone—including yourself—to use for any purpose, personal or commercial, without any credit or attribution required. By placing a pixel, you agree to waive all rights to your contribution.</p>
+                        <p>This dedication applies exclusively to <strong>canvas contributions</strong>. The site code, UI, branding, and any third‑party assets (e.g., sounds and profile images) are <strong>not</strong> part of this dedication and remain under their respective licenses.</p>
                     </div>
                     <div class="highlight-box warning">
                         <h4><i class="ph ph-warning"></i>A Quick Heads-Up</h4>
@@ -178,7 +179,7 @@
                     <div class="subsection">
                         <h3><i class="ph ph-scales icon"></i>1. Our Stance on Content</h3>
                         <p>Pixland is a platform for free expression. We do not moderate artwork, political statements, offensive content, or anything else you choose to create. The canvas reflects the raw creativity (and chaos) of the internet.</p>
-                        <p>However, there are two hard lines we draw to protect individuals and comply with the law.</p>
+                        <p>However, there is one hard line we draw to protect individuals.</p>
                     </div>
                     <div class="subsection">
                         <h3><i class="ph ph-gavel icon"></i>2. Prohibited Content</h3>
@@ -198,7 +199,7 @@
 
     <footer class="footer">
         <div class="footer-content">
-            <p>Last updated: 11/06/2025</p>
+            <p>Last updated: 2025-11-13</p>
             <p>Questions? <a href="mailto:alakan439@gmail.com" class="contact-link">Contact us</a></p>
         </div>
     </footer>
@@ -207,7 +208,7 @@
         class="home-button"
         onclick={() => {goto('/');}}
         title="Go to Play"
-        aria-label="Go to Play"
+        aria-label="Go to play"
     >
         <i class="ph ph-house"></i>
     </button>

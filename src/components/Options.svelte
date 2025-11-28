@@ -29,6 +29,17 @@
                 <i class="ph-bold ph-image"></i>
                 <p>generate</p>
             </button> 
+            <button
+                class="option-button"
+                onclick={(e) => {
+                    e.stopPropagation();
+                    ui.palettesModalIsOpen = true;
+                    optionIsOpen = false;
+                }}
+            >
+                <i class="ph-bold ph-palette"></i>
+                <p>palettes</p>
+            </button> 
         {:else}
             <button
                 class="option-button"

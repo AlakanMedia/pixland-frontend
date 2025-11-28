@@ -13,7 +13,7 @@
     <div class="container">
         <Editor />
     </div>
-    <button class="home-button" onclick={() => {goto("/");}} title="Go to Play" aria-label="Go to Play">
+    <button class="home-button" onclick={() => {goto("/");}} title="Go to Play" aria-label="Go to play">
         <i class="ph ph-house"></i>
     </button>
 </div>

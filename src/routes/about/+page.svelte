@@ -76,7 +76,7 @@
                         <div class="acknowledgment-content">
                             <div class="acknowledgment-text">
                                 <span class="acknowledgment-label">Sound Design:</span>
-                                Thanks to <a href="https://pixabay.com/es/users/floraphonic-38928062/?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=188105" target="_blank">Floraphonic</a>, who created and freely published on <a href="https://pixabay.com//?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=188105" target="_blank">Pixabay</a> the sound I use for when a pixel is painted.
+                                Thanks to <a href="https://pixabay.com/es/users/floraphonic-38928062/?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=188105" target="_blank">Floraphonic</a>, who created and freely published on <a href="https://pixabay.com/?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=188105" target="_blank">Pixabay</a> the sound I use for when a pixel is painted.
                             </div>
                         </div>
                     </div>
@@ -112,9 +112,9 @@
         </main>
 
         <div class="actions">
-            <a href="/" class="btn btn-primary">
+            <a href="/" class="btn btn-primary" aria-label="Go to play" title="Go to Play">
                 <i class="ph ph-play"></i>
-                Start Creating
+                Go to Play
             </a>
             <a href="https://github.com/AlakanMedia" class="btn btn-secondary" target="_blank" rel="noopener noreferrer">
                 <i class="ph ph-coffee"></i>
@@ -123,11 +123,11 @@
         </div>
 
         <div class="creator-note">
-            <p>Pixland is a one-person passion project, built in my free time for the love of pixel art and online communities. It's made by me, for anyone who enjoys creating, exploring, or just having fun placing pixels.</p>
+            <p>Pixland is a one-person project, built in my free time out of love for pixel art and online communities. It's also a way for me to put into practice everything I've learned as a developer, so you might spot features that go a bit beyond a typical online pixel art game.</p>
         </div>
     </div>
 
-    <button class="home-button" onclick={() => {goto("/");}} title="Go to Play" aria-label="Go to Play">
+    <button class="home-button" onclick={() => {goto("/");}} title="Go to Play" aria-label="Go to play">
         <i class="ph ph-house"></i>
     </button>
 </div>

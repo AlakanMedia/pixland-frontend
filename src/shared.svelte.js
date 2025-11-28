@@ -15,6 +15,7 @@ export const mousePosition = $state({
 export const ui = $state({
     activeUsers: 0,
     generateImageModalIsOpen: false,
+    palettesModalIsOpen: false,
     loginModalIsOpen: false,
     profileModalIsOpen: false,
     settingsModalIsOpen: false,
